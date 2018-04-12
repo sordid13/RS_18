@@ -1,7 +1,13 @@
+# Game state
 STATE_PREPARING = "Game Preparing"
 STATE_PAUSED = "Game Paused"
 STATE_STARTED = "Game Started"
 
+# List of dishes & ingredients exist in game
+DISHES_LIST = []
+INGREDIENTS_LIST = []
+
+# Dishes related
 DISH_POINTS = 10
 
 FOOD_TYPE_SEAFOOD = "Seafood"
@@ -21,3 +27,6 @@ INGREDIENT_TYPE_BEEF = "Beef"
 INGREDIENT_TYPE_POULTRY = "Poultry"
 INGREDIENT_TYPE_LAMB = "Lamb"
 INGREDIENT_TYPE_MISC = "Misc"
+
+# Customers
+STARTING_CUSTOMERS = 100

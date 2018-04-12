@@ -1,7 +1,9 @@
 from pygame.locals import *
 import pygame
 
+
 from .Events import *
+from .Constants import *
 
 class Controller:
     def __init__(self, evManager):
@@ -9,8 +11,6 @@ class Controller:
         self.evManager.RegisterListener(self)
 
         self.keepGoing = True
-
-        self.ingredientsList = None
 
     def Run(self):
         while self.keepGoing:
@@ -24,10 +24,10 @@ class Controller:
 
                 # Temporary Test Events
                 elif event.type == KEYDOWN and event.key == K_q:
-                    ev = BuyIngredientEvent(self.ingredientsList[0], 5, 100)
+                    ev = BuyIngredientEvent(INGREDIENTS_LIST[0], 5, 100)
 
                 elif event.type == KEYDOWN and event.key == K_w:
-                    ev = BuyIngredientEvent(self.ingredientsList[0], 4, 100)
+                    ev = BuyIngredientEvent(INGREDIENTS_LIST[0], 4, 100)
 
                 elif event.type == KEYDOWN and event.key == K_e:
                     ev = NewDayEvent()
@@ -38,6 +38,3 @@ class Controller:
     def Notify(self, event):
         if isinstance(event, QuitEvent):
             self.keepGoing = False
-
-        elif isinstance(event, GameStartedEvent):
-            self.ingredientsList = event.ingredientsList

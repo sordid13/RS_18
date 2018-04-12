@@ -11,9 +11,8 @@ class Game:
 
         self.player = Player(self.evManager)
 
-        # List of dishes & ingredients exist in game
-        self.dishesList = []
-        self.ingredientsList = []
+        self.date = Date(self.evManager)
+        self.customerManager = CustomerManager(self.evManager)
 
     def Start(self):
         self.state = STATE_STARTED
@@ -27,10 +26,10 @@ class Game:
             name = str(config.get(section, "name"))
             type = str(config.get(section, "type"))
             baseCost = config.getint(section, "cost")
-            self.ingredientsList.append(Ingredient(name, type, baseCost, self.evManager))
+            INGREDIENTS_LIST.append(Ingredient(name, type, baseCost, self.evManager))
 
         # Load list of dishes
-        config = configparser.ConfigParser() # Reinitiate for new file
+        config = configparser.ConfigParser()  # Reinitiate for new file
         config.read("data/dishes.rs")
         for section in config.sections():
             name = str(config.get(section, "name"))
@@ -40,13 +39,13 @@ class Game:
 
             ingredients = []
             for ingredient in rawIngre.split(','):
-                for i in self.ingredientsList:
+                for i in INGREDIENTS_LIST:
                     if ingredient == i.name:
                         ingredients.append(i)
 
-            self.dishesList.append(Dish(name, foodType, cuisine, ingredients, self.evManager))
+            DISHES_LIST.append(Dish(name, foodType, cuisine, ingredients, self.evManager))
 
-        ev = GameStartedEvent(self.ingredientsList, self.dishesList)
+        ev = GameStartedEvent()
         self.evManager.Post(ev)
 
     def Notify(self, event):
@@ -167,7 +166,6 @@ class Inventory:
         for b in self.batches:
             if b is batch:
                 self.batches.remove(b)
-        print(self.batches)
 
     def Notify(self, event):
         if isinstance(event, BatchExpiredEvent):
@@ -214,11 +212,9 @@ class Batch:
                 self.evManager.Post(ev)
 
 
-
 def main():
     evManager = EventManager()
     game = Game(evManager)
-    menu = Menu(evManager)
     view = PygameView(evManager)
     control = Controller(evManager)
 

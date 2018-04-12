@@ -9,11 +9,8 @@ class QuitEvent:
 
 
 class GameStartedEvent:
-    def __init__(self, ingredientsList, dishesList):
+    def __init__(self):
         self.name = "Game Started Event"
-        # Reference attributes to View/Controller
-        self.ingredientsList = ingredientsList
-        self.dishesList = dishesList
 
 
 class NewDayEvent:
