@@ -11,7 +11,7 @@ class Game:
 
         self.player = Player(self.evManager)
 
-        self.date = Date(self.evManager)
+        self.dateManager = DateManager(self.evManager)
         self.customerManager = CustomerManager(self.evManager)
 
     def Start(self):
