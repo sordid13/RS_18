@@ -24,10 +24,13 @@ class Controller:
 
                 # Temporary Test Events
                 elif event.type == KEYDOWN and event.key == K_q:
-                    ev = BuyIngredientEvent(INGREDIENTS_LIST[0], 5, 100)
+                    ev = BuyIngredientEvent(INGREDIENTS_LIST[0], 5, 10)
+
+                elif event.type == KEYDOWN and event.key == K_a:
+                    ev = BuyIngredientEvent(INGREDIENTS_LIST[2], 2, 10)
 
                 elif event.type == KEYDOWN and event.key == K_w:
-                    ev = BuyIngredientEvent(INGREDIENTS_LIST[0], 4, 100)
+                    ev = AddDishEvent(DISHES_LIST[1])
 
                 elif event.type == KEYDOWN and event.key == K_e:
                     ev = NewDayEvent()
