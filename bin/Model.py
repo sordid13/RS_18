@@ -68,7 +68,7 @@ class Player:
         self.waiters = [Waiter(self.evManager)]
 
     def ProcessDay(self):
-        dishByDemand = [self.menu.dishes[0]] # For initialize purposes
+        dishByDemand = []
         customers = self.game.customerManager.CalculateCustomerSplit(self.impression)
         menuImpression = self.menu.ImpressionPoints
 
@@ -76,30 +76,34 @@ class Player:
 
         # Arrange dishes based on demand
         for dish in self.menu.dishes:
-            dish.demand = math.floor( (dish.ImpressionPoints / menuImpression) * customers )
-            for d in dishByDemand:
-                if dish.demand > d.demand and dish is not d:
-                    i = dishByDemand.index(d)
-                    dishByDemand = dishByDemand[:i] + [dish] + dishByDemand[i:]
+            demand = math.floor((dish.ImpressionPoints / menuImpression) * customers)
+            dishDict = dict(dish=dish, demand=demand, sales=0)
+            if len(dishByDemand) == 0:
+                dishByDemand.append(dishDict)
+            else:
+                for d in dishByDemand:
+                    if demand > d['demand'] and dish is not d['dish']:
+                        i = dishByDemand.index(d)
+                        dishByDemand = dishByDemand[:i] + [dishDict] + dishByDemand[i:]
 
         for dish in dishByDemand:
-            dishAmount = int(dish.demand)
+            dishAmount = dish['demand']
             print(dishAmount)
 
             # Calculate amount of dish can make based on ingredient availability
-            for ingredient in dish.ingredients:
+            for ingredient in dish['dish'].ingredients:
                 stock = self.inventory.IngredientStock(ingredient)
                 ingredientAmount = sum(stock)
                 print(str(ingredient.name) + str(ingredientAmount))
                 if ingredientAmount < dishAmount:
                     dishAmount = ingredientAmount
-                dish.sales = dishAmount
-            missingDemand = dish.demand - dishAmount
+                dish['sales'] = dishAmount
+            missingDemand = dish['demand'] - dishAmount
 
             # Calculate dish quality based on ingredients
             if dishAmount > 0:
                 quality = 0
-                for ingredient in dish.ingredients:
+                for ingredient in dish['dish'].ingredients:
                     stock = self.inventory.IngredientStock(ingredient)
                     ingredientAmount = dishAmount
                     ingredientQuality = 5
@@ -114,7 +118,7 @@ class Player:
                                 break
                         ingredientQuality -= 1
 
-                averageQuality = quality / (dish.numberIngredients * dishAmount)
+                averageQuality = quality / (dish['dish'].numberIngredients * dishAmount)
                 print(averageQuality)
                 self.inventory.UseIngredients(dish, dishAmount)
             else:
@@ -126,10 +130,10 @@ class Player:
                 split -= 1
 
             for d in dishByDemand:
-                if d is dish:
+                if d[dish] is dish:
                     continue
                 else:
-                    d.demand += math.floor(missingDemand / split)
+                    d['demand'] += math.floor(missingDemand / split)
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
@@ -211,11 +215,6 @@ class Dish:
         self.numberIngredients = len(self.ingredients)
 
         self.trendModifier = 1
-
-        # Only assigned and referenced in Player.ProcessDay() and DishManager
-        # Not to be referenced elsewhere (will break)
-        self.demand = 0
-        self.sales = 0
 
     @property
     def ImpressionPoints(self):
