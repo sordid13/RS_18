@@ -109,7 +109,7 @@ class DateTime(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.topRight = (WIDTH * 95 // 100, 0)
 
-class PygameView:
+class View:
     def __init__(self, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)

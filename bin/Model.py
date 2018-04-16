@@ -346,7 +346,7 @@ class Batch:
 def main():
     evManager = EventManager()
     game = Game(evManager)
-    view = PygameView(evManager)
+    view = View(evManager)
     control = Controller(evManager)
 
     control.Run()
