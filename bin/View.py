@@ -109,6 +109,7 @@ class DateTime(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.topright = (WIDTH * 95 // 100, 0)
 
+
 class View:
     def __init__(self, evManager):
         self.evManager = evManager
@@ -129,7 +130,6 @@ class View:
         self.customersTab = CustomersTab(self.allSprites)
         self.satisfactionTab = SatisfactionTab(self.allSprites)
         self.datetime = DateTime(self.allSprites)
-
 
     def Notify(self, event):
         if isinstance(event, TickEvent):
