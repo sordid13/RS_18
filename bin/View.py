@@ -25,7 +25,7 @@ class StaffTab(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.image.load(os.path.join(imgFolder, "StaffTab.png")).convert()  # 384 x 216
         self.rect = self.image.get_rect()
-        self.rect.bottomRight = (WIDTH * 26.5 // 100, HEIGHT)
+        self.rect.bottomright = (WIDTH * 26.5 // 100, HEIGHT)
 
     def update(self):
         pass
@@ -36,7 +36,7 @@ class MenuTab(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.image.load(os.path.join(imgFolder, "MenuTab.png")).convert()
         self.rect = self.image.get_rect()
-        self.rect.midBottom = (WIDTH * 45 // 100, HEIGHT)
+        self.rect.midbottom = (WIDTH * 45 // 100, HEIGHT)
 
     def update(self):
         pass
@@ -47,7 +47,7 @@ class InventoryTab(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.image.load(os.path.join(imgFolder, "InventoryTab.png")).convert()
         self.rect = self.image.get_rect()
-        self.rect.bottomLeft = (WIDTH * 63.5 // 100, HEIGHT)
+        self.rect.bottomleft = (WIDTH * 63.5 // 100, HEIGHT)
 
     def update(self):
         pass
@@ -58,7 +58,7 @@ class FinanceTab(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.image.load(os.path.join(imgFolder, "FinanceTab1.png")).convert()
         self.rect = self.image.get_rect()
-        self.rect.topLeft = (WIDTH * 10 // 100, 0)
+        self.rect.topleft = (WIDTH * 10 // 100, 0)
 
         self.text = "-1234567890"
         self.font = pygame.font.SysFont(fontName, fontSize)
@@ -75,7 +75,7 @@ class CustomersTab(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.image.load(os.path.join(imgFolder, "CustomerTab.png")).convert()
         self.rect = self.image.get_rect()
-        self.rect.midTop = (WIDTH * 40 // 100, 0)
+        self.rect.midtop = (WIDTH * 40 // 100, 0)
 
         self.text = "50"
         self.font = pygame.font.SysFont(fontName, fontSize)
@@ -92,7 +92,7 @@ class SatisfactionTab(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.image.load(os.path.join(imgFolder, "SatisfactionTab.png")).convert()
         self.rect = self.image.get_rect()
-        self.rect.topRight = (WIDTH * 70 // 100, 0)
+        self.rect.topright = (WIDTH * 70 // 100, 0)
 
         self.text = "Happy"
         self.font = pygame.font.SysFont(fontName, fontSize)
@@ -107,7 +107,7 @@ class DateTime(pygame.sprite.Sprite):
         self.image = pygame.Surface((WIDTH * 20 // 100, HEIGHT * 10 // 100))
         self.image.fill(BLACK)
         self.rect = self.image.get_rect()
-        self.rect.topRight = (WIDTH * 95 // 100, 0)
+        self.rect.topright = (WIDTH * 95 // 100, 0)
 
 class PygameView:
     def __init__(self, evManager):
