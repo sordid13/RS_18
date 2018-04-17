@@ -1,5 +1,6 @@
 from bin import *
 import math
+import random
 
 
 class CustomerManager:
@@ -12,10 +13,15 @@ class CustomerManager:
         self.totalImpression = 100
 
     def TotalCustomers(self):
-        # TODO: Implement BETTER system to generate number of customers for the day
+        # TODO: Implement BETTER system to generate number of customers incorporating random events
         customers = None
-        customers = self.prevCustomers * 1.005 # Temporary growth equation
-        self.prevCustomers = customers
+        r = random.randint(0, 1) # 50% chance
+        if not r:
+            customers = self.prevCustomers * 1.01 # Simple growth equation
+            self.prevCustomers = customers
+            print("yay")
+        else:
+            customers = self.prevCustomers
 
         self.totalCustomers = math.floor(customers)
 

@@ -6,7 +6,7 @@ cost = 10
 [Chicken Meat]
 name = Chicken Meat
 type = Poultry
-cost = 10
+cost = 8
 
 [Bread]
 name = Bread

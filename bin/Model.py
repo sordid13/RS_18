@@ -9,14 +9,16 @@ class Game:
         self.evManager.RegisterListener(self)
         self.state = STATE_PREPARING
 
+        self.LoadAssets()
+
         self.dateManager = DateManager(self.evManager)
         self.customerManager = CustomerManager(self.evManager)
+        self.dishManager = DishManager(self.evManager)
 
         self.players = [Player(self, self.evManager)]
 
     def Start(self):
         self.state = STATE_STARTED
-        self.LoadAssets()
 
     def LoadAssets(self):
         # Load list of ingredients
@@ -60,80 +62,32 @@ class Player:
         self.evManager.RegisterListener(self)
         self.game = game
 
-        self.impression = 20
+        self.customerManager = self.game.customerManager
+        self.dishManager = self.game.dishManager
+
+        self.impression = 80
 
         self.menu = Menu(self.evManager)
         self.inventory = Inventory(self.evManager)
-        self.chefs = [Chef(CUISINE_WESTERN, self.evManager)]
+        self.chefs = [Chef(0, CUISINE_WESTERN, self.evManager)]
         self.waiters = [Waiter(self.evManager)]
 
+    def ChefCuisines(self):
+        cuisines = []
+        for chef in self.chefs:
+            if chef.cuisine not in cuisines:
+                cuisines.append(chef.cuisine)
+        return cuisines
+
     def ProcessDay(self):
-        dishByDemand = []
-        customers = self.game.customerManager.CalculateCustomerSplit(self.impression)
-        menuImpression = self.menu.ImpressionPoints
-
-        # TODO: Transfer functions to DishManager
-
-        # Arrange dishes based on demand
-        for dish in self.menu.dishes:
-            demand = math.floor((dish.ImpressionPoints / menuImpression) * customers)
-            dishDict = dict(dish=dish, demand=demand, sales=0)
-            if len(dishByDemand) == 0:
-                dishByDemand.append(dishDict)
-            else:
-                for d in dishByDemand:
-                    if demand > d['demand'] and dish is not d['dish']:
-                        i = dishByDemand.index(d)
-                        dishByDemand = dishByDemand[:i] + [dishDict] + dishByDemand[i:]
-
-        for dish in dishByDemand:
-            dishAmount = dish['demand']
-            print(dishAmount)
-
-            # Calculate amount of dish can make based on ingredient availability
-            for ingredient in dish['dish'].ingredients:
-                stock = self.inventory.IngredientStock(ingredient)
-                ingredientAmount = sum(stock)
-                print(str(ingredient.name) + str(ingredientAmount))
-                if ingredientAmount < dishAmount:
-                    dishAmount = ingredientAmount
-                dish['sales'] = dishAmount
-            missingDemand = dish['demand'] - dishAmount
-
-            # Calculate dish quality based on ingredients
-            if dishAmount > 0:
-                quality = 0
-                for ingredient in dish['dish'].ingredients:
-                    stock = self.inventory.IngredientStock(ingredient)
-                    ingredientAmount = dishAmount
-                    ingredientQuality = 5
-                    for amount in stock:
-                        if amount > 0:
-                            amount -= ingredientAmount
-                            if amount < 0:
-                                ingredientAmount = - amount
-                                quality += (dishAmount - ingredientAmount) * ingredientQuality
-                            else:
-                                quality += ingredientAmount * ingredientQuality
-                                break
-                        ingredientQuality -= 1
-
-                averageQuality = quality / (dish['dish'].numberIngredients * dishAmount)
-                print(averageQuality)
-                self.inventory.UseIngredients(dish, dishAmount)
-            else:
-                dishByDemand.remove(dish)
-
-            # Transfer missing demand to other dishes
-            split = len(dishByDemand)
-            if dish in dishByDemand:
-                split -= 1
-
-            for d in dishByDemand:
-                if d[dish] is dish:
-                    continue
-                else:
-                    d['demand'] += math.floor(missingDemand / split)
+        customers = self.customerManager.CalculateCustomerSplit(self.impression)
+        dishesSold = None
+        if len(self.chefs) > 0:
+            dishesSold = self.dishManager.ProcessDishes(self, customers)
+        else:
+            dishesSold = 0
+            ev = NoChefEvent()
+            self.evManager.Post(ev)
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
@@ -168,8 +122,9 @@ class AI(Player):
 
 
 class Chef:
-    def __init__(self, cuisine, evManager):
+    def __init__(self, level, cuisine, evManager):
         self.evManager = evManager
+        self.level = level
         self.cuisine = cuisine
         # TODO: Possible features - chef experience
 
@@ -185,7 +140,7 @@ class Menu:
         self.evManager = evManager
         self.evManager.RegisterListener(self)
 
-        self.dishes = []
+        self.dishes = DISHES_LIST[:]
 
     def AddDish(self, dish):
         if dish not in self.dishes:
@@ -262,6 +217,7 @@ class Inventory:
         return stock
 
     def UseIngredients(self, dish, amount):
+        # amount must be non-zero
         # Debits ingredient stock based on precalculated amount of dishes (amount reflects how much able to make)
         for ingredient in dish.ingredients:
             useAmount = amount

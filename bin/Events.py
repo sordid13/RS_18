@@ -62,3 +62,7 @@ class HireChefEvent:
 class HireWaiterEvent:
     def __init__(self):
         self.name = "Hire Waiter Event"
+
+class NoChefEvent:
+    def __init__(self):
+        self.name = "No Chef Event"
