@@ -19,7 +19,6 @@ class CustomerManager:
         if not r:
             customers = self.prevCustomers * 1.01 # Simple growth equation
             self.prevCustomers = customers
-            print("yay")
         else:
             customers = self.prevCustomers
 

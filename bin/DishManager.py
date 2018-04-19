@@ -44,7 +44,6 @@ class DishManager:
             stockCopy = copy.deepcopy(stock)
 
             for d1 in checkDishes:
-                print(d1['dish'].name)
                 dish = None
                 for d2 in dishList:
                     if d1['dish'].name == d2['dish'].name:
@@ -91,7 +90,7 @@ class DishManager:
     def ProcessDishes(self, player, customers):
         dishList = self.DishesByDemand(player, customers)
         dishList = self.GetDishAvailable(dishList, player)
-        chefCuisines = player.ChefCuisines()
+        chefs = player.GetChefs()
 
         for dish in dishList:
             dishAmount = dish['sales']
@@ -117,9 +116,16 @@ class DishManager:
 
                 averageQuality = quality / (dish['dish'].numberIngredients * dishAmount)
                 averageQuality = averageQuality * 2 # Scale from 0 - 5 to 0 - 10
-                if dish['dish'].cuisine not in chefCuisines:
-                    averageQuality *= 0.8 # -20% quality
 
-                dish['quality'] = math.floor(averageQuality)
+                # Chef quality modifier
+                qualityModifier = 1
+                if dish['dish'].cuisine not in (c['cuisine'] for c in chefs):
+                    qualityModifier -= 0.2 # -20% quality
+                else:
+                    for chef in chefs:
+                        if dish['dish'].cuisine == chef['cuisine']:
+                            qualityModifier -= 0.1 * (3 - chef['level']) # 3 is max level
+
+                dish['quality'] = math.floor(averageQuality * qualityModifier)
 
         return dishList

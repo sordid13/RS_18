@@ -54,8 +54,9 @@ class BatchExpiredEvent:
 
 
 class HireChefEvent:
-    def __init__(self, cuisine):
+    def __init__(self, level, cuisine):
         self.name = "Hire Chef Event"
+        self.level = level
         self.cuisine = cuisine
 
 

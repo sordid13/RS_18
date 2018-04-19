@@ -9,6 +9,13 @@ class Game:
         self.evManager.RegisterListener(self)
         self.state = STATE_PREPARING
 
+        self.dateManager = None
+        self.customerManager = None
+        self.dishManager = None
+
+        self.players = None
+
+    def Start(self):
         self.LoadAssets()
 
         self.dateManager = DateManager(self.evManager)
@@ -17,8 +24,9 @@ class Game:
 
         self.players = [Player(self, self.evManager)]
 
-    def Start(self):
         self.state = STATE_STARTED
+        ev = GameStartedEvent()
+        self.evManager.Post(ev)
 
     def LoadAssets(self):
         # Load list of ingredients
@@ -47,9 +55,6 @@ class Game:
 
             DISHES_LIST.append(Dish(name, foodType, cuisine, ingredients, self.evManager))
 
-        ev = GameStartedEvent()
-        self.evManager.Post(ev)
-
     def Notify(self, event):
         if isinstance(event, TickEvent):
             if self.state is STATE_PREPARING:
@@ -69,15 +74,23 @@ class Player:
 
         self.menu = Menu(self.evManager)
         self.inventory = Inventory(self.evManager)
-        self.chefs = [Chef(0, CUISINE_WESTERN, self.evManager)]
+        self.chefs = [Chef(CUISINE_WESTERN, 0, self.evManager), Chef(CUISINE_WESTERN, 3, self.evManager),
+                      Chef(CUISINE_CHINESE, 0, self.evManager), Chef(CUISINE_CHINESE, 3, self.evManager),
+                      Chef(CUISINE_INDIAN, 0, self.evManager)]
         self.waiters = [Waiter(self.evManager)]
 
-    def ChefCuisines(self):
-        cuisines = []
+    def GetChefs(self):
+        # Returns highest level of each cuisine chef
+        chefs = []
         for chef in self.chefs:
-            if chef.cuisine not in cuisines:
-                cuisines.append(chef.cuisine)
-        return cuisines
+            if chef.cuisine not in (c['cuisine'] for c in chefs):
+                chefDict = dict(cuisine=chef.cuisine, level=chef.level)
+                chefs.append(chefDict)
+            else:
+                for c in chefs:
+                    if chef.cuisine == c['cuisine'] and chef.level > c['level']:
+                        c['level'] = chef.level
+        return chefs
 
     def ProcessDay(self):
         customers = self.customerManager.CalculateCustomerSplit(self.impression)
@@ -88,6 +101,8 @@ class Player:
             dishesSold = 0
             ev = NoChefEvent()
             self.evManager.Post(ev)
+
+        print(dishesSold)
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
@@ -105,7 +120,7 @@ class Player:
                 self.inventory.batches.append(newBatch)
 
         elif isinstance(event, HireChefEvent):
-            self.chefs.append(Chef(event.cuisine, self.evManager))
+            self.chefs.append(Chef(event.level, event.cuisine, self.evManager))
 
         elif isinstance(event, HireWaiterEvent):
             self.waiters.append(Waiter(self.evManager))
@@ -122,16 +137,18 @@ class AI(Player):
 
 
 class Chef:
-    def __init__(self, level, cuisine, evManager):
+    def __init__(self, cuisine, level, evManager):
         self.evManager = evManager
-        self.level = level
+        self.name = ""
         self.cuisine = cuisine
+        self.level = level
         # TODO: Possible features - chef experience
 
 
 class Waiter:
     def __init__(self, evManager):
         self.evManager = evManager
+        self.name = ""
         # TODO: Possible features - waiter experience
 
 
@@ -175,9 +192,6 @@ class Dish:
     def ImpressionPoints(self):
         points = DISH_POINTS * self.trendModifier
         return points
-
-    def SatisfactionPoints(self):
-        pass
 
 
 class Ingredient:
