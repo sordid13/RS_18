@@ -67,3 +67,8 @@ class HireWaiterEvent:
 class NoChefEvent:
     def __init__(self):
         self.name = "No Chef Event"
+
+class LeftClickEvent:
+    def __init__(self, pos):
+        self.name = "Left Click Event"
+        self.pos = pos

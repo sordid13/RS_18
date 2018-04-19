@@ -41,6 +41,10 @@ class Controller:
                 elif event.type == KEYDOWN and event.key == K_e:
                     ev = NewDayEvent()
 
+                elif event.type == MOUSEBUTTONDOWN and event.button == 1:
+                    pos = pygame.mouse.get_pos()
+                    ev = LeftClickEvent(pos)
+
                 if ev:
                     self.evManager.Post(ev)
 
