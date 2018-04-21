@@ -9,18 +9,14 @@ class Game:
         self.evManager.RegisterListener(self)
         self.state = STATE_PREPARING
 
-        self.dateManager = None
-        self.customerManager = None
-        self.dishManager = None
+        self.dateManager = DateManager(self.evManager)
+        self.customerManager = CustomerManager(self.evManager)
+        self.dishManager = DishManager(self.evManager)
 
         self.players = None
 
     def Start(self):
         self.LoadAssets()
-
-        self.dateManager = DateManager(self.evManager)
-        self.customerManager = CustomerManager(self.evManager)
-        self.dishManager = DishManager(self.evManager)
 
         self.players = [Player(self, self.evManager)]
 
@@ -36,6 +32,7 @@ class Game:
             name = str(config.get(section, "name"))
             type = str(config.get(section, "type"))
             baseCost = config.getint(section, "cost")
+            print(baseCost)
             INGREDIENTS_LIST.append(Ingredient(name, type, baseCost, self.evManager))
 
         # Load list of dishes
@@ -70,8 +67,10 @@ class Player:
         self.customerManager = self.game.customerManager
         self.dishManager = self.game.dishManager
 
-        self.impression = 80
+        # Changes daily
+        self.baseImpression = 80
 
+        self.restaurantLvl = 0
         self.menu = Menu(self.evManager)
         self.inventory = Inventory(self.evManager)
         self.chefs = [Chef(CUISINE_WESTERN, 0, self.evManager), Chef(CUISINE_WESTERN, 3, self.evManager),
@@ -80,7 +79,7 @@ class Player:
         self.waiters = [Waiter(self.evManager)]
 
     def GetChefs(self):
-        # Returns highest level of each cuisine chef
+        # Returns highest level of each cuisine chef in dictionary
         chefs = []
         for chef in self.chefs:
             if chef.cuisine not in (c['cuisine'] for c in chefs):
@@ -92,17 +91,49 @@ class Player:
                         c['level'] = chef.level
         return chefs
 
-    def ProcessDay(self):
-        customers = self.customerManager.CalculateCustomerSplit(self.impression)
-        dishesSold = None
-        if len(self.chefs) > 0:
-            dishesSold = self.dishManager.ProcessDishes(self, customers)
-        else:
-            dishesSold = 0
-            ev = NoChefEvent()
-            self.evManager.Post(ev)
+    def ImpressionPoints(self):
+        restaurantModifier = 0.05 * self.restaurantLvl
+        marketingModifier = 0 # TODO: Call function in marketing module
+        impression = math.floor(self.baseImpression * (1 + restaurantModifier + marketingModifier))
 
-        print(dishesSold)
+        return impression
+
+    def SatisfactionPoints(self, dishesServed, unfedCustomers):
+        # Calculate satisfaction based on base cost to sale price value
+        costModifier = self.restaurantLvl ** 1.7
+        totalSatisfaction = 0
+
+        # Calculate gross satisfaction
+        for dish in dishesServed:
+            qualityModifier = (dish['quality'] / 20) + 1  # Scale from 10 to 1.5, 1 to 1.05
+            cost = dish['dish'].baseCost ** qualityModifier
+            adjustedCost = cost + costModifier
+
+            satisfaction = math.floor((adjustedCost / dish['price']) * 100)
+            if satisfaction > 100:
+                satisfaction = 100
+
+            totalSatisfaction += satisfaction * dish['sales']
+
+            if dish['demand'] > dish['sales']:
+                missingDemand = dish['demand'] - dish['sales']
+                totalSatisfaction -= missingDemand * 20
+
+        totalSatisfaction -= unfedCustomers * 100
+
+        return totalSatisfaction
+
+    def ProcessDay(self):
+        impression = self.ImpressionPoints()
+
+        rawCustomers = self.customerManager.CalculateCustomerSplit(impression) # Number not finalised
+        dishesServed = self.dishManager.ProcessDishes(self, rawCustomers)
+        actualCustomers = self.dishManager.Customers(dishesServed)
+        unfedCustomers = self.dishManager.UnfedCustomers(dishesServed)
+
+        satisfaction = self.SatisfactionPoints(dishesServed, unfedCustomers)
+        self.baseImpression += satisfaction
+
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
@@ -157,23 +188,25 @@ class Menu:
         self.evManager = evManager
         self.evManager.RegisterListener(self)
 
-        self.dishes = DISHES_LIST[:]
+        # Dishes stored as dictionary of 'dish' and 'price'
+        self.dishes = []
 
-    def AddDish(self, dish):
-        if dish not in self.dishes:
-            self.dishes.append(dish)
+    def AddDish(self, dish, price):
+        dishDict = dict(dish=dish, price=price)
+        if dishDict not in self.dishes:
+            self.dishes.append(dishDict)
 
     @property
     def ImpressionPoints(self):
         points = 0
         for dish in self.dishes:
-            points += dish.ImpressionPoints
+            points += dish['dish'].ImpressionPoints
 
         return points
 
     def Notify(self, event):
         if isinstance(event, AddDishEvent):
-            self.AddDish(event.dish)
+            self.AddDish(event.dish, event.price)
 
 
 class Dish:
@@ -184,7 +217,13 @@ class Dish:
         self.foodType = foodType
         self.cuisine = cuisine
         self.ingredients = ingredients
+
         self.numberIngredients = len(self.ingredients)
+
+        self.baseCost = 0
+        for ingredient in self.ingredients:
+            self.baseCost += ingredient.baseCost
+        print(self.baseCost)
 
         self.trendModifier = 1
 
