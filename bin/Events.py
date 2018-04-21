@@ -34,9 +34,10 @@ class NewYearEvent:
 
 
 class AddDishEvent:
-    def __init__(self, dish):
+    def __init__(self, dish, price):
         self.name = "Add Dish Event"
         self.dish = dish
+        self.price = price
 
 
 class BuyIngredientEvent:
