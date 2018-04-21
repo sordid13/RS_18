@@ -6,11 +6,21 @@ class DishManager:
     def __init__(self, evManager):
         self.evManager = evManager
 
-    def CustomersFed(self, dishList):
+    def Customers(self, dishList):
+        # Returns actual number of customers in restaurant
         customers = 0
         for dish in dishList:
-            customers += dish['sales']
+            customers += dish['demand']
         return customers
+
+
+    def UnfedCustomers(self, dishList):
+        customers = 0
+        sales = 0
+        for dish in dishList:
+            customers += dish['demand']
+            sales += dish['sales']
+        return customers - sales
 
     def DishesByDemand(self, player, customers):
         dishList = []
@@ -19,7 +29,7 @@ class DishManager:
         # Arrange dishes based on demand
         for dish in player.menu.dishes:
             demand = math.floor((dish.ImpressionPoints / menuImpression) * customers)
-            dishDict = dict(dish=dish, demand=demand, sales=int(0), quality=0)
+            dishDict = dict(dish=dish['dish'], price=dish['price'], demand=demand, sales=int(0), quality=0)
             if len(dishList) == 0:
                 dishList.append(dishDict)
             else:
@@ -88,9 +98,15 @@ class DishManager:
         return dishList
 
     def ProcessDishes(self, player, customers):
+        chefs = player.GetChefs()
+        if len(chefs) == 0:
+            ev = NoChefEvent()
+            self.evManager.Post(ev)
+            return
+
         dishList = self.DishesByDemand(player, customers)
         dishList = self.GetDishAvailable(dishList, player)
-        chefs = player.GetChefs()
+
 
         for dish in dishList:
             dishAmount = dish['sales']
