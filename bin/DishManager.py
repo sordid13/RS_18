@@ -22,6 +22,12 @@ class DishManager:
             sales += dish['sales']
         return customers - sales
 
+    def SalesRevenue(self, dishList):
+        revenue = 0
+        for dish in dishList:
+            revenue += dish['price'] * dish['sales']
+        return revenue
+
     def DishesByDemand(self, player, customers):
         dishList = []
         menuImpression = player.menu.ImpressionPoints
