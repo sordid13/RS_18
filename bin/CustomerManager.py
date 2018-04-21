@@ -10,7 +10,13 @@ class CustomerManager:
 
         self.totalCustomers = None
         self.prevCustomers = STARTING_CUSTOMERS
-        self.totalImpression = Impression.total
+        self.totalImpression = 100
+
+    def TotalImpression(self, players):
+        impression = 0
+        for player in players:
+            impression = player.ImpressionPoints()
+        self.totalImpression = impression
 
     def TotalCustomers(self):
         # TODO: Implement BETTER system to generate number of customers incorporating random events

@@ -57,6 +57,9 @@ class Game:
             if self.state is STATE_PREPARING:
                 self.Start()
 
+        elif isinstance(event, NewDayEvent):
+            self.customerManager.TotalImpression(self.players)
+
 
 class Player:
     def __init__(self, game, evManager):
