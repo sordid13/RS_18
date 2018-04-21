@@ -141,8 +141,7 @@ class Player:
         self.baseImpression += satisfaction
 
         ev = SalesReportEvent
-
-
+        self.evManager.Post(ev)
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
