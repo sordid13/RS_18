@@ -74,6 +74,7 @@ class Player:
         self.baseImpression = 80
 
         self.restaurantLvl = 0
+        self.restaurantCapacity = 50
         self.menu = Menu(self.evManager)
         self.inventory = Inventory(self.evManager)
         self.chefs = [Chef(CUISINE_WESTERN, 0, self.evManager), Chef(CUISINE_WESTERN, 3, self.evManager),
@@ -126,23 +127,28 @@ class Player:
 
         return totalSatisfaction
 
-    def ProcessDay(self):
+    def ProcessSales(self):
         impression = self.ImpressionPoints()
 
         rawCustomers = self.customerManager.CalculateCustomerSplit(impression) # Number not finalised
         dishesServed = self.dishManager.ProcessDishes(self, rawCustomers)
+
         actualCustomers = self.dishManager.Customers(dishesServed)
         unfedCustomers = self.dishManager.UnfedCustomers(dishesServed)
+        salesRevenue = self.dishManager.SalesRevenue(dishesServed)
 
         satisfaction = self.SatisfactionPoints(dishesServed, unfedCustomers)
         self.baseImpression += satisfaction
 
+        ev = SalesReportEvent
+
+
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
-            self.ProcessDay()
+            self.ProcessSales()
 
-        elif isinstance(event, BuyIngredientEvent):
+        elif isinstance(event, AddIngredientToCartEvent):
             new = True
             for batch in self.inventory.batches:
                 if batch.age == 0:
@@ -300,7 +306,10 @@ class Inventory:
                 self.batches.remove(b)
 
     def Notify(self, event):
-        if isinstance(event, BatchExpiredEvent):
+        if isinstance(event, BuyIngredientsEvent):
+            self.batches.append(event.batch)
+
+        elif isinstance(event, BatchExpiredEvent):
             self.RemoveBatch(event.batch)
 
 
@@ -346,6 +355,9 @@ class Batch:
                     for i in self.batch:
                         if i is ing:
                             self.batch.remove(ing)
+
+    def Clear(self):
+        self.batch = []
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
