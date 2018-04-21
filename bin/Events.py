@@ -30,7 +30,16 @@ class NewMonthEvent:
 
 class NewYearEvent:
     def __init__(self):
-        self.name = "New year Event"
+        self.name = "New Year Event"
+
+
+class SalesReportEvent:
+    def __init__(self, customers, unfedCustomers, revenue, satisfaction):
+        self.name = "Sales Report Event"
+        self.customers = customers
+        self.unfedCustomers = unfedCustomers
+        self.revenue = revenue
+        self.satisfaction = satisfaction
 
 
 class AddDishEvent:
@@ -40,12 +49,18 @@ class AddDishEvent:
         self.price = price
 
 
-class BuyIngredientEvent:
+class AddIngredientToCartEvent:
     def __init__(self, ingredient, quality, amount):
-        self.name = "Buy Ingredient Event"
+        self.name = "Add Ingredient To Cart Event"
         self.ingredient = ingredient
         self.quality = quality
         self.amount = amount
+
+
+class BuyIngredientsEvent:
+    def __init__(self, batch):
+        self.name = "Buy Ingredients Event"
+        self.batch = batch
 
 
 class BatchExpiredEvent:
