@@ -32,7 +32,6 @@ class Game:
             name = str(config.get(section, "name"))
             type = str(config.get(section, "type"))
             baseCost = config.getint(section, "cost")
-            print(baseCost)
             INGREDIENTS_LIST.append(Ingredient(name, type, baseCost, self.evManager))
 
         # Load list of dishes
@@ -40,15 +39,19 @@ class Game:
         config.read("data/dishes.rs")
         for section in config.sections():
             name = str(config.get(section, "name"))
-            foodType = str(config.get(section, "foodType"))
+            foodType = str(config.get(section, "type"))
             cuisine = str(config.get(section, "cuisine"))
             rawIngre = str(config.get(section, "ingredients")).strip()
 
             ingredients = []
-            for ingredient in rawIngre.split(', '):
+            split = rawIngre.split(', ')
+            for ingredient in split:
                 for i in INGREDIENTS_LIST:
                     if ingredient == i.name:
                         ingredients.append(i)
+                        break
+            if len(split) > len(ingredients):
+                print("No Ingredient Error")
 
             DISHES_LIST.append(Dish(name, foodType, cuisine, ingredients, self.evManager))
 
@@ -73,6 +76,7 @@ class Player:
         # Changes daily
         self.baseImpression = 80
 
+        self.cash = 1000
         self.restaurantLvl = 0
         self.restaurantCapacity = 50
         self.menu = Menu(self.evManager)
@@ -231,7 +235,6 @@ class Dish:
         self.baseCost = 0
         for ingredient in self.ingredients:
             self.baseCost += ingredient.baseCost
-        print(self.baseCost)
 
         self.trendModifier = 1
 
