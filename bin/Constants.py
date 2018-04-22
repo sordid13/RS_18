@@ -7,6 +7,10 @@ STATE_STARTED = "Game Started"
 DISHES_LIST = []
 INGREDIENTS_LIST = []
 
+# Game defaults
+DEFAULT_MENU = []
+DEFAULT_INVENTORY = []
+
 # Dishes related
 DISH_POINTS = 10
 
