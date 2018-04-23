@@ -142,11 +142,11 @@ class DishManager:
                 # Chef quality modifier
                 qualityModifier = 1
                 if dish['dish'].cuisine not in (c['cuisine'] for c in chefs):
-                    qualityModifier -= 0.2 # -20% quality
+                    qualityModifier -= 0.25 # -20% quality
                 else:
                     for chef in chefs:
                         if dish['dish'].cuisine == chef['cuisine']:
-                            qualityModifier -= 0.1 * (3 - chef['level']) # 3 is max level
+                            qualityModifier -= 0.05 * (5 - chef['level']) # 5 is max level
 
                 dish['quality'] = math.floor(averageQuality * qualityModifier)
 
