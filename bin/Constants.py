@@ -4,8 +4,13 @@ STATE_PAUSED = "Game Paused"
 STATE_STARTED = "Game Started"
 
 # List of dishes & ingredients exist in game
-DISHES_LIST = []
 INGREDIENTS_LIST = []
+DISHES_LIST = []
+WESTERN_DISHES = []
+CHINESE_DISHES = []
+JAPANESE_DISHES = []
+KOREAN_DISHES = []
+INDIAN_DISHES = []
 
 # Game defaults
 DEFAULT_MENU = []

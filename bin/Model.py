@@ -53,7 +53,18 @@ class Game:
             if len(split) > len(ingredients):
                 print("No Ingredient Error")
 
-            DISHES_LIST.append(Dish(name, foodType, cuisine, ingredients, self.evManager))
+            dish = Dish(name, foodType, cuisine, ingredients, self.evManager)
+            DISHES_LIST.append(dish)
+            if cuisine == "Western":
+                WESTERN_DISHES.append(dish)
+            elif cuisine == "Chinese":
+                CHINESE_DISHES.append(dish)
+            elif cuisine == "Japanese":
+                JAPANESE_DISHES.append(dish)
+            elif cuisine == "Korean":
+                KOREAN_DISHES.append(dish)
+            elif cuisine == "Indian":
+                INDIAN_DISHES.append(dish)
 
     def Notify(self, event):
         if isinstance(event, TickEvent):
@@ -108,9 +119,9 @@ class Player:
     def ImpressionPoints(self):
         restaurantModifier = 0.05 * self.restaurantLvl
         marketingModifier = 0 # TODO: Call function in marketing module
-        impression = math.floor(self.baseImpression * (1 + restaurantModifier + marketingModifier))
+        impression = self.baseImpression * (1 + restaurantModifier + marketingModifier)
 
-        return impression
+        return math.floor(impression)
 
     def SatisfactionPoints(self, dishesServed, customers, unfedCustomers):
         # Calculate satisfaction based on base cost to sale price value
@@ -143,7 +154,7 @@ class Player:
         x = self.WaitersExperience()
         totalSatisfaction *= 0.95 + 0.5 * (x ** x)
 
-        return totalSatisfaction
+        return math.floor(totalSatisfaction)
 
     def ProcessSales(self):
         impression = self.ImpressionPoints()
