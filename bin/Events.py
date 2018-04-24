@@ -49,7 +49,7 @@ class AddDishEvent:
         self.price = price
 
 
-class AddIngredientToCartEvent:
+class AddToCartEvent:
     def __init__(self, ingredient, quality, amount):
         self.name = "Add Ingredient To Cart Event"
         self.ingredient = ingredient
@@ -57,10 +57,23 @@ class AddIngredientToCartEvent:
         self.amount = amount
 
 
+class RemoveFromCartEvent:
+    def __init__(self, ingredient):
+        self.name = "Remove Ingredient From Cart Event"
+        self.ingredient = ingredient
+
+
+class CartUpdateEvent:
+    def __init__(self, cart, price):
+        self.name = "Cart Update Event"
+        self.cart = cart
+        self.price = price
+
+
 class BuyIngredientsEvent:
-    def __init__(self, batch):
+    def __init__(self, cart):
         self.name = "Buy Ingredients Event"
-        self.batch = batch
+        self.cart = cart
 
 
 class BatchExpiredEvent:

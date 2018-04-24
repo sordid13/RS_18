@@ -53,7 +53,18 @@ class Game:
             if len(split) > len(ingredients):
                 print("No Ingredient Error")
 
-            DISHES_LIST.append(Dish(name, foodType, cuisine, ingredients, self.evManager))
+            dish = Dish(name, foodType, cuisine, ingredients, self.evManager)
+            DISHES_LIST.append(dish)
+            if cuisine == "Western":
+                WESTERN_DISHES.append(dish)
+            elif cuisine == "Chinese":
+                CHINESE_DISHES.append(dish)
+            elif cuisine == "Japanese":
+                JAPANESE_DISHES.append(dish)
+            elif cuisine == "Korean":
+                KOREAN_DISHES.append(dish)
+            elif cuisine == "Indian":
+                INDIAN_DISHES.append(dish)
 
     def Notify(self, event):
         if isinstance(event, TickEvent):
@@ -84,7 +95,7 @@ class Player:
         self.chefs = [Chef(CUISINE_WESTERN, 0, self.evManager), Chef(CUISINE_WESTERN, 3, self.evManager),
                       Chef(CUISINE_CHINESE, 0, self.evManager), Chef(CUISINE_CHINESE, 3, self.evManager),
                       Chef(CUISINE_INDIAN, 0, self.evManager)]
-        self.waiters = [Waiter(self.evManager)]
+        self.waiters = [Waiter(0, self.evManager)]
 
     def GetChefs(self):
         # Returns highest level of each cuisine chef in dictionary
@@ -99,14 +110,20 @@ class Player:
                         c['level'] = chef.level
         return chefs
 
+    def WaitersExperience(self):
+        experience = 0
+        for waiter in self.waiters:
+            experience += waiter.level
+        return experience / len(self.waiters)
+
     def ImpressionPoints(self):
         restaurantModifier = 0.05 * self.restaurantLvl
         marketingModifier = 0 # TODO: Call function in marketing module
-        impression = math.floor(self.baseImpression * (1 + restaurantModifier + marketingModifier))
+        impression = self.baseImpression * (1 + restaurantModifier + marketingModifier)
 
-        return impression
+        return math.floor(impression)
 
-    def SatisfactionPoints(self, dishesServed, unfedCustomers):
+    def SatisfactionPoints(self, dishesServed, customers, unfedCustomers):
         # Calculate satisfaction based on base cost to sale price value
         costModifier = self.restaurantLvl ** 1.7
         totalSatisfaction = 0
@@ -117,7 +134,7 @@ class Player:
             cost = dish['dish'].baseCost ** qualityModifier
             adjustedCost = cost + costModifier
 
-            satisfaction = math.floor((adjustedCost / dish['price']) * 100)
+            satisfaction = (adjustedCost / dish['price']) * 100
             if satisfaction > 100:
                 satisfaction = 100
 
@@ -125,11 +142,19 @@ class Player:
 
             if dish['demand'] > dish['sales']:
                 missingDemand = dish['demand'] - dish['sales']
-                totalSatisfaction -= missingDemand * 20
+                totalSatisfaction -= missingDemand * 40
 
-        totalSatisfaction -= unfedCustomers * 100
+        totalSatisfaction -= unfedCustomers * 200
 
-        return totalSatisfaction
+        # Customer service modifiers
+        insufficientStaffToCustomers = customers - (len(self.waiters) * 50)
+        if insufficientStaffToCustomers > 0:
+            totalSatisfaction -= insufficientStaffToCustomers ** 2
+
+        x = self.WaitersExperience()
+        totalSatisfaction *= 0.95 + 0.5 * (x ** x)
+
+        return math.floor(totalSatisfaction)
 
     def ProcessSales(self):
         impression = self.ImpressionPoints()
@@ -141,7 +166,7 @@ class Player:
         unfedCustomers = self.dishManager.UnfedCustomers(dishesServed)
         salesRevenue = self.dishManager.SalesRevenue(dishesServed)
 
-        satisfaction = self.SatisfactionPoints(dishesServed, unfedCustomers)
+        satisfaction = self.SatisfactionPoints(dishesServed, actualCustomers, unfedCustomers)
         self.baseImpression += satisfaction
 
         ev = SalesReportEvent
@@ -151,15 +176,16 @@ class Player:
         if isinstance(event, NewDayEvent):
             self.ProcessSales()
 
-        elif isinstance(event, AddIngredientToCartEvent):
+        elif isinstance(event, BuyIngredientsEvent):
             new = True
             for batch in self.inventory.batches:
+                # Loop and check for same-day batch
                 if batch.age == 0:
-                    batch.AddIngredients(event.ingredient, event.quality, event.amount)
+                    batch.AddIngredients(event.cart)
                     new = False
             if new:
                 newBatch = Batch(self.evManager)
-                newBatch.AddIngredients(event.ingredient, event.quality, event.amount)
+                newBatch.AddIngredients(event.cart)
                 self.inventory.batches.append(newBatch)
 
         elif isinstance(event, HireChefEvent):
@@ -189,9 +215,10 @@ class Chef:
 
 
 class Waiter:
-    def __init__(self, evManager):
+    def __init__(self, level, evManager):
         self.evManager = evManager
         self.name = ""
+        self.level = level
         # TODO: Possible features - waiter experience
 
 
@@ -255,14 +282,9 @@ class Ingredient:
         self.quality = None
         self.amount = None
 
-        # Only assigned and referenced in Player.ProcessDay()
-        # Not to be referenced elsewhere (will break)
-        self.demand = 0
-
-    @property
     def Price(self, quality):
-        # TODO: Price-quality algo
-        return
+        price = math.floor(self.baseCost ** (1 + quality/10))
+        return price
 
 
 class Inventory:
@@ -308,10 +330,7 @@ class Inventory:
                 self.batches.remove(b)
 
     def Notify(self, event):
-        if isinstance(event, BuyIngredientsEvent):
-            self.batches.append(event.batch)
-
-        elif isinstance(event, BatchExpiredEvent):
+        if isinstance(event, BatchExpiredEvent):
             self.RemoveBatch(event.batch)
 
 
@@ -334,18 +353,15 @@ class Batch:
         stock.reverse()
         return stock
 
-    def AddIngredients(self, ingredient, quality, amount):
+    def AddIngredients(self, list):
         new = True
-        for i in self.batch:
-            if i.name == ingredient.name and i.quality == quality:
-                i.amount += amount
-                new = False
-        if new:
-            ing = copy.copy(ingredient)
-            ing.quality = quality
-            ing.amount = amount
-
-            self.batch.append(ing)
+        for ingredient in list:
+            for i in self.batch:
+                if i.name == ingredient.name and i.quality == ingredient.quality:
+                    i.amount += ingredient.amount
+                    new = False
+            if new:
+                self.batch.append(ingredient)
 
     def RemoveIngredients(self, ingredient, quality, amount):
         for ing in self.batch:
@@ -367,6 +383,51 @@ class Batch:
             if self.age > 6:
                 ev = BatchExpiredEvent(self)
                 self.evManager.Post(ev)
+
+
+class Cart:
+    def __init__(self, evManager):
+        self.evManager = evManager
+        self.evManager.RegisterListener(self)
+
+        self.cart = []
+        self.totalPrice = 0
+
+    def AddToCart(self, ingredient, quality, amount):
+        new = True
+        for i in self.cart:
+            if i.name == ingredient.name and i.quality == ingredient.quality:
+                i.amount += amount
+                new = False
+
+        if new:
+            newIng = ingredient
+            newIng.quality = ingredient.quality
+            newIng.amount = ingredient.amount
+            self.cart.append(newIng)
+
+        self.totalPrice += ingredient.Price(quality) * amount
+
+        # Tell View to update cart list
+        ev = CartUpdateEvent(self.cart, self.totalPrice)
+        self.evManager.Post(ev)
+
+    def RemoveFromCart(self, ingredient):
+        for i in self.cart:
+            if i.name == ingredient.name and i.quality == ingredient.quality:
+                self.cart.remove(i)
+
+        self.totalPrice -= ingredient.Price(ingredient.quality) * ingredient.amount
+
+        ev = CartUpdateEvent(self.cart, self.totalPrice)
+        self.evManager.Post(ev)
+
+    def Notify(self, event):
+        if isinstance(event, AddToCartEvent):
+            self.AddToCart(event.ingredient, event.quality, event.amount)
+
+        elif isinstance(event, RemoveFromCartEvent):
+            self.RemoveFromCart(event.ingredient)
 
 
 def main():
