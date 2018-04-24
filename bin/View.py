@@ -18,8 +18,6 @@ BLUE = (0, 0, 255)
 YELLOW = (250, 250, 0)
 PURPLE = (128, 0, 128)
 
-cuisineType = ["Western", "Chinese", "Japanese", "Korean", "Indian"]
-
 
 
 fontName = 'Comic Sans MS'
@@ -76,7 +74,9 @@ class MainWindow(pygame.sprite.Sprite):
         pass
 
 class OpenWindowButton(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, color, group=None, windowGroup=None, windowName=None):
+    def __init__(self, x, y, w, h, color, evManager, group=None, windowGroup=None, windowName=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.x = x
         self.y = y
@@ -93,7 +93,7 @@ class OpenWindowButton(pygame.sprite.Sprite):
 
     def Clicked(self):
         self.windowGroup.empty()
-        self.windowName(self.windowGroup)
+        self.windowName(self.evManager, self.windowGroup)
 
 #When instantiated, it will have group value from FinanceWindow, where it instantiate.
 class CloseButton(pygame.sprite.Sprite):
@@ -109,7 +109,9 @@ class CloseButton(pygame.sprite.Sprite):
         self.group.empty() #The button will empty/remove all sprite in its group which is "windowGroup".
 
 class FinanceTab(pygame.sprite.Sprite):
-    def __init__(self, group=None, windowGroup=None):
+    def __init__(self, evManager, group=None, windowGroup=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((230,50))
         self.image.fill(GREEN)
@@ -124,12 +126,15 @@ class FinanceTab(pygame.sprite.Sprite):
 
 # When instantiated, it will have group value from FinanceTab, where it instantiate.
 class FinanceWindow():
-    def __init__(self, group=None):
+    def __init__(self, evManager, group=None):
+        self.evManager = evManager
         self.window = MainWindow(group, GREEN)
 
 
 class CustomersTab(pygame.sprite.Sprite):
-    def __init__(self, group=None, windowGroup=None):
+    def __init__(self, evManager, group=None, windowGroup=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((230, 50))
         self.image.fill(BLUE)
@@ -147,7 +152,9 @@ class CustomersWindow():
         self.window = MainWindow(group, BLUE)
 
 class SatisfactionTab(pygame.sprite.Sprite):
-    def __init__(self, group=None, windowGroup=None):
+    def __init__(self, evManager, group=None, windowGroup=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((230, 50))
         self.image.fill(YELLOW)
@@ -161,11 +168,15 @@ class SatisfactionTab(pygame.sprite.Sprite):
         SatisfactionWindow(self.windowGroup)
 
 class SatisfactionWindow():
-    def __init__(self, group=None):
+    def __init__(self, evManager, group=None):
+        self.evManager = evManager
+
         self.window = MainWindow(group, YELLOW)
 
 class DateTime(pygame.sprite.Sprite):
-    def __init__(self, group=None):
+    def __init__(self, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((230, 50))
         self.image.fill(RED)
@@ -177,7 +188,9 @@ class DateTime(pygame.sprite.Sprite):
 
 
 class StaffTab(pygame.sprite.Sprite):
-    def __init__(self, group=None, windowGroup=None):
+    def __init__(self, evManager, group=None, windowGroup=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((270,50))
         self.image.fill(YELLOW)
@@ -193,11 +206,15 @@ class StaffTab(pygame.sprite.Sprite):
         StaffWindow(self.windowGroup)
 
 class StaffWindow():
-    def __init__(self, group=None):
+    def __init__(self, evManager, group=None):
+        self.evManager = evManager
+
         self.window = MainWindow(group, BLUE)
 
 class MenuTab(pygame.sprite.Sprite):
-    def __init__(self, group=None):
+    def __init__(self, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((500, 200))
         self.image.fill(BLUE)
@@ -209,7 +226,9 @@ class MenuTab(pygame.sprite.Sprite):
 
 
 class InventoryTab(pygame.sprite.Sprite):
-    def __init__(self, group=None):
+    def __init__(self, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((500, 200))
         self.image.fill(GREEN)
@@ -220,7 +239,9 @@ class InventoryTab(pygame.sprite.Sprite):
         pass
 
 class MidTab(pygame.sprite.Sprite):
-    def __init__(self, group=None, clickUI=None, windowGroup=None, windowsGUI=None):
+    def __init__(self, evManager, group=None, clickUI=None, windowGroup=None, windowsGUI=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((70, 200))
         self.image.fill(RED)
@@ -231,52 +252,57 @@ class MidTab(pygame.sprite.Sprite):
         self.windowGroup = windowGroup
         self.windowsGUI = windowsGUI
 
-        self.addDishButton = AddDishButton(self.clickUI, self.windowGroup)
-        self.marketButton = MarketButton(self.clickUI, self.windowGroup)
+        self.addDishButton = AddDishButton(self.evManager, self.clickUI, self.windowGroup)
+        self.marketButton = MarketButton(self.evManager, self.clickUI, self.windowGroup)
 
 class AddDishButton():
-    def __init__(self, group=None, windowGroup=None):
+    def __init__(self, evManager, group=None, windowGroup=None):
+        self.evManager = evManager
+
         self.x = WIDTH * 50/100
         self.y = HEIGHT * 80/100
         self.windowName = AddDishWindow
         self.windowGroup = windowGroup
-        self.button = OpenWindowButton(self.x, self.y, 40, 40, BLUE, group, self.windowGroup, self.windowName)
+        self.button = OpenWindowButton(self.x, self.y, 40, 40, BLUE, self.evManager, group, self.windowGroup, self.windowName)
 
 
 
 class MarketButton():
-    def __init__(self, group=None, windowGroup=None):
+    def __init__(self, evManager, group=None, windowGroup=None):
+        self.evManager = evManager
+
         self.x = WIDTH * 50/100
         self.y = HEIGHT * 90/100
         self.windowName = MarketWindow
         self.windowGroup = windowGroup
-        self.button = OpenWindowButton(self.x, self.y, 40, 40, GREEN, group, self.windowGroup, self.windowName)
+        self.button = OpenWindowButton(self.x, self.y, 40, 40, GREEN, self.evManager, group, self.windowGroup, self.windowName)
 
 
-class AddDishWindow():
-    def __init__(self, group=None):
+# --------------------------------------------------------------------------------------------------------------
+
+class AddDishWindow:
+    def __init__(self, evManager, group=None):
+        self.evManager = evManager
+
         self.group = group
         self.window = MainWindow(group, BLUE)
         self.tab = range(5)
 
         self.cuisine = "Western"
         self.page = 0
-        self.maxPage = math.ceil(len(DISHES_LIST) / 12) - 1
+        self.maxPage = math.ceil(len(WESTERN_DISHES) / 12) - 1
 
         ArrowUp(WIDTH * 78 / 100, HEIGHT * 30 / 100, self, group)
         ArrowDown(WIDTH * 78 / 100, HEIGHT * 38 / 100, self, group)
 
-        self.dishScreen = DishScreen(self.page, self.cuisine, self, group)
+        self.dishScreen = DishScreen(self.page, self.cuisine, self, self.evManager, group)
 
         x = WIDTH * 25 / 100
         y = HEIGHT * 17 / 100
-        c = 0
 
-        for cuisine in cuisineType:
-            self.cuisine = cuisineType[c]
-            CuisineTab(x, y, self.cuisine, self, group)
+        for cuisine in CUISINES_LIST:
+            CuisineTab(x, y, cuisine, self, self.evManager, group)
             y += 50
-            c += 1
 
     def Update(self):
         self.dishScreen.kill()
@@ -286,13 +312,15 @@ class AddDishWindow():
 
         self.dishScreen.dishContainers = []
         self.dishScreen = None
-        self.dishScreen = DishScreen(self.page, self.cuisine, self, self.group)
+        self.dishScreen = DishScreen(self.page, self.cuisine, self, self.evManager, self.group)
 
 
 
 
 class CuisineTab(pygame.sprite.Sprite):
-    def __init__(self, x, y, cuisine, window, group=None):
+    def __init__(self, x, y, cuisine, window, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.cuisine = cuisine
         self.window = window
@@ -311,7 +339,9 @@ class CuisineTab(pygame.sprite.Sprite):
 
 
 class DishScreen(pygame.sprite.Sprite):
-    def __init__(self, page, cuisine, window, group=None):
+    def __init__(self, page, cuisine, window, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.group = group
         self.image = pygame.Surface((570, 350))
@@ -320,6 +350,17 @@ class DishScreen(pygame.sprite.Sprite):
         self.rect.center = (WIDTH * 53 / 100, HEIGHT * 36 / 100)
 
         self.cuisine = cuisine
+        if self.cuisine == "Western":
+            self.dishList = WESTERN_DISHES
+        elif self.cuisine == "Chinese":
+            self.dishList = CHINESE_DISHES
+        elif self.cuisine == "Japanese":
+            self.dishList = JAPANESE_DISHES
+        elif self.cuisine == "Korean":
+            self.dishList = KOREAN_DISHES
+        elif self.cuisine == "Indian":
+            self.dishList = INDIAN_DISHES
+
         self.dishContainers = []
 
         self.window = window
@@ -330,9 +371,10 @@ class DishScreen(pygame.sprite.Sprite):
         baseIndex = self.page * 12
         for i in range(12):
             try:
-                dish = DISHES_LIST[i + baseIndex]
+                dish = self.dishList[i + baseIndex]
                 if self.cuisine == dish.cuisine:
-                    self.dishContainers.append(DishContainer(x, y, dish, self.cuisine, self.window, group))
+                    self.dishContainers.append(DishContainer(x, y, dish, self.cuisine, self.window, self.evManager,
+                                                             group))
                     y += 55
                     if i == 5:
                         x += 280
@@ -344,7 +386,9 @@ class DishScreen(pygame.sprite.Sprite):
 
 
 class DishContainer(pygame.sprite.Sprite):
-    def __init__(self, x, y, dish, cuisine, window, group=None):
+    def __init__(self, x, y, dish, cuisine, window, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.x = x
         self.y = y
@@ -377,9 +421,12 @@ class DishSprite(pygame.sprite.Sprite):
     def Clicked(self):
         return
 
+# --------------------------------------------------------------------------------------------------------------
 
 class MarketWindow():
-    def __init__(self, group=None):
+    def __init__(self, evManager, group=None):
+        self.evManager = evManager
+
         self.group = group
         self.window = MainWindow(group, GREEN)
         self.tab = range(6)
@@ -393,15 +440,15 @@ class MarketWindow():
         self.maxPage = math.ceil(len(INGREDIENTS_LIST) / 10) - 1
 
     #Instantiate Sprite in the window.
-        self.ingredientScreen = IngredientScreen(self.page, self, group)
+        self.ingredientScreen = IngredientScreen(self.page, self, self.evManager, group)
         ArrowUp(WIDTH * 75/100, HEIGHT * 30/100, self, group)
         ArrowDown(WIDTH * 75/100, HEIGHT * 38/100, self, group)
-        MarketCart(group)
+        MarketCart(self.evManager, group)
 
         for tab in self.tab:
             imageName = str(qualityNumber) + "quality.png"
             image = pygame.image.load(os.path.join(imgFolder, imageName)).convert()
-            QualityTab(x, y, image, qualityNumber, self, group)
+            QualityTab(x, y, image, qualityNumber, self, self.evManager, group)
             x += 110
             qualityNumber += 1
 
@@ -417,11 +464,13 @@ class MarketWindow():
 
         self.ingredientScreen.ingredientContainers = []
         self.ingredientScreen = None
-        self.ingredientScreen = IngredientScreen(self.page, self, self.group)
+        self.ingredientScreen = IngredientScreen(self.page, self, self.evManager, self.group)
 
 
 class QualityTab(pygame.sprite.Sprite):
-    def __init__(self, x, y, image, quality, window, group=None):
+    def __init__(self, x, y, image, quality, window, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite. __init__(self, group)
         self.parent = window
         self.group = group
@@ -438,7 +487,9 @@ class QualityTab(pygame.sprite.Sprite):
 
 
 class IngredientScreen(pygame.sprite.Sprite):
-    def __init__(self, page, window, group=None):
+    def __init__(self, page, window, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.imageName = "Container.png"
         self.image = pygame.image.load(os.path.join(imgFolder, self.imageName)).convert()
@@ -456,7 +507,8 @@ class IngredientScreen(pygame.sprite.Sprite):
         for i in range(10):
             try:
                 ingredient = INGREDIENTS_LIST[i + baseIndex]
-                self.ingredientContainers.append(IngredientContainer(x, y, ingredient, self.window, group))
+                self.ingredientContainers.append(IngredientContainer(x, y, ingredient, self.window, self.evManager,
+                                                                     group))
                 y += 55
                 if i == 4:
                     x += 315
@@ -469,7 +521,9 @@ class IngredientScreen(pygame.sprite.Sprite):
 
 
 class IngredientContainer(pygame.sprite.Sprite):
-    def __init__(self, x, y, ingredient, window, group=None):
+    def __init__(self, x, y, ingredient, window, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.ingredient = ingredient
         self.x = x
@@ -486,13 +540,13 @@ class IngredientContainer(pygame.sprite.Sprite):
         self.ingredientQuality = Numbers(self, "quality", self.x - 85, self.y + 5 , group)
 
         self.contents.append(Text(self.ingredient.name, self.x - 100, self.y - 20, group))
-        self.contents.append(IngredientSprite(self.x - 120, self.y, ingredient, group))
+        self.contents.append(IngredientSprite(self.x - 120, self.y, ingredient, self.evManager, group))
 
         self.contents.append(self.ingredientQuantity)
         self.contents.append(self.ingredientQuality)
         self.contents.append(ArrowLeft(self.x + 85, self.y - 10,  self, group))
         self.contents.append(ArrowRight(self.x + 135, self.y - 10,  self, group))
-        self.contents.append(AddToCart(self.x + 110, self.y + 10, self, group))
+        self.contents.append(AddToCart(self.x + 110, self.y + 10, self, self.evManager, group))
 
     def Update(self):
         self.quality = self.window.quality
@@ -510,7 +564,9 @@ class IngredientContainer(pygame.sprite.Sprite):
         return
 
 class IngredientSprite(pygame.sprite.Sprite):
-    def __init__(self, x, y, ingredient, group=None):
+    def __init__(self, x, y, ingredient, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.ingredient = ingredient
         self.x = x
@@ -527,7 +583,9 @@ class IngredientSprite(pygame.sprite.Sprite):
 
 
 class AddToCart(pygame.sprite.Sprite):
-    def __init__(self, x, y, container, group=None):
+    def __init__(self, x, y, container, evManager, group=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.x = x
         self.y = y
@@ -538,15 +596,44 @@ class AddToCart(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
+    def Clicked(self):
+        if self.container.quantity > 0:
+            ev = AddToCartEvent(self.container.ingredient, self.container.quality, self.container.quantity)
+            print(self.container.quality)
+            self.evManager.Post(ev)
+
+            self.container.quantity = 0
+            self.container.Update()
+
 
 class MarketCart(pygame.sprite.Sprite):
-    def __init__(self, group=None):
+    def __init__(self, evManager, group=None):
+        self.evManager = evManager
+        self.evManager.RegisterListener(self)
+
         pygame.sprite.Sprite.__init__(self, group)
+        self.group = group
         self.image = pygame.Surface((170, 300))
         self.image.fill(PURPLE)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH * 87/100, HEIGHT * 38/100)
 
+        self.contents = []
+
+    def Notify(self, event):
+        if isinstance(event, CartUpdateEvent):
+            for sprite in self.contents:
+                sprite.kill()
+            self.contents = []
+
+            x = self.rect.left + 20
+            y = self.rect.top + 50
+            for item in event.cart:
+                self.contents.append(Text(item.name, x, y, self.group))
+                y += 30
+                self.contents.append(
+                    Text("Grade: " + str(item.quality) + " ... " + str(item.amount) + " units", x, y, self.group))
+                y += 50
 
 
 class ArrowLeft(pygame.sprite.Sprite):
@@ -659,14 +746,14 @@ class View:
 
         #All sprite start from here.
         #Sprite will carry it group from here.
-        self.staffTab = StaffTab(self.clickUI, self.windows)
-        self.menuTab = MenuTab(self.mainUI)
-        self.inventoryTab = InventoryTab(self.mainUI)
-        self.midTab = MidTab(self.mainUI, self.clickUI, self.windows)
-        self.financeTab = FinanceTab(self.clickUI, self.windows)
-        self.customersTab = CustomersTab(self.clickUI, self.windows)
-        self.satisfactionTab = SatisfactionTab(self.clickUI, self.windows)
-        self.datetime = DateTime(self.mainUI)
+        self.staffTab = StaffTab(self.evManager, self.clickUI, self.windows)
+        self.menuTab = MenuTab(self.evManager, self.mainUI)
+        self.inventoryTab = InventoryTab(self.evManager, self.mainUI)
+        self.midTab = MidTab(self.evManager, self.mainUI, self.clickUI, self.windows)
+        self.financeTab = FinanceTab(self.evManager, self.clickUI, self.windows)
+        self.customersTab = CustomersTab(self.evManager, self.clickUI, self.windows)
+        self.satisfactionTab = SatisfactionTab(self.evManager, self.clickUI, self.windows)
+        self.datetime = DateTime(self.evManager, self.mainUI)
 
 
     def Notify(self, event):
@@ -707,13 +794,19 @@ class View:
                     try:
                         sprite.ShiftClicked()
                     except AttributeError:
-                        sprite.Clicked()
+                        try:
+                            sprite.Clicked()
+                        except AttributeError:
+                            continue
             for sprite in self.windows:
                 if sprite.rect.collidepoint(event.pos):
                     try:
                         sprite.ShiftClicked()
                     except AttributeError:
-                        sprite.Clicked()
+                        try:
+                            sprite.Clicked()
+                        except AttributeError:
+                            continue
 
         elif isinstance(event, CtrlLeftClickEvent):
             for sprite in self.clickUI:
@@ -721,13 +814,19 @@ class View:
                     try:
                         sprite.CtrlClicked()
                     except AttributeError:
-                        sprite.Clicked()
+                        try:
+                            sprite.Clicked()
+                        except AttributeError:
+                            continue
             for sprite in self.windows:
                 if sprite.rect.collidepoint(event.pos):
                     try:
                         sprite.CtrlClicked()
                     except AttributeError:
-                        sprite.Clicked()
+                        try:
+                            sprite.Clicked()
+                        except AttributeError:
+                            continue
 
 
 
