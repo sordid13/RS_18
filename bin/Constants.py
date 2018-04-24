@@ -34,3 +34,7 @@ INGREDIENT_TYPE_MISC = "Misc"
 
 # Customers
 STARTING_CUSTOMERS = 100
+
+
+
+

@@ -88,3 +88,15 @@ class LeftClickEvent:
     def __init__(self, pos):
         self.name = "Left Click Event"
         self.pos = pos
+
+
+class ShiftLeftClickEvent:
+    def __init__(self, pos):
+        self.name = "Shift Left Click Event"
+        self.pos = pos
+
+
+class CtrlLeftClickEvent:
+    def __init__(self, pos):
+        self.name = "Ctrl Left Click Event"
+        self.pos = pos
