@@ -12,6 +12,7 @@ class Game:
         self.dateManager = DateManager(self.evManager)
         self.customerManager = CustomerManager(self.evManager)
         self.dishManager = DishManager(self.evManager)
+        self.cart = Cart(self.evManager)
 
         self.players = None
 
@@ -396,14 +397,14 @@ class Cart:
     def AddToCart(self, ingredient, quality, amount):
         new = True
         for i in self.cart:
-            if i.name == ingredient.name and i.quality == ingredient.quality:
+            if i.name == ingredient.name and i.quality == quality:
                 i.amount += amount
                 new = False
 
         if new:
-            newIng = ingredient
-            newIng.quality = ingredient.quality
-            newIng.amount = ingredient.amount
+            newIng = copy.deepcopy(ingredient)
+            newIng.quality = quality
+            newIng.amount = amount
             self.cart.append(newIng)
 
         self.totalPrice += ingredient.Price(quality) * amount
@@ -411,6 +412,8 @@ class Cart:
         # Tell View to update cart list
         ev = CartUpdateEvent(self.cart, self.totalPrice)
         self.evManager.Post(ev)
+
+        print(self.cart)
 
     def RemoveFromCart(self, ingredient):
         for i in self.cart:
