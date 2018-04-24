@@ -12,6 +12,9 @@ class Controller:
 
         self.keepGoing = True
 
+        self.shiftPressed = False
+        self.ctrlPressed = False
+
     def Run(self):
         while self.keepGoing:
             ev = TickEvent()
@@ -41,9 +44,28 @@ class Controller:
                 elif event.type == KEYDOWN and event.key == K_e:
                     ev = NewDayEvent()
 
+                elif event.type == KEYDOWN and event.key == K_LSHIFT:
+                    self.shiftPressed = True
+                    self.ctrlPressed = False
+
+                elif event.type == KEYUP and event.key == K_LSHIFT:
+                    self.shiftPressed = False
+
+                elif event.type == KEYDOWN and event.key == K_LCTRL:
+                    self.ctrlPressed = True
+                    self.shiftPressed = False
+
+                elif event.type == KEYUP and event.key == K_LCTRL:
+                    self.ctrlPressed = False
+
                 elif event.type == MOUSEBUTTONDOWN and event.button == 1:
                     pos = pygame.mouse.get_pos()
-                    ev = LeftClickEvent(pos)
+                    if self.shiftPressed:
+                        ev = ShiftLeftClickEvent(pos)
+                    elif self.ctrlPressed:
+                        ev = CtrlLeftClickEvent(pos)
+                    else:
+                        ev = LeftClickEvent(pos)
 
                 if ev:
                     self.evManager.Post(ev)
