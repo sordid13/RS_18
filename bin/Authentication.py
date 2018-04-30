@@ -27,14 +27,14 @@ class StartPage(tk.Frame):
         tk.Frame.__init__(self, master, width=250, height=250)
         self.master.title("Restaurant Towkay")
         startLabel = tk.Label(self, text="Welcome to Restaurant Towkay")
-        pageLogin = tk.Button(self, text="Login", command=lambda: master.switchFrame(PageOne))
-        pageRegister = tk.Button(self, text="Register", command=lambda: master.switchFrame(PageTwo))
+        pageLogin = tk.Button(self, text="Login", command=lambda: master.switchFrame(loginPage))
+        pageRegister = tk.Button(self, text="Register", command=lambda: master.switchFrame(registerPage))
         startLabel.place(x=40, y=50)
         pageLogin.place(x=110, y=160)
         pageRegister.place(x=108, y=200)
 
 
-class PageOne(tk.Frame):
+class loginPage(tk.Frame):
 
     def __init__(self, master):
         tk.Frame.__init__(self, master, width=250, height=250)
@@ -64,9 +64,14 @@ class PageOne(tk.Frame):
             keyList = json.load(json_file)
 
         noUser = True
+        blankUser = False
+
+        if user == "":
+            blankUser = True
+            messagebox.showerror("Oops!", "Username blank!")
 
         for acc in keyList:
-            if user == acc['user']:
+            if user == acc['user'] and blankUser is False:
                 noUser = False
                 account = acc
                 hash1 = account['hashValue']
@@ -77,13 +82,13 @@ class PageOne(tk.Frame):
                     messagebox.showerror("Oops!", "Wrong password!")
                     break
 
-        if noUser:
+        if noUser and blankUser is False:
             messagebox.showerror("Oops!", "User is not registered!")
 
         json_file.close()
 
 
-class PageTwo(tk.Frame):
+class registerPage(tk.Frame):
 
     def __init__(self, master):
         tk.Frame.__init__(self, master, width=250, height=250)
@@ -121,21 +126,22 @@ class PageTwo(tk.Frame):
         redundantUser = False
         blankUser = False
         matchPassword = True
+        message = ""
 
         for acc in keyList:
             if userNew == acc['user']:
                 redundantUser = True
-                messagebox.showerror("Oops!", "Username taken!")
+                message += "Username taken! \n"
                 break
-
-        if passwordNew != passwordConfirm:
-            matchPassword = False
-            messagebox.showerror("Oops!", "Password does not match!")
 
         if userNew == "":
             blankUser = True
-            messagebox.showerror("Oops!", "Username blank!"
-                                 )
+            message += "Username blank! \n"
+
+        if passwordNew != passwordConfirm:
+            matchPassword = False
+            message += "Password does not match! \n"
+
         if not redundantUser and not blankUser and matchPassword:
             keys = {}
             keys['user'] = userNew
@@ -146,6 +152,8 @@ class PageTwo(tk.Frame):
                 json.dump(keyList, json_file, indent=4)
             json_file.close()
             messagebox.showinfo("Success!", "Registration successful!")
+        else:
+            messagebox.showerror("Oops!", message)
 
 
 if __name__ == "__main__":
