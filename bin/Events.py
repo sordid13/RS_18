@@ -88,3 +88,9 @@ class LeftClickEvent:
     def __init__(self, pos):
         self.name = "Left Click Event"
         self.pos = pos
+
+class SpendRequestEvent:
+    def __init__(self, cost, function):
+        self.name = "Spend Request Event"
+        self.cost = cost
+        self.function = function

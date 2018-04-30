@@ -73,6 +73,7 @@ class Player:
         # Changes daily
         self.baseImpression = 80
 
+        self.cash = 1000
         self.restaurantLvl = 0
         self.restaurantCapacity = 50
         self.menu = Menu(self.evManager)

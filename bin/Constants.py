@@ -34,3 +34,10 @@ INGREDIENT_TYPE_MISC = "Misc"
 
 # Customers
 STARTING_CUSTOMERS = 100
+
+# Finance related
+INGREDIENTS = "Ingredients"
+RENOVATION = "Renovation"
+UTILITY = "Overhead"
+TAX = "TAX"
+MISC = "Miscellaneous"
