@@ -5,13 +5,13 @@ from tkinter import *
 import tkinter as tk
 from tkinter import messagebox
 
+
 class TikinterApp(tk.Tk):
 
     def __init__(self):
         tk.Tk.__init__(self)
         self._frame = None
         self.switchFrame(StartPage)
-
 
     def switchFrame(self, frameClass):
         newFrame = frameClass(self)
@@ -32,6 +32,7 @@ class StartPage(tk.Frame):
         startLabel.place(x=40, y=50)
         pageLogin.place(x=110, y=160)
         pageRegister.place(x=108, y=200)
+
 
 class PageOne(tk.Frame):
 
@@ -80,6 +81,7 @@ class PageOne(tk.Frame):
             messagebox.showerror("Oops!", "User is not registered!")
 
         json_file.close()
+
 
 class PageTwo(tk.Frame):
 
@@ -144,7 +146,6 @@ class PageTwo(tk.Frame):
                 json.dump(keyList, json_file, indent=4)
             json_file.close()
             messagebox.showinfo("Success!", "Registration successful!")
-
 
 
 if __name__ == "__main__":
