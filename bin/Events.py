@@ -69,6 +69,10 @@ class CartUpdateEvent:
         self.cart = cart
         self.price = price
 
+class ClearCartEvent:
+    def __init__(self):
+        self.name = "Clear Cart"
+
 
 class BuyIngredientsEvent:
     def __init__(self, cart):
