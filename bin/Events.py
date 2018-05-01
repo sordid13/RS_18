@@ -69,6 +69,10 @@ class CartUpdateEvent:
         self.cart = cart
         self.price = price
 
+class ClearCartEvent:
+    def __init__(self):
+        self.name = "Clear Cart"
+
 
 class BuyIngredientsEvent:
     def __init__(self, cart):
@@ -80,6 +84,33 @@ class BatchExpiredEvent:
     def __init__(self, batch):
         self.name = "Batch Expired Event"
         self.batch = batch
+
+
+class OpenHireStaffEvent:
+    def __init__(self):
+        self.name = "Open Hire Staff"
+
+
+
+class OpenMyStaffEvent:
+    def __init__(self):
+        self.name = "Open My Staff"
+
+
+
+class SelectStaffEvent:
+    def __init__(self, staffType):
+        self.name = "Select Staff"
+        self.staffType = staffType
+
+
+
+
+
+class SelectCuisineEvent:
+    def __init__(self, cuisine):
+        self.name = "Select Cuisine"
+        self.cuisine = cuisine
 
 
 class HireChefEvent:
@@ -97,6 +128,7 @@ class HireWaiterEvent:
 class NoChefEvent:
     def __init__(self):
         self.name = "No Chef Event"
+
 
 class LeftClickEvent:
     def __init__(self, pos):
