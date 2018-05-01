@@ -1,7 +1,7 @@
 [Beef Sirloin]
 name = Beef Sirloin
 type = Beef
-cost = 5
+cost = 1
 
 [Beef Tenderloin]
 name = Beef Tenderloin

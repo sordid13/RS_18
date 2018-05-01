@@ -86,20 +86,51 @@ class BatchExpiredEvent:
         self.batch = batch
 
 
+class OpenHireStaffEvent:
+    def __init__(self):
+        self.name = "Open Hire Staff"
+
+
+
+class OpenMyStaffEvent:
+    def __init__(self):
+        self.name = "Open My Staff"
+
+
+
+class SelectStaffEvent:
+    def __init__(self, staffType):
+        self.name = "Select Staff"
+        self.staffType = staffType
+
+
+
+
+
+class SelectCuisineEvent:
+    def __init__(self, cuisine):
+        self.name = "Select Cuisine"
+        self.cuisine = cuisine
+
+
 class HireChefEvent:
-    def __init__(self, level, cuisine):
+    def __init__(self, chef, level, cuisine):
         self.name = "Hire Chef Event"
+        self.chef = chef
         self.level = level
         self.cuisine = cuisine
 
 
 class HireWaiterEvent:
-    def __init__(self):
+    def __init__(self, waiter):
         self.name = "Hire Waiter Event"
+        self.waiter = waiter
+
 
 class NoChefEvent:
     def __init__(self):
         self.name = "No Chef Event"
+
 
 class LeftClickEvent:
     def __init__(self, pos):
