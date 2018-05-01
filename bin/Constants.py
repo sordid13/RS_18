@@ -3,6 +3,10 @@ STATE_PREPARING = "Game Preparing"
 STATE_PAUSED = "Game Paused"
 STATE_STARTED = "Game Started"
 
+# Screen settings
+DISPLAY_RESOLUTION = (1280, 720)
+DRAW_RESOLUTION = (1280, 720)
+
 # List of dishes & ingredients exist in game
 INGREDIENTS_LIST = []
 DISHES_LIST = []
@@ -13,8 +17,8 @@ KOREAN_DISHES = []
 INDIAN_DISHES = []
 
 # Game defaults
-DEFAULT_MENU = []
-DEFAULT_INVENTORY = []
+AI_DEFAULT_MENU = []
+AI_INVENTORY = ["Baked Sea Bass", "Grilled Salmon", "Roast Beef", "Roast Chicken", "Lamb Shank"]
 
 # Dishes related
 DISH_POINTS = 10
@@ -30,7 +34,7 @@ CUISINE_CHINESE = "Chinese"
 CUISINE_JAPANESE = "Japanese"
 CUISINE_KOREAN = "Korean"
 CUISINE_INDIAN = "Indian"
-CUISINES_LIST = [CUISINE_WESTERN, CUISINE_CHINESE, CUISINE_JAPANESE, CUISINE_KOREAN, CUISINE_INDIAN]
+CUISINES_LIST = [CUISINE_WESTERN, CUISINE_CHINESE, CUISINE_KOREAN]
 
 INGREDIENT_TYPE_SEAFOOD = "Seafood"
 INGREDIENT_TYPE_BEEF = "Beef"
