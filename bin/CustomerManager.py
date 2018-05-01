@@ -12,11 +12,11 @@ class CustomerManager:
         self.prevCustomers = STARTING_CUSTOMERS
         self.totalImpression = 100
 
-    def TotalImpression(self, players):
-        impression = 0
-        for player in players:
-            impression = player.ImpressionPoints()
+    def TotalImpression(self, player, rival):
+        impression = player.ImpressionPoints() + rival.ImpressionPoints()
         self.totalImpression = impression
+        print(player.ImpressionPoints())
+        print(rival.ImpressionPoints())
 
     def TotalCustomers(self):
         # TODO: Implement BETTER system to generate number of customers incorporating random events
@@ -33,6 +33,9 @@ class CustomerManager:
     def CalculateCustomerSplit(self, impression):
         # TODO: Implement system to calculate customer split
         customers = math.floor(self.totalCustomers * (impression / self.totalImpression))
+
+        if customers < 0:
+            customers = 0
 
         return customers
 

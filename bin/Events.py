@@ -125,8 +125,6 @@ class HireWaiterEvent:
         self.name = "Hire Waiter Event"
         self.level = level
 
-
-
 class NoChefEvent:
     def __init__(self):
         self.name = "No Chef Event"
@@ -148,3 +146,14 @@ class CtrlLeftClickEvent:
     def __init__(self, pos):
         self.name = "Ctrl Left Click Event"
         self.pos = pos
+
+
+# AI-Related Events
+
+class RivalSalesReportEvent:
+    def __init__(self, customers, unfedCustomers, revenue, satisfaction):
+        self.name = "Rival Sales Report Event"
+        self.customers = customers
+        self.unfedCustomers = unfedCustomers
+        self.revenue = revenue
+        self.satisfaction = satisfaction

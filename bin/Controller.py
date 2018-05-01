@@ -59,7 +59,11 @@ class Controller:
                     self.ctrlPressed = False
 
                 elif event.type == MOUSEBUTTONDOWN and event.button == 1:
-                    pos = pygame.mouse.get_pos()
+                    (x,y) = pygame.mouse.get_pos()
+                    scale = (DRAW_RESOLUTION[0] / DISPLAY_RESOLUTION[0])
+                    x *= scale
+                    y *= scale
+                    pos = (x, y)
                     if self.shiftPressed:
                         ev = ShiftLeftClickEvent(pos)
                     elif self.ctrlPressed:

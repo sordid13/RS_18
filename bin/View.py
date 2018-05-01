@@ -122,7 +122,7 @@ class FinanceTab(pygame.sprite.Sprite):
 
     def Clicked(self):
         self.windowGroup.empty()
-        FinanceWindow(self.windowGroup)  # The value passed here, the FinanceWindow will instantiate under windowGroup.
+        FinanceWindow(self.evManager, self.windowGroup) # The value passed here, the FinanceWindow will instantiate under windowGroup.
 
 # When instantiated, it will have group value from FinanceTab, where it instantiate.
 class FinanceWindow():
@@ -165,7 +165,7 @@ class SatisfactionTab(pygame.sprite.Sprite):
 
     def Clicked(self):
         self.windowGroup.empty()
-        SatisfactionWindow(self.windowGroup)
+        SatisfactionWindow(self.evManager, self.windowGroup)
 
 class SatisfactionWindow():
     def __init__(self, evManager, group=None):
@@ -203,7 +203,7 @@ class StaffTab(pygame.sprite.Sprite):
         #self.button = OpenWindowButton(WIDTH * 50/100, HEIGHT * 62.5/100, self.clickUI, self.windowGroup, self.windowName)
 
     def Clicked(self):
-        StaffWindow(self.windowGroup)
+        StaffWindow(self.evManager, self.windowGroup)
 
 class StaffWindow():
     def __init__(self, evManager, group=None):
@@ -731,7 +731,7 @@ class View:
 
         pygame.init()
 
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode(DISPLAY_RESOLUTION)
         self.background = pygame.Surface(self.screen.get_size())
         self.background.fill(WHITE)
         self.screen.blit(self.background, (0, 0))
@@ -827,9 +827,3 @@ class View:
                             sprite.Clicked()
                         except AttributeError:
                             continue
-
-
-
-
-
-
