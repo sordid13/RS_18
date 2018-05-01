@@ -1,3 +1,13 @@
+[Beef Brisket]
+name = Beef Brisket
+type = Beef
+cost = 1
+
+[Beef Cheek]
+name = Beef Cheek
+type = Beef
+cost = 1
+
 [Beef Sirloin]
 name = Beef Sirloin
 type = Beef
@@ -15,6 +25,11 @@ cost = 1
 
 [Bell Pepper]
 name = Bell Pepper
+type = Misc
+cost = 1
+
+[Black Bean]
+name = Black Bean
 type = Misc
 cost = 1
 
@@ -36,6 +51,11 @@ cost = 1
 [Carrot]
 name = Carrot
 type = Misc
+cost = 1
+
+[Catfish]
+name = Catfish
+type = Seafood
 cost = 1
 
 [Feta Cheese]
@@ -70,6 +90,11 @@ cost = 1
 
 [Egg]
 name = Egg
+type = Misc
+cost = 1
+
+[Egg Plant]
+name = Egg Plant
 type = Misc
 cost = 1
 
@@ -118,18 +143,28 @@ name = Mushroom
 type = Misc
 cost = 1
 
+[Noodles]
+name = Noodles
+type = Misc
+cost = 1
+
 [Onion]
 name = Onion
 type = Misc
 cost = 1
 
-[Prawn]
-name = Prawn
-type = Seafood
+[Potato]
+name = Potato
+type = Misc
 cost = 1
 
 [Quinoa]
 name = Quinoa
+type = Misc
+cost = 1
+
+[Rice]
+name = Rice
 type = Misc
 cost = 1
 
@@ -148,8 +183,23 @@ name = Sea Bass
 type = Seafood
 cost = 1
 
+[Seaweed]
+name = Seaweed
+type = Misc
+cost = 1
+
+[Shrimp]
+name = Shrimp
+type = Seafood
+cost = 1
+
 [Sichuan Pepper]
 name = Sichuan Pepper
+type = Misc
+cost = 1
+
+[Soy Sauce]
+name = Soy Sauce
 type = Misc
 cost = 1
 
@@ -161,6 +211,11 @@ cost = 1
 [Squid]
 name = Squid
 type = Seafood
+cost = 1
+
+[Tofu]
+name = Tofu
+type = Misc
 cost = 1
 
 [Tomato]
