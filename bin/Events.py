@@ -114,17 +114,17 @@ class SelectCuisineEvent:
 
 
 class HireChefEvent:
-    def __init__(self, chef, level, cuisine):
+    def __init__(self, level, cuisine):
         self.name = "Hire Chef Event"
-        self.chef = chef
         self.level = level
         self.cuisine = cuisine
 
 
 class HireWaiterEvent:
-    def __init__(self, waiter):
+    def __init__(self, level):
         self.name = "Hire Waiter Event"
-        self.waiter = waiter
+        self.level = level
+
 
 
 class NoChefEvent:
