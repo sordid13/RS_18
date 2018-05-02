@@ -18,7 +18,7 @@ BLUE = (0, 0, 255)
 YELLOW = (250, 250, 0)
 PURPLE = (128, 0, 128)
 
-fontName = 'Comic Sans MS'
+fontName = ''
 
 imgFolder = os.path.join("asset")
 
@@ -45,18 +45,24 @@ class Text(pygame.sprite.Sprite):
 
 
 class Numbers(pygame.sprite.Sprite):
-    def __init__(self, parent, attribute, x, y, color, group=None):
+    def __init__(self, parent, attribute, x, y, color, fontSize, group=None, align=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.color = color
         self.parent = parent
         self.attribute = attribute
         self.text = str(getattr(self.parent, self.attribute))
-        self.textFont = pygame.font.SysFont(fontName, 16)
+        self.fontSize = fontSize
+        self.textFont = pygame.font.SysFont(fontName, self.fontSize)
         self.image = self.textFont.render(self.text, True, self.color)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
-        self.rect.midright = (self.x, self.y)
+
+        # Default alignment = right
+        if align is CENTER:
+            self.rect.center = (self.x, self.y)
+        else:
+            self.rect.midright = (self.x, self.y)
 
     def Update(self):
         self.text = str(getattr(self.parent, self.attribute))
@@ -220,15 +226,25 @@ class ArrowDown(pygame.sprite.Sprite):
 class DateTime(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None):
         self.evManager = evManager
+        self.evManager.RegisterListener(self)
 
         pygame.sprite.Sprite.__init__(self, group)
+        self.group = group
         self.image = pygame.Surface((230, 50))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH * 90 / 100, HEIGHT * 4 / 100)
 
+        self.date = str(Date.day) + " / " + str(Date.month) + " / " + str(Date.year)
+        self.display = Numbers(self, "date", self.rect.right - 10, self.rect.centery, WHITE, 24, self.group)
+
     def Clicked(self):
         pass
+
+    def Notify(self, event):
+        if isinstance(event, NewDayEvent):
+            self.date = str(Date.day) + " / " + str(Date.month) + " / " + str(Date.year)
+            self.display.Update()
 
 # FINANCE----------------------------------------------------------------------------------------------
 
@@ -461,7 +477,6 @@ class ChefTab(pygame.sprite.Sprite):
         self.rect.center = (WIDTH * 22/100, HEIGHT * 22/100)
 
     def Clicked(self):
-        print(self.window.staffScreen.myChef)
         staffType = "Chef"
         ev = SelectStaffEvent(staffType)
         self.evManager.Post(ev)
@@ -523,16 +538,6 @@ class StaffScreen(pygame.sprite.Sprite):
         self.staffType = staffType
         self.tabs = []
         self.contents = []
-
-        x = WIDTH * 20/100
-        y = HEIGHT * 20/100
-        if staffType == "Chef" and len(self.window.myChef) > 0:
-            for chef in self.window.myChef:
-                self.contents.append(ChefContainer(x, y, 50, 50, chef.cuisine, chef.level, self.evManager, self.group,))
-
-        elif staffType == "Waiter" and len(self.window.myWaiter) > 0:
-            for waiter in self.window.myWaiter:
-                self.contents.append(WaiterContainer(x, y, 50, 50, waiter.level, self.evManager, self.group))
 
 
     def LoadHireChefContents(self):
@@ -600,6 +605,7 @@ class ChefContainer(pygame.sprite.Sprite):
         self.evManager = evManager
         self.group = group
         self.staffType = "Chef"
+        self.myStaff = myStaff
 
         self.x = x
         self.y = y
@@ -624,13 +630,18 @@ class ChefContainer(pygame.sprite.Sprite):
         self.rect.midleft = (self.x, self.y)
         self.contents = []
 
-        self.sprite = StaffSprite(self.x + 30, self.y, 40, 40, self.evManager, self.group)
-        self.contents.append(self.sprite)
+        if self.myStaff == "MyStaff":
+            self.sprite = StaffSprite(self.x + 30, self.y, 40, 40, self.evManager, self.group)
+            self.contents.append(self.sprite)
 
-        self.contents.append(Text(self.name, self.x + 60, self.y - 25, WHITE, 18, self.group))
-        self.contents.append(Text(self.cuisine, self.x + 60, self.y, WHITE, 18, self.group))
+        else:
+            self.sprite = StaffSprite(self.x + 30, self.y, 40, 40, self.evManager, self.group)
+            self.contents.append(self.sprite)
 
-        self.contents.append(HireButton(self.x + 450, self.y, 50, 20, self, self.evManager, self.group))
+            self.contents.append(Text(self.name, self.x + 60, self.y - 25, WHITE, 18, self.group))
+            self.contents.append(Text(self.cuisine, self.x + 60, self.y, WHITE, 18, self.group))
+
+            self.contents.append(HireButton(self.x + 450, self.y, 50, 20, self, self.evManager, self.group))
 
 
 class WaiterContainer(pygame.sprite.Sprite):
@@ -638,6 +649,7 @@ class WaiterContainer(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
         self.group = group
+        self.myStaff = myStaff
 
         self.staffType = "Waiter"
         self.x = x
@@ -662,12 +674,17 @@ class WaiterContainer(pygame.sprite.Sprite):
         self.rect.midleft = (self.x, self.y)
         self.contents = []
 
-        self.sprite = StaffSprite(self.x + 30, self.y - 30, 40, 40, self.evManager, self.group)
-        self.contents.append(self.sprite)
+        if self.myStaff == "MyStaff":
+            self.sprite = StaffSprite(self.x + 30, self.y, 40, 40, self.evManager, self.group)
+            self.contents.append(self.sprite)
 
-        self.contents.append(Text(self.name, self.x + 60, self.y - 45, WHITE, 18, self.group))
+        else:
+            self.sprite = StaffSprite(self.x + 30, self.y - 30, 40, 40, self.evManager, self.group)
+            self.contents.append(self.sprite)
 
-        self.contents.append(HireButton(self.x + 290, self.y + 25, 50, 50, self, self.evManager, self.group))
+            self.contents.append(Text(self.name, self.x + 60, self.y - 45, WHITE, 18, self.group))
+
+            self.contents.append(HireButton(self.x + 290, self.y + 25, 50, 50, self, self.evManager, self.group))
 
 
 class StaffSprite(pygame.sprite.Sprite):
@@ -1014,10 +1031,12 @@ class DishDetail(pygame.sprite.Sprite):
 
         self.contents = []
 
+        print(self.dish.type)
         self.contents.append(DishSprite(self.x, self.y - 90, self.dish, self.group))
         self.contents.append(Text(self.dish.name, self.x, self.y - 50, BLACK, 18, self.group, CENTER))
 
         self.contents.append(Text("Type:", self.rect.left + 10, self.y - 30, BLACK, 16, self.group))
+        print(self.dish.type)
         self.contents.append(Text(self.dish.type, self.rect.left + 17, self.y - 10, BLACK, 14, self.group))
 
         self.contents.append(Text("Cuisine:", self.rect.left + 10, self.y + 20, BLACK, 16, self.group))
@@ -1167,9 +1186,9 @@ class IngredientContainer(pygame.sprite.Sprite):
         self.quality = self.window.quality
         self.price = self.ingredient.Price(self.quality)
 
-        self.ingredientQuantity = Numbers(self, "quantity", self.x + 120, self.y - 13, WHITE, group)
-        self.ingredientQuality = Numbers(self, "quality", self.x - 85, self.y + 5, WHITE, group)
-        self.ingredientPrice = Numbers(self, "price", self.x - 70, self.y + 5, WHITE, group)
+        self.ingredientQuantity = Numbers(self, "quantity", self.x + 120, self.y - 13, WHITE, 16, group)
+        self.ingredientQuality = Numbers(self, "quality", self.x - 85, self.y + 5, WHITE, 16, group)
+        self.ingredientPrice = Numbers(self, "price", self.x - 70, self.y + 5, WHITE, 16, group)
 
         self.contents.append(Text(self.ingredient.name, self.x - 100, self.y - 20, WHITE, 14, group))
         self.contents.append(IngredientSprite(self.x - 120, self.y, ingredient, self.evManager, group))
@@ -1392,7 +1411,7 @@ class View:
             dirtyRects += self.clickUI.draw(self.screen)
             dirtyRects += self.popUp.draw(self.screen)
 
-            pygame.display.update(dirtyRects)
+            pygame.display.flip()
 
         elif isinstance(event, LeftClickEvent):
             for sprite in self.clickUI:

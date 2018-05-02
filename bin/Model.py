@@ -419,11 +419,11 @@ class Menu:
 
 
 class Dish:
-    def __init__(self, name, foodType, cuisine, ingredients, evManager):
+    def __init__(self, name, type, cuisine, ingredients, evManager):
         self.evManager = evManager
 
         self.name = name
-        self.foodType = foodType
+        self.type = type
         self.cuisine = cuisine
         self.ingredients = ingredients
 

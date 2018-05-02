@@ -47,5 +47,7 @@ STARTING_CUSTOMERS = 100
 
 # Text alignment
 CENTER = "Center"
+RIGHT = "Right"
+LEFT = "Left"
 
 
