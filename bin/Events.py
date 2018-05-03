@@ -91,20 +91,15 @@ class OpenHireStaffEvent:
         self.name = "Open Hire Staff"
 
 
-
 class OpenMyStaffEvent:
     def __init__(self):
         self.name = "Open My Staff"
-
 
 
 class SelectStaffEvent:
     def __init__(self, staffType):
         self.name = "Select Staff"
         self.staffType = staffType
-
-
-
 
 
 class SelectCuisineEvent:
@@ -134,6 +129,13 @@ class LeftClickEvent:
     def __init__(self, pos):
         self.name = "Left Click Event"
         self.pos = pos
+
+        
+class SpendRequestEvent:
+    def __init__(self, cost, function):
+        self.name = "Spend Request Event"
+        self.cost = cost
+        self.function = function
 
 
 class ShiftLeftClickEvent:
