@@ -15,10 +15,18 @@ class Controller:
         self.shiftPressed = False
         self.ctrlPressed = False
 
+        self.startTicks = 0
+
     def Run(self):
         while self.keepGoing:
             ev = TickEvent()
             self.evManager.Post(ev)
+
+            currentTicks = pygame.time.get_ticks()
+            if currentTicks - self.startTicks > 60000:
+                self.startTicks = currentTicks
+                ev = NewDayEvent()
+                self.evManager.Post(ev)
 
             for event in pygame.event.get():
                 ev = None

@@ -1188,7 +1188,7 @@ class IngredientContainer(pygame.sprite.Sprite):
 
         self.ingredientQuantity = Numbers(self, "quantity", self.x + 120, self.y - 13, WHITE, 16, group)
         self.ingredientQuality = Numbers(self, "quality", self.x - 85, self.y + 5, WHITE, 16, group)
-        self.ingredientPrice = Numbers(self, "price", self.x - 70, self.y + 5, WHITE, 16, group)
+        self.ingredientPrice = Numbers(self, "price", self.x, self.y + 5, WHITE, 16, group)
 
         self.contents.append(Text(self.ingredient.name, self.x - 100, self.y - 20, WHITE, 14, group))
         self.contents.append(IngredientSprite(self.x - 120, self.y, ingredient, self.evManager, group))
@@ -1212,6 +1212,9 @@ class IngredientContainer(pygame.sprite.Sprite):
 
         self.qualityDisplay = str(self.quality)
         self.ingredientQuality.Update()
+
+        self.price = self.ingredient.Price(self.quality)
+        self.ingredientPrice.Update()
 
 
     def Clicked(self):
