@@ -49,7 +49,7 @@ class AddDishEvent:
         self.price = price
 
 
-class AddIngredientToCartEvent:
+class AddToCartEvent:
     def __init__(self, ingredient, quality, amount):
         self.name = "Add Ingredient To Cart Event"
         self.ingredient = ingredient
@@ -57,16 +57,55 @@ class AddIngredientToCartEvent:
         self.amount = amount
 
 
+class RemoveFromCartEvent:
+    def __init__(self, ingredient):
+        self.name = "Remove Ingredient From Cart Event"
+        self.ingredient = ingredient
+
+
+class CartUpdateEvent:
+    def __init__(self, cart, price):
+        self.name = "Cart Update Event"
+        self.cart = cart
+        self.price = price
+
+class ClearCartEvent:
+    def __init__(self):
+        self.name = "Clear Cart"
+
+
 class BuyIngredientsEvent:
-    def __init__(self, batch):
+    def __init__(self, cart):
         self.name = "Buy Ingredients Event"
-        self.batch = batch
+        self.cart = cart
 
 
 class BatchExpiredEvent:
     def __init__(self, batch):
         self.name = "Batch Expired Event"
         self.batch = batch
+
+
+class OpenHireStaffEvent:
+    def __init__(self):
+        self.name = "Open Hire Staff"
+
+
+class OpenMyStaffEvent:
+    def __init__(self):
+        self.name = "Open My Staff"
+
+
+class SelectStaffEvent:
+    def __init__(self, staffType):
+        self.name = "Select Staff"
+        self.staffType = staffType
+
+
+class SelectCuisineEvent:
+    def __init__(self, cuisine):
+        self.name = "Select Cuisine"
+        self.cuisine = cuisine
 
 
 class HireChefEvent:
@@ -77,20 +116,46 @@ class HireChefEvent:
 
 
 class HireWaiterEvent:
-    def __init__(self):
+    def __init__(self, level):
         self.name = "Hire Waiter Event"
+        self.level = level
 
 class NoChefEvent:
     def __init__(self):
         self.name = "No Chef Event"
+
 
 class LeftClickEvent:
     def __init__(self, pos):
         self.name = "Left Click Event"
         self.pos = pos
 
+        
 class SpendRequestEvent:
     def __init__(self, cost, function):
         self.name = "Spend Request Event"
         self.cost = cost
         self.function = function
+
+
+class ShiftLeftClickEvent:
+    def __init__(self, pos):
+        self.name = "Shift Left Click Event"
+        self.pos = pos
+
+
+class CtrlLeftClickEvent:
+    def __init__(self, pos):
+        self.name = "Ctrl Left Click Event"
+        self.pos = pos
+
+
+# AI-Related Events
+
+class RivalSalesReportEvent:
+    def __init__(self, customers, unfedCustomers, revenue, satisfaction):
+        self.name = "Rival Sales Report Event"
+        self.customers = customers
+        self.unfedCustomers = unfedCustomers
+        self.revenue = revenue
+        self.satisfaction = satisfaction
