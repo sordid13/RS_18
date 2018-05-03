@@ -34,7 +34,7 @@ class Game:
         for section in config.sections():
             name = str(config.get(section, "name"))
             type = str(config.get(section, "type"))
-            baseCost = config.getint(section, "cost")
+            baseCost = config.getfloat(section, "cost")
             INGREDIENTS_LIST.append(Ingredient(name, type, baseCost, self.evManager))
 
         # Load list of dishes
@@ -72,6 +72,7 @@ class Game:
             elif cuisine == "Indian":
                 INDIAN_DISHES.append(dish)
 
+        print(len(INGREDIENTS_LIST))
 
     def Notify(self, event):
         if isinstance(event, TickEvent):
@@ -452,8 +453,11 @@ class Ingredient:
         self.amount = None
 
     def Price(self, quality):
-        price = math.floor(self.baseCost ** (1 + quality/10))
+        price = self.baseCost * (quality ** 2)
+        price = math.floor(price * 10)
+        price /= 10
         return price
+
 
 
 class Inventory:

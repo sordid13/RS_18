@@ -88,7 +88,7 @@ ingredients = Lamb Shank
 name = Stuffed Lamb
 type = Lamb
 cuisine = Western
-ingredients = Lamb Saddle, Spinach, Feta Cheese
+ingredients = Lamb Shoulder, Spinach, Feta Cheese
 
 
 # Chinese
@@ -151,7 +151,7 @@ ingredients = Egg Plant, Sichuan Pepper, Chili, Soy Sauce, Green Onion
 name = Sichuan Sliced Beef
 type = Beef
 cuisine = Chinese
-ingredients = Beef Brisket, Sichuan Pepper, Chili, Soy Sauce, Green Onion
+ingredients = Beef Sirloin, Sichuan Pepper, Chili, Soy Sauce, Green Onion
 
 [Sichuan Spicy Wonton]
 name = Sichuan Spicy Wonton
@@ -220,7 +220,7 @@ ingredients = Beef Tenderloin, Mushroom, Spinach, Bell Pepper, Noodles
 name = Jjajangmyeon
 type = Beef
 cuisine = Korean
-ingredients = Beef Cheek, Cucumber, Potato, Black Bean, Noodles
+ingredients = Minced Beef, Cucumber, Potato, Black Bean, Noodles
 
 [Yachaejeon]
 name = Yachaejeon
