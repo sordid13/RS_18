@@ -292,67 +292,50 @@ class CustomersTab(pygame.sprite.Sprite):
         CustomersWindow(self.evManager, self.windowGroup)
 
 
-class CustomersWindow():
+class CustomersWindow:
     def __init__(self, evManager, group=None):
         self.evManager = evManager
         self.group = group
         self.window = MainWindow(BLUE, self.group)
+        self.previousTodayCustomer = PreviousTodayCustomer( WIDTH * 50/100, HEIGHT * 18/100, self.evManager, self.group)
+        self.dishPercentage = DishPercentage(WIDTH * 50/100, HEIGHT * 43/100, self.evManager, self.group)
 
-        self.competitionBar = CompetitionBar(self.evManager, self.group)
-
-
-class CompetitionBar:
-    def __init__(self, evManager, group=None):
+class PreviousTodayCustomer(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
         self.group = group
-
-        self.x = WIDTH * 25/100
-        self.y = HEIGHT * 23/100
-        self.w = 600
-        self.h = 30
-        self.difference = 100 #TODO: Algorithm
-
-        self.rivalBar = RivalBar(self.x, self.y, self.w, self.h, self.evManager, self.group)
-        self.playerBar = PlayerBar(self.x, self.y, self.w - self.difference, self.h, self.evManager, self.group)
-
-
-class PlayerBar(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, evManager, group=None):
-        self.evManager = evManager
         self.x = x
         self.y = y
-        self.w = w
-        self.h = h
-
-        pygame.sprite.Sprite.__init__(self, group)
-        self.image = pygame.Surface((self.w, self.h))
-        self.image.fill(GREEN)
+        self.image = pygame.Surface((600, 90))
+        self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
-        self.rect.midleft = (self.x, self.y)
+        self.rect.center = (self.x,  self.y)
 
+        self.contents = []
+        self.contents.append(Text("No. Customers", self.x - 150, self.y - 30, BLACK, 20, self.group))
+        self.contents.append(Text("Unserved Customer", self.x, self.y - 30, BLACK, 20, self.group))
+        self.contents.append(Text("Satisfaction", self.x + 170, self.y - 30, BLACK, 20, self.group))
+        self.contents.append(Text("Today", self.x - 270, self.y - 10, BLACK, 20, self.group))
+        self.contents.append(Text("Previous Day", self.x - 270, self.y + 20, BLACK, 20, self.group))
 
-class RivalBar(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, evManager, group=None):
+class DishPercentage(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.group = group
         self.evManager = evManager
         self.x = x
         self.y = y
-        self.w = w
-        self.h = h
-
-        pygame.sprite.Sprite.__init__(self, group)
-        self.image = pygame.Surface((self.w, self.h))
+        self.image = pygame.Surface((650, 250))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
-        self.rect.midleft = (self.x, self.y)
+        self.rect.center = (self.x, self.y)
 
 
+# RIVAL--------------------------------------------------------------------------------------------------
 
 
-
-# SATISFACTION--------------------------------------------------------------------------------------------------
-
-
-class SatisfactionTab(pygame.sprite.Sprite):
+class RivalTab(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None, windowGroup=None):
         self.evManager = evManager
 
@@ -366,10 +349,10 @@ class SatisfactionTab(pygame.sprite.Sprite):
 
     def Clicked(self):
         self.windowGroup.empty()
-        SatisfactionWindow(self.evManager, self.windowGroup)
+        RivalWindow(self.evManager, self.windowGroup)
 
 
-class SatisfactionWindow():
+class RivalWindow:
     def __init__(self, evManager, group=None):
         self.evManager = evManager
         self.group = group
@@ -732,14 +715,11 @@ class HireButton(pygame.sprite.Sprite):
 
 
 
-
-
-
 # RESTAURANT LEVEL & UPGRADE -----------------------------------------------------------------------------------------
 
 
 class RestaurantTab(pygame.sprite.Sprite):
-    def __init__(self, evManager, group=None, windowGroup=None):
+    def __init__(self, evManager, group=None, popUp=None):
         self.evManager = evManager
 
         pygame.sprite.Sprite.__init__(self, group)
@@ -748,18 +728,171 @@ class RestaurantTab(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH * 64/100, HEIGHT * 67/100)
 
-        self.windowGroup = windowGroup
+        self.popUp = popUp
 
     def Clicked(self):
-        self.windowGroup.empty()
-        RestaurantWindow(self.evManager, self.windowGroup)
+        RestaurantDetail(self.evManager, self.popUp)
 
 
-class RestaurantWindow:
+class RestaurantDetail(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.evManager.RegisterListener(self)
+        self.group = group
+
+        self.image = pygame.Surface((230, 380))
+        self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH * 9 / 100, HEIGHT * 36.5 / 100)
+
+        self.level = 1
+        self.capacity = 100
+        self.operatingCost = self.level * self.capacity
+
+        Text("Level:", self.rect.left + 30, self.rect.top + 60, BLACK, 25, self.group)
+        self.levelDisplay = Numbers(self, "level", self.rect.left + 50, self.rect.top + 90, BLACK, 25,
+                                    self.group, CENTER)
+        Text("Capacity:", self.rect.left + 120, self.rect.top + 60, BLACK, 25, self.group)
+        self.capacityDisplay = Numbers(self, "capacity", self.rect.left + 160, self.rect.top + 90, BLACK, 25,
+                                       self.group, CENTER)
+        Text("Operating Cost:", WIDTH * 8.5/100, self.rect.top + 120, BLACK, 25, self.group, CENTER)
+        self.operatingCostDisplay = Numbers(self, "operatingCost", WIDTH * 8.5/100, self.rect.top + 140, BLACK, 25,
+                                            self.group, CENTER)
+
+        Text("UPGRADE", WIDTH * 8.5/100, self.rect.top + 165, BLACK, 27, self.group, CENTER)
+
+        self.upgradeDetail = UpgradeDetail(self, self.evManager, self.group)
+
+
+        x = self.rect.right - 20
+        y = self.rect.top + 20
+        self.closeButton = CloseButton(x, y, self.group)
+
+    def Remove(self):
+        self.levelDisplay.kill()
+        self.capacityDisplay.kill()
+        self.operatingCostDisplay.kill()
+        self.group.remove(contents for contents in self.upgradeDetail.contents)
+
+
+
+    def Update(self):
+        self.operatingCost = self.level * self.capacity
+        self.levelDisplay = Numbers(self, "level", self.rect.left + 50, self.rect.top + 90, BLACK, 25,
+                                    self.group, CENTER)
+        self.capacityDisplay = Numbers(self, "capacity", self.rect.left + 160, self.rect.top + 90, BLACK, 25,
+                                       self.group, CENTER)
+        self.operatingCostDisplay = Numbers(self, "operatingCost", WIDTH * 8.5 / 100, self.rect.top + 140, BLACK,
+                                            25, self.group, CENTER)
+        self.upgradeDetail = UpgradeDetail(self, self.evManager, self.group)
+
+
+    def Notify(self, event):
+        if isinstance(event, UpgradeLevelEvent):
+            self.Remove()
+            self.level = event.level
+            self.Update()
+
+
+        elif isinstance(event, UpgradeCapacityEvent):
+            self.Remove()
+            self.capacity = event.capacity
+            self.Update()
+
+
+class UpgradeDetail(pygame.sprite.Sprite):
+    def __init__(self, parent, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
         self.group = group
-        self.window = MainWindow(PURPLE, self.group)
+        self.parent = parent
+
+        self.image = pygame.Surface((200, 190))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH * 9 / 100, HEIGHT * 48 / 100)
+        self.contents = []
+
+        #UPGRADE LEVEL
+        self.currentLevel = self.parent.level
+        self.nextLevel = self.currentLevel + 1
+        self.newLevelCost = self.nextLevel * self.parent.capacity
+        self.costLevelDifference = self.newLevelCost - self.parent.operatingCost
+        self.upLevelCost = 1000 * (self.nextLevel ** 2)
+
+        self.contents.append(Text("Level:", self.rect.left + 40, self.rect.top + 10, BLACK, 23, self.group))
+        self.contents.append(Numbers(self, "currentLevel", self.rect.left + 100, self.rect.top + 17, BLACK, 25,
+                                     self.group))
+        self.contents.append(Text("-->", self.rect.left + 120, self.rect.top + 17, BLACK, 25, self.group, CENTER)) #TODO: Replace with Arrow Sprite
+        self.contents.append(Numbers(self, "nextLevel", self.rect.left + 145, self.rect.top + 17, BLACK, 25,
+                                     self.group))
+        self.contents.append(Text("+$" + str(self.costLevelDifference), self.rect.left + 50, self.rect.top + 45, BLACK,
+                                  25, self.group, CENTER))
+        self.contents.append(Text("$" + str(self.upLevelCost), self.rect.left + 130, self.rect.top + 45, BLACK, 25,
+                                  self.group, CENTER))
+        self.contents.append(UpgradeButton(WIDTH * 9/100, self.rect.top + 70, self, "level", self.evManager,
+                                           self.group))
+
+        #UPGRADE CAPACITY
+        self.currentCapacity = self.parent.capacity
+        self.nextCapacity = self.currentCapacity + 100
+        self.newCapacityCost = self.parent.level * self.nextCapacity
+        self.costCapacityDifference = self.newCapacityCost - self.parent.operatingCost
+        self.upCapacityCost = 2 * self.nextCapacity
+
+        self.contents.append(Text("Capacity:", self.rect.left + 10, self.rect.top + 100, BLACK, 23, self.group))
+
+        self.contents.append(Numbers(self, "currentCapacity", self.rect.left + 120, self.rect.top + 108, BLACK, 23,
+                                     self.group))
+
+        self.contents.append(Text("-->", self.rect.left + 140, self.rect.top + 107, BLACK, 25, self.group, CENTER)) # TODO: Replace with Arrow Sprite
+
+        self.contents.append(Numbers(self, "nextCapacity", self.rect.left + 190, self.rect.top + 108, BLACK, 23,
+                                     self.group))
+
+        self.contents.append(Text("+$" + str(self.costCapacityDifference), self.rect.left + 50, self.rect.top + 135,
+                                  BLACK, 25,self.group, CENTER))
+        self.contents.append(Text("$" + str(self.upCapacityCost), self.rect.left + 130, self.rect.top + 135, BLACK, 25,
+                                  self.group, CENTER))
+        self.contents.append(UpgradeButton(WIDTH * 9/100, self.rect.bottom - 25, self, "capacity", self.evManager,
+                                           self.group))
+
+
+class UpgradeButton(pygame.sprite.Sprite):
+    def __init__(self, x, y, parent, type, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.group = group
+        self.evManager = evManager
+        self.type = type
+        self.x = x
+        self.y = y
+        self.parent = parent
+
+        self.image = pygame.Surface((90, 25))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+    def Clicked(self):
+        if self.type == "level":
+            ev = UpgradeLevelEvent(self.parent.nextLevel, self.parent.upLevelCost)
+            self.evManager.Post(ev)
+
+        elif self.type == "capacity":
+            ev = UpgradeCapacityEvent(self.parent.nextCapacity, self.parent.upCapacityCost)
+            self.evManager.Post(ev)
+
+
+
+
+
+
+
+
+
+
+
 
 # MAIN UI: Menu, Inventory ---------------------------------------------------------------------------------------------
 
@@ -1385,13 +1518,13 @@ class View:
         #All sprite start from here.
         #Sprite will carry it group from here.
         self.staffTab = StaffTab(self.evManager, self.clickUI, self.windows)
-        self.restaurantTab = RestaurantTab(self.evManager, self.clickUI, self.windows)
+        self.restaurantTab = RestaurantTab(self.evManager, self.clickUI, self.popUp)
         self.menuTab = MenuTab(self.evManager, self.mainUI)
         self.inventoryTab = InventoryTab(self.evManager, self.mainUI)
         self.midTab = MidTab(self.evManager, self.mainUI, self.clickUI, self.popUp, self.windows)
         self.financeTab = FinanceTab(self.evManager, self.clickUI, self.windows)
         self.customersTab = CustomersTab(self.evManager, self.clickUI, self.windows)
-        self.satisfactionTab = SatisfactionTab(self.evManager, self.clickUI, self.windows)
+        self.rivalTab = RivalTab(self.evManager, self.clickUI, self.windows)
         self.datetime = DateTime(self.evManager, self.mainUI)
 
 
