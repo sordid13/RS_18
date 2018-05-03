@@ -7,6 +7,11 @@ STATE_STARTED = "Game Started"
 DISPLAY_RESOLUTION = (1280, 720)
 DRAW_RESOLUTION = (1280, 720)
 
+# Text alignment
+CENTER = "Center"
+RIGHT = "Right"
+LEFT = "Left"
+
 # List of dishes & ingredients exist in game
 INGREDIENTS_LIST = []
 DISHES_LIST = []
@@ -45,9 +50,11 @@ INGREDIENT_TYPE_MISC = "Misc"
 # Customers
 STARTING_CUSTOMERS = 100
 
-# Text alignment
-CENTER = "Center"
-RIGHT = "Right"
-LEFT = "Left"
+# Finance related
+INGREDIENTS = "Ingredients"
+RENOVATION = "Renovation"
+UTILITY = "Overhead"
+TAX = "TAX"
+MISC = "Miscellaneous"
 
 
