@@ -1,3 +1,9 @@
+class AuthenticatedEvent:
+    def __init__(self, user):
+        self.name = "Authenticated Event"
+        self.user = user
+
+
 class TickEvent:
     def __init__(self):
         self.name = "Tick Event"

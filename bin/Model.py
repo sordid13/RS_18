@@ -7,80 +7,22 @@ class Game:
     def __init__(self, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
-        self.state = STATE_PREPARING
 
         self.dateManager = DateManager(self.evManager)
         self.customerManager = CustomerManager(self.evManager)
         self.dishManager = DishManager(self.evManager)
         self.cart = Cart(self.evManager)
 
-        self.player = None
-        self.rival = None
+        self.player1 = Player(self, self.evManager)
+        self.player2 = AI(self, self.evManager)
 
-    def Start(self):
-        self.LoadAssets()
+        self.player1.rival = self.player2
+        self.player2.rival = self.player1
 
-        self.player = Player(self, self.evManager)
-        self.rival = AI(self, self.evManager)
-
-        self.state = STATE_STARTED
-        ev = GameStartedEvent()
-        self.evManager.Post(ev)
-
-    def LoadAssets(self):
-        # Load list of ingredients
-        config = configparser.ConfigParser()
-        config.read("data/ingredients.rs")
-        for section in config.sections():
-            name = str(config.get(section, "name"))
-            type = str(config.get(section, "type"))
-            baseCost = config.getfloat(section, "cost")
-            INGREDIENTS_LIST.append(Ingredient(name, type, baseCost, self.evManager))
-
-        # Load list of dishes
-        config = configparser.ConfigParser()  # Reinitiate for new file
-        config.read("data/dishes.rs")
-        for section in config.sections():
-            name = str(config.get(section, "name"))
-            type = str(config.get(section, "type"))
-            cuisine = str(config.get(section, "cuisine"))
-            rawIngre = str(config.get(section, "ingredients")).strip()
-
-            ingredients = []
-            split = rawIngre.split(', ')
-            for ingredient in split:
-                noIngredient = True
-                for i in INGREDIENTS_LIST:
-                    if ingredient == i.name:
-                        ingredients.append(i)
-                        noIngredient = False
-                        break
-                if noIngredient:
-                    print(ingredient)
-
-
-            dish = Dish(name, type, cuisine, ingredients, self.evManager)
-            DISHES_LIST.append(dish)
-            if cuisine == "Western":
-                WESTERN_DISHES.append(dish)
-            elif cuisine == "Chinese":
-                CHINESE_DISHES.append(dish)
-            elif cuisine == "Japanese":
-                JAPANESE_DISHES.append(dish)
-            elif cuisine == "Korean":
-                KOREAN_DISHES.append(dish)
-            elif cuisine == "Indian":
-                INDIAN_DISHES.append(dish)
-
-        print(len(INGREDIENTS_LIST))
 
     def Notify(self, event):
-        if isinstance(event, TickEvent):
-            if self.state is STATE_PREPARING:
-                self.Start()
-
-        elif isinstance(event, NewDayEvent):
-            self.customerManager.TotalImpression(self.player, self.rival)
+        if isinstance(event, NewDayEvent):
+            self.customerManager.TotalImpression(self.player1, self.player2)
 
 
 class Player:
@@ -88,7 +30,7 @@ class Player:
         self.evManager = evManager
         self.evManager.RegisterListener(self)
         self.game = game
-        self.rival = self.game.rival
+        self.rival = None
 
         self.customerManager = self.game.customerManager
         self.dishManager = self.game.dishManager
@@ -108,6 +50,12 @@ class Player:
         self.restaurantLvl = 0
         self.restaurantCapacity = 50
         self.menu.dishLimit = 5 + (5 * self.restaurantLvl)
+
+    def SpendMoney(self, value):
+        self.cash -= value
+
+    def EarnMoney(self, value):
+        self.cash += value
 
     def GetChefs(self):
         # Returns highest level of each cuisine chef in dictionary
@@ -254,7 +202,6 @@ class AI(Player):
     def __init__(self, game, evManager):
         super().__init__(game, evManager)
         self.name = "AI 1 "
-        self.rival = self.game.player
 
         self.chefs = [Chef(CUISINE_WESTERN, 0, self.evManager), Chef(CUISINE_WESTERN, 3, self.evManager),
                       Chef(CUISINE_CHINESE, 0, self.evManager), Chef(CUISINE_CHINESE, 3, self.evManager),
@@ -603,19 +550,3 @@ class Cart:
 
         elif isinstance(event, RemoveFromCartEvent):
             self.RemoveFromCart(event.ingredient)
-
-
-def main():
-    evManager = EventManager()
-    game = Game(evManager)
-    view = View(evManager)
-    control = Controller(evManager)
-
-    control.Run()
-
-def authenticated():
-    return Authentication.authenticated()
-
-if __name__ == '__main__':
-    #if authenticated():
-        main()

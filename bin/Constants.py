@@ -51,7 +51,7 @@ INGREDIENT_TYPE_MISC = "Misc"
 STARTING_CUSTOMERS = 100
 
 # Finance related
-INGREDIENTS = "Ingredients"
+INVENTORY = "Inventory"
 RENOVATION = "Renovation"
 UTILITY = "Overhead"
 TAX = "TAX"
