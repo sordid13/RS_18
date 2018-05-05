@@ -271,6 +271,69 @@ class FinanceWindow:
         self.evManager = evManager
         self.group = group
         self.window = MainWindow(GREEN, self.group)
+        self.screen = None
+
+        x = WIDTH/2
+        y = HEIGHT/2
+        #Button
+        self.dayButton = FinanceButton(x - 300, y - 260, 140, 30, self, "Day", YELLOW, self.evManager, self.group)
+        self.weekButton = FinanceButton(x - 150, y - 260, 140, 30, self, "Week", PURPLE, self.evManager, self.group)
+        self.monthButton = FinanceButton(x , y - 260, 140, 30, self, "Month", BLUE, self.evManager, self.group)
+        self.yearButton = FinanceButton(x + 150, y - 260, 140, 30, self, "Year", RED, self.evManager, self.group)
+        self.statementButton = FinanceButton(x + 250, y - 260, 30, 40, self, "Statement", BLACK, self.evManager, self.group)
+        self.graphButton = FinanceButton(x + 285, y - 260, 30, 40, self, "Graph", BLACK, self.evManager, self.group)
+
+        #Text
+        Text("Income:", x - 350, y - 200, BLACK, 25, self.group)
+        Text("Sales", x - 330, y - 180, BLACK, 25, self.group)
+        Text("Expense:", x - 350, y - 155, BLACK, 25, self.group)
+        Text("Inventory", x - 330, y - 130, BLACK, 25, self.group)
+        Text("Marketing", x - 330, y - 100, BLACK, 25, self.group)
+        Text("Renovation", x - 330, y - 70, BLACK, 25, self.group)
+        Text("Salary", x - 330, y - 40, BLACK, 25, self.group)
+        Text("Misc.", x - 330, y - 10, BLACK, 25, self.group)
+        Text("Profit/Loss", x - 350, y + 20, BLACK, 25, self.group)
+
+        self.firstScreen = StatementScreen(x - 120, y - 80, self, self.evManager, self.group)
+        self.secondScreen = StatementScreen(x + 80, y - 80, self, self.evManager, self.group)
+        self.thirdScreen = StatementScreen(x + 280, y - 80, self, self.evManager, self.group)
+
+
+
+class StatementScreen(pygame.sprite.Sprite):
+    def __init__(self, x, y, parent, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.parent = parent
+        self.x = x
+        self.y = y
+
+        self.image = pygame.Surface((190, 270))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+
+
+class FinanceButton(pygame.sprite.Sprite):
+    def __init__(self, x, y, w, h, parent, name, color, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.parent = parent
+        self.name = name
+        self.color = color
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+
+        self.image = pygame.Surface((self.w, self.h))
+        self.image.fill(self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
 
 # CUSTOMERS-------------------------------------------------------------------------------------------------
 
@@ -357,6 +420,32 @@ class RivalWindow:
         self.evManager = evManager
         self.group = group
         self.window = MainWindow(YELLOW, self.group)
+
+        x = WIDTH/2
+        y = HEIGHT/2
+        self.customersNumber = 100
+
+        Text("Rival's Restaurant", x, y - 270, BLACK, 35, self.group, CENTER)
+        Text("Today Customers:", x - 220, y - 240, BLACK, 25, self.group)
+        self.customersDisplay = Numbers(self, "customersNumber", x + 20, y - 230, BLACK, 38, self.group)
+
+        Text("MENU", x, y - 190,  BLACK, 35, self.group, CENTER)
+        self.menuScreen = RivalMenuScreen(x, y, self.evManager, self.group)
+
+
+class RivalMenuScreen(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.x = x
+        self.y = y
+
+        self.image = pygame.Surface((780, 250))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y - 50)
+
 
 # STAFFs/WORKERs--------------------------------------------------------------------------------------------------
 
@@ -882,16 +971,6 @@ class UpgradeButton(pygame.sprite.Sprite):
         elif self.type == "capacity":
             ev = UpgradeCapacityEvent(self.parent.nextCapacity, self.parent.upCapacityCost)
             self.evManager.Post(ev)
-
-
-
-
-
-
-
-
-
-
 
 
 # MAIN UI: Menu, Inventory ---------------------------------------------------------------------------------------------
