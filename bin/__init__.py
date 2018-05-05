@@ -9,3 +9,6 @@ from .Date import *
 from .CustomerManager import *
 from .DishManager import *
 from .TrendManager import *
+
+from .Model import *
+from .Authentication import *

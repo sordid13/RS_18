@@ -26,7 +26,7 @@ class Controller:
             if currentTicks - self.startTicks > 60000:
                 self.startTicks = currentTicks
                 ev = NewDayEvent()
-                self.evManager.Post(ev)
+                #self.evManager.Post(ev)
 
             for event in pygame.event.get():
                 ev = None

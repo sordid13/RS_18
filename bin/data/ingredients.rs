@@ -73,8 +73,8 @@ name = Egg
 type = Misc
 cost = 0.4
 
-[Egg Plant]
-name = Egg Plant
+[Eggplant]
+name = Eggplant
 type = Misc
 cost = 0.7
 
