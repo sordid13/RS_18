@@ -97,16 +97,17 @@ class BatchExpiredEvent:
         self.batch = batch
 
 
+#STAFF RELATED EVENT
 class GUIOpenHireStaffEvent:
     def __init__(self):
         self.name = "Open Hire Staff Event"
 
-
+      
 class GUIOpenMyStaffEvent:
     def __init__(self):
         self.name = "Open My Staff Event"
 
-
+        
 class GUISelectStaffEvent:
     def __init__(self, staffType):
         self.name = "Select Staff Event"
@@ -142,6 +143,22 @@ class NoChefEvent:
         self.name = "No Chef Event"
 
 
+#UPGRADE RELATED EVENT
+class UpgradeLevelEvent:
+    def __init__(self, level, cost):
+        self.name = "Upgrade Level Event"
+        self.level = level
+        self.cost = cost
+
+
+class UpgradeCapacityEvent:
+    def __init__(self, capacity, cost):
+        self.name = "Upgrade Capacity Event"
+        self.capacity = capacity
+        self.cost = cost
+
+
+#Controller Related Event
 class LeftClickEvent:
     def __init__(self, pos):
         self.name = "Left Click Event"
