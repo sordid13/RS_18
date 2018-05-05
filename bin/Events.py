@@ -48,6 +48,11 @@ class SalesReportEvent:
         self.satisfaction = satisfaction
 
 
+class MenuUpdateEvent:
+    def __init__(self, dishes):
+        self.name = "Update Menu Event"
+        self.dishes = dishes
+
 class AddDishEvent:
     def __init__(self, dish, price):
         self.name = "Add Dish Event"
@@ -92,26 +97,32 @@ class BatchExpiredEvent:
         self.batch = batch
 
 
-class OpenHireStaffEvent:
+class GUIOpenHireStaffEvent:
     def __init__(self):
-        self.name = "Open Hire Staff"
+        self.name = "Open Hire Staff Event"
 
 
-class OpenMyStaffEvent:
+class GUIOpenMyStaffEvent:
     def __init__(self):
-        self.name = "Open My Staff"
+        self.name = "Open My Staff Event"
 
 
-class SelectStaffEvent:
+class GUISelectStaffEvent:
     def __init__(self, staffType):
-        self.name = "Select Staff"
+        self.name = "Select Staff Event"
         self.staffType = staffType
 
 
-class SelectCuisineEvent:
+class GUISelectCuisineEvent:
     def __init__(self, cuisine):
-        self.name = "Select Cuisine"
+        self.name = "Select Cuisine Event"
         self.cuisine = cuisine
+
+
+class StaffUpdateEvent:
+    def __init__(self, chefs, waiters):
+        self.chefs = chefs
+        self.waiters = waiters
 
 
 class HireChefEvent:

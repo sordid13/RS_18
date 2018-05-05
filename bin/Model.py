@@ -19,6 +19,9 @@ class Game:
         self.player1.rival = self.player2
         self.player2.rival = self.player1
 
+        ev = GameStartedEvent()
+        self.evManager.Post(ev)
+
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
@@ -178,6 +181,8 @@ class Player:
 
         elif isinstance(event, AddDishEvent):
             self.menu.AddDish(event.dish, event.price)
+            print(event.dish.name)
+            print(event.price)
 
         elif isinstance(event, BuyIngredientsEvent):
             new = True
@@ -196,6 +201,10 @@ class Player:
 
         elif isinstance(event, HireWaiterEvent):
             self.waiters.append(Waiter(event.level, self.evManager))
+
+        elif isinstance(event, GUIOpenMyStaffEvent):
+            ev = StaffUpdateEvent(self.chefs, self.waiters)
+            self.evManager.Post(ev)
 
 
 class AI(Player):
@@ -341,13 +350,19 @@ class Menu:
 
     def AddDish(self, dish, price):
         dishDict = dict(dish=dish, price=price, satisfaction=None)
-        if dishDict not in self.dishes:
+        if dish not in (d['dish'] for d in self.dishes):
             self.dishes.append(dishDict)
+
+            ev = MenuUpdateEvent(self.dishes)
+            self.evManager.Post(ev)
 
     def RemoveDish(self, dish):
         for d in self.dishes:
             if d['dish'].name == dish.name:
                 self.dishes.remove(d)
+
+                ev = MenuUpdateEvent(self.dishes)
+                self.evManager.Post(ev)
 
     def Cuisines(self):
         cuisines = []

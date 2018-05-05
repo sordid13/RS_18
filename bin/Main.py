@@ -78,6 +78,8 @@ class Main:
 
 if __name__ == '__main__':
     evManager = EventManager()
-    auth = Authentication(evManager)
+    #auth = Authentication(evManager)
     main = Main(evManager)
-    auth.mainloop()
+    main.LoadAssets()
+    main.Start()
+    #auth.mainloop()
