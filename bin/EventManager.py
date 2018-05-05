@@ -6,7 +6,6 @@ class EventManager:
     def __init__(self):
         from weakref import WeakKeyDictionary
         self.listeners = WeakKeyDictionary()
-        self.eventQueue = []
 
     def RegisterListener(self, listener):
         self.listeners[listener] = 1
@@ -16,17 +15,7 @@ class EventManager:
             del self.listeners[listener]
 
     def Post(self, event):
-        # Post a new event.  It will be broadcast to all listeners
-        self.eventQueue.append(event)
-        if isinstance(event, TickEvent):
-            self.ConsumeEventQueue()
-
-    def ConsumeEventQueue(self):
-        for event in self.eventQueue:
-
-            keys = list(self.listeners.keys())
-            for listener in keys:
-                listener.Notify(event)
-
-        self.eventQueue = []
+        keys = list(self.listeners.keys())
+        for listener in keys:
+            listener.Notify(event)
 

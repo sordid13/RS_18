@@ -1,4 +1,5 @@
 from bin import *
+from .Events import *
 import configparser
 import copy
 
@@ -202,7 +203,7 @@ class Player:
         elif isinstance(event, HireWaiterEvent):
             self.waiters.append(Waiter(event.level, self.evManager))
 
-        elif isinstance(event, GUIOpenMyStaffEvent):
+        elif isinstance(event, StaffUpdateRequestEvent):
             ev = StaffUpdateEvent(self.chefs, self.waiters)
             self.evManager.Post(ev)
 

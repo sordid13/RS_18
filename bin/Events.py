@@ -97,7 +97,6 @@ class BatchExpiredEvent:
         self.batch = batch
 
 
-#STAFF RELATED EVENT
 class GUIOpenHireStaffEvent:
     def __init__(self):
         self.name = "Open Hire Staff Event"
@@ -119,9 +118,13 @@ class GUISelectCuisineEvent:
         self.name = "Select Cuisine Event"
         self.cuisine = cuisine
 
+class StaffUpdateRequestEvent:
+    def __init__(self):
+        self.name = "Staff Update Request Event"
 
 class StaffUpdateEvent:
     def __init__(self, chefs, waiters):
+        self.name = "Staff Update Event"
         self.chefs = chefs
         self.waiters = waiters
 
