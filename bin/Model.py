@@ -41,9 +41,9 @@ class Player:
 
         self.menu = Menu(self.evManager)
         self.inventory = Inventory(self.evManager)
-        self.chefs = [Chef(CUISINE_WESTERN, 0, self.evManager), Chef(CUISINE_WESTERN, 3, self.evManager),
-                      Chef(CUISINE_CHINESE, 0, self.evManager), Chef(CUISINE_CHINESE, 3, self.evManager),
-                      Chef(CUISINE_INDIAN, 0, self.evManager)]
+        self.chefs = [Chef(0, CUISINE_WESTERN, self.evManager), Chef(3, CUISINE_WESTERN, self.evManager),
+                      Chef(0, CUISINE_CHINESE, self.evManager), Chef(3, CUISINE_CHINESE, self.evManager),
+                      Chef(0, CUISINE_INDIAN, self.evManager)]
         self.waiters = [Waiter(0, self.evManager)]
         self.marketingBonuses = []
 
@@ -337,11 +337,12 @@ class AI(Player):
 
 
 class Chef:
-    def __init__(self, cuisine, level, evManager):
+    def __init__(self, level, cuisine, evManager):
         self.evManager = evManager
         self.name = ""
-        self.cuisine = cuisine
         self.level = level
+        self.cuisine = cuisine
+
         # TODO: Possible features - chef experience
 
 

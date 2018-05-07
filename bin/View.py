@@ -479,7 +479,7 @@ class RivalMenuScreen(pygame.sprite.Sprite):
 
 
 class StaffTab(pygame.sprite.Sprite):
-    def __init__(self, evManager, group=None, windowGroup=None):
+    def __init__(self, evManager, group=None, windowGroup=None, popUp=None):
         self.evManager = evManager
 
         pygame.sprite.Sprite.__init__(self, group)
@@ -489,17 +489,19 @@ class StaffTab(pygame.sprite.Sprite):
         self.rect.center = (WIDTH * 36/100, HEIGHT * 67/100)
 
         self.windowGroup = windowGroup
+        self.popUp = popUp
 
     def Clicked(self):
         self.windowGroup.empty()
-        StaffWindow(self.evManager, self.windowGroup)
+        StaffWindow(self.evManager, self.windowGroup, self.popUp)
 
 
 class StaffWindow(MainWindow):
-    def __init__(self, evManager, group=None):
+    def __init__(self, evManager, group=None, popUp=None):
         super().__init__(YELLOW, group)
         self.evManager = evManager
         self.evManager.RegisterListener(self)
+        self.popUp = popUp
 
 
         MyStaffsTab(self.evManager, self.group)
@@ -544,9 +546,7 @@ class StaffWindow(MainWindow):
         elif isinstance(event, GUIOpenMyStaffEvent):
             self.RemoveContents()
             self.screen = None
-            self.screen = MyStaffScreen(self.evManager, self.group)
-
-
+            self.screen = MyStaffScreen(self.evManager, self.group, self.popUp)
 
 
 class StaffSprite(pygame.sprite.Sprite):
@@ -571,7 +571,6 @@ class StaffSprite(pygame.sprite.Sprite):
         self.image.fill(self.color)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
-
 
 
 class MyStaffsTab(pygame.sprite.Sprite):
@@ -608,7 +607,7 @@ class HireStaffsTab(pygame.sprite.Sprite):
 
 
 class MyStaffScreen(pygame.sprite.Sprite):
-    def __init__(self, evManager, group=None):
+    def __init__(self, evManager, group=None, popUp=None):
         pygame.sprite.Sprite.__init__(self, group)
 
         self.evManager = evManager
@@ -616,6 +615,7 @@ class MyStaffScreen(pygame.sprite.Sprite):
         self.group = group
         self.x = WIDTH * 50/100
         self.y = HEIGHT * 40/100
+        self.popUp = popUp
 
         self.image = pygame.Surface((780, 300))
         self.image.fill(BLUE)
@@ -625,25 +625,32 @@ class MyStaffScreen(pygame.sprite.Sprite):
 
         self.contents = []
         self.container = []
+        self.page = 1
 
-        self.contents.append(Text("Restaurant's Kuli", self.x, self.y - 130, BLACK, 30, self.group, CENTER))
+        self.contents.append(Text("Restaurant's Staff", self.x, self.y - 130, BLACK, 30, self.group, CENTER))
 
         ev = StaffUpdateRequestEvent()
         self.evManager.Post(ev)
 
     def LoadStaff(self, chefs, waiters):
-        x = self.x
-        y = self.y
+        x = self.x - 350
+        y = self.y - 75
         i = 0
+
         for chef in chefs:
-            self.container.append(MyChefContainer(x - 360, y - 90, chef, self.evManager, self.group))
-            x += 50
+            self.container.append(MyChefContainer(x, y, chef, self.evManager, self.group, self.popUp))
+            x += 65
             i += 1
-            if i % 7 == 0:
-                x = self.x
-                y += 55
-
-
+            if i % 10 == 0:
+                x = self.x - 350
+                y += 75
+        for waiter in waiters:
+            self.container.append(MyWaiterContainer(x, y, waiter, self.evManager, self.group, self.popUp))
+            x += 65
+            i += 1
+            if i % 10 == 0:
+                x = self.x - 350
+                y += 75
 
     def RemoveContents(self):
         for container in self.container:
@@ -766,6 +773,23 @@ class ChefTab(pygame.sprite.Sprite):
         self.evManager.Post(ev)
 
 
+class WaiterTab(pygame.sprite.Sprite):
+    def __init__(self, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+
+        self.image = pygame.Surface((40, 40))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH * 22/100, HEIGHT * 32 / 100)
+
+    def Clicked(self):
+        staffType = "Waiter"
+        ev = GUISelectStaffEvent(staffType)
+        self.evManager.Post(ev)
+
+
 class ChefCuisine(pygame.sprite.Sprite):
     def __init__(self, x, y, cuisine, evManager, group=None):
         self.evManager = evManager
@@ -784,31 +808,132 @@ class ChefCuisine(pygame.sprite.Sprite):
         self.evManager.Post(ev)
 
 
-class WaiterTab(pygame.sprite.Sprite):
-    def __init__(self, evManager, group=None):
-        pygame.sprite.Sprite.__init__(self, group)
+class ChefDetail(pygame.sprite.Sprite):
+    def __init__(self, chef, evManager, group=None):
         self.evManager = evManager
+        pygame.sprite.Sprite.__init__(self, group)
         self.group = group
 
-        self.image = pygame.Surface((40, 40))
-        self.image.fill(GREEN)
+        self.x = WIDTH * 9 / 100
+        self.y = HEIGHT * 40 / 100
+        self.w = 230
+        self.h = 300
+        self.chef = chef
+        self.level = self.chef.level
+        self.cuisine = self.chef.cuisine
+        self.name = None
+        self.wage = None
+
+        if self.level == 3:
+            self.name = "Chef de Cuisine"
+            self.wage = 5000
+        elif self.level == 2:
+            self.name = "Sous Chef"
+            self.wage = 3500
+        elif self.level == 1:
+            self.name = "Chef de Partie"
+            self.wage = 2000
+        elif self.level == 0:
+            self.name = "Commis Chef"
+            self.wage = 1000
+
+        self.image = pygame.Surface((self.w, self.h))
+        self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 22/100, HEIGHT * 32 / 100)
+        self.rect.center = (self.x, self.y)
+        self.contents = []
+
+        x = self.rect.right - 20
+        y = self.rect.top + 20
+        self.closeButton = CloseButton(x, y, self.group)
+
+        self.contents.append(Text("CHEF", self.x, self.y - 130, BLACK, 35, self.group, CENTER))
+        self.contents.append(StaffSprite(self.x, self.y - 80, 40, 40, self.evManager, self.group, "Chef"))
+        self.contents.append(Text(self.name, self.x, self.y - 35, BLACK, 20, self.group, CENTER))
+        self.contents.append(Text(self.cuisine, self.x, self.y - 20, BLACK, 20, self.group, CENTER))
+        self.contents.append(Text("Wage/Day:", self.x - 100, self.y, BLACK, 20, self.group))
+        self.contents.append(Text(str(self.wage), self.x - 20, self.y, BLACK, 20, self.group))
+        self.contents.append(FireStaffButton(self.x, self.y + 100, self, self.evManager, self.group))
+
+
+class WaiterDetail(pygame.sprite.Sprite):
+    def __init__(self, waiter, evManager, group=None):
+        self.evManager = evManager
+        pygame.sprite.Sprite.__init__(self, group)
+        self.group = group
+
+        self.x = WIDTH * 9 / 100
+        self.y = HEIGHT * 40 / 100
+        self.w = 230
+        self.h = 300
+        self.waiter = waiter
+        self.level = self.waiter.level
+        self.name = None
+        self.wage = None
+
+        if self.level == 3:
+            self.name = "Highly-Trained"
+            self.wage = 2500
+        elif self.level == 2:
+            self.name = "Well-Trained"
+            self.wage = 2000
+        elif self.level == 1:
+            self.name = "Basic-Trained"
+            self.wage = 1500
+        elif self.level == 0:
+            self.name = "Untrained"
+            self.wage = 1000
+
+        self.image = pygame.Surface((self.w, self.h))
+        self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+        self.contents = []
+
+        x = self.rect.right - 20
+        y = self.rect.top + 20
+        self.closeButton = CloseButton(x, y, self.group)
+
+        self.contents.append(Text("WAITER", self.x, self.y - 130, BLACK, 35, self.group, CENTER))
+        self.contents.append(StaffSprite(self.x, self.y - 80, 40, 40, self.evManager, self.group, "Waiter"))
+        self.contents.append(Text(self.name, self.x, self.y - 35, BLACK, 20, self.group, CENTER))
+        self.contents.append(Text("Wage/Day:", self.x - 100, self.y, BLACK, 20, self.group))
+        self.contents.append(Text(str(self.wage), self.x - 20, self.y, BLACK, 20, self.group))
+        self.contents.append(FireStaffButton(self.x, self.y + 100, self, self.evManager, self.group))
+
+
+class FireStaffButton(pygame.sprite.Sprite):
+    def __init__(self, x, y, staff, evManager, group=None):
+        self.evManager = evManager
+        pygame.sprite.Sprite.__init__(self, group)
+        self.group = group
+        self.staff = staff
+        self.x = x
+        self.y = y
+
+        self.image = pygame.Surface((150, 50))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+        Text("FIRE!!!", self.x, self.y, BLACK, 30, self.group, CENTER)
 
     def Clicked(self):
-        staffType = "Waiter"
-        ev = GUISelectStaffEvent(staffType)
-        self.evManager.Post(ev)
+        pass
+
 
 
 class MyChefContainer(pygame.sprite.Sprite):
-    def __init__(self, x, y, chef, evManager, group=None):
+    def __init__(self, x, y, chef, evManager, group=None, popUp=None):
         self.evManager = evManager
         pygame.sprite.Sprite.__init__(self, group)
         self.group = group
         self.chef = chef
+        self.level = chef.level
+        self.cuisine = chef.cuisine
+        self.popUp = popUp
+        self.type = "Chef"
 
-        self.image = pygame.Surface((45, 45))
+        self.image = pygame.Surface((55, 70))
         self.image.fill(RED)
 
         self.x = x
@@ -818,11 +943,12 @@ class MyChefContainer(pygame.sprite.Sprite):
 
         self.contents = []
 
-        self.contents.append(StaffSprite(self.x, self.y, 40, 40, self.evManager, self.group))
+        self.contents.append(StaffSprite(self.x, self.y - 8, 50, 50, self.evManager, self.group, "Chef"))
+        self.contents.append(Text(str(self.chef.level), self.x, self.y + 30, BLACK, 20, self.group, CENTER))
 
     def Clicked(self):
-        # TODO: Do
-        pass
+        self.popUp.empty()
+        ChefDetail(self, self.evManager, self.popUp)
 
 
 class HireChefContainer(pygame.sprite.Sprite):
@@ -839,15 +965,25 @@ class HireChefContainer(pygame.sprite.Sprite):
         self.cuisine = cuisine
         self.level = level
         self.name = None
+        self.wage = None
+        self.cost = None
 
         if self.level == 3:
             self.name = "Chef de Cuisine"
+            self.wage = 5000
+            self.cost = 10000
         elif self.level == 2:
             self.name = "Sous Chef"
+            self.wage = 3500
+            self.cost = 7000
         elif self.level == 1:
             self.name = "Chef de Partie"
+            self.wage = 2000
+            self.cost = 4000
         elif self.level == 0:
             self.name = "Commis Chef"
+            self.wage = 1000
+            self.cost = 2000
 
         self.image = pygame.Surface((self.w, self.h))
         self.image.fill(RED)
@@ -859,32 +995,42 @@ class HireChefContainer(pygame.sprite.Sprite):
 
         self.contents.append(Text(self.name, self.x + 60, self.y - 25, WHITE, 18, self.group))
         self.contents.append(Text(self.cuisine, self.x + 60, self.y, WHITE, 18, self.group))
+        self.contents.append(Text("Wage/Day:", self.x + 200, self.y - 25, WHITE, 20, self.group))
+        self.contents.append(Text(str(self.wage), self.x + 270, self.y - 23, WHITE, 20, self.group))
+        self.contents.append(Text("Hire Cost:", self.x + 200, self.y, WHITE, 20, self.group))
+        self.contents.append(Text(str(self.cost), self.x + 270, self.y, WHITE, 20, self.group))
 
         self.contents.append(HireButton(self.x + 450, self.y, 50, 20, self, self.evManager, self.group))
 
 
 class MyWaiterContainer(pygame.sprite.Sprite):
-    def __init__(self, x, y, waiter, evManager, group=None):
+    def __init__(self, x, y, waiter, evManager, group=None, popUp=None):
         self.evManager = evManager
         pygame.sprite.Sprite.__init__(self, group)
         self.group = group
         self.waiter = waiter
+        self.level = waiter.level
+        self.popUp = popUp
+        self.type = "Waiter"
 
-        self.image = pygame.Surface((45, 45))
+        self.image = pygame.Surface((55, 70))
         self.image.fill(BLUE)
 
         self.x = x
         self.y = y
-        self.rect = (self.x, self.y)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
 
         self.contents = []
 
-        self.sprite = StaffSprite(self.x + 30, self.y, 40, 40, self.evManager, self.group)
+        self.sprite = StaffSprite(self.x, self.y - 8, 50, 50, self.evManager, self.group, "Waiter")
         self.contents.append(self.sprite)
+        self.contents.append(Text(str(self.waiter.level), self.x, self.y + 30, BLACK, 20, self.group, CENTER))
+
 
     def Clicked(self):
-        # TODO: Do
-        pass
+        self.popUp.empty()
+        WaiterDetail(self, self.evManager, self.popUp)
 
 
 class HireWaiterContainer(pygame.sprite.Sprite):
@@ -900,15 +1046,25 @@ class HireWaiterContainer(pygame.sprite.Sprite):
         self.h = h
         self.level = level
         self.name = None
+        self.wage = None
+        self.cost = None
 
         if self.level == 3:
             self.name = "Highly-Trained"
+            self.wage = 2500
+            self.cost = 5000
         elif self.level == 2:
             self.name = "Well-Trained"
+            self.wage = 2000
+            self.cost = 4000
         elif self.level == 1:
             self.name = "Basic-Trained"
+            self.wage = 1500
+            self.cost = 3000
         elif self.level == 0:
             self.name = "Untrained"
+            self.wage = 1000
+            self.cost = 2000
 
         self.image = pygame.Surface((self.w, self.h))
         self.image.fill(RED)
@@ -919,6 +1075,10 @@ class HireWaiterContainer(pygame.sprite.Sprite):
         self.contents.append(StaffSprite(self.x + 30, self.y - 30, 40, 40, self.evManager, self.group))
 
         self.contents.append(Text(self.name, self.x + 60, self.y - 45, WHITE, 18, self.group))
+        self.contents.append(Text("Wage/Day:", self.x + 60, self.y - 25, WHITE, 20, self.group))
+        self.contents.append(Text(str(self.wage), self.x + 130, self.y - 23, WHITE, 20, self.group))
+        self.contents.append(Text("Hire Cost:", self.x + 60, self.y, WHITE, 20, self.group))
+        self.contents.append(Text(str(self.cost), self.x + 130, self.y, WHITE, 20, self.group))
 
         self.contents.append(HireButton(self.x + 290, self.y + 25, 50, 50, self, self.evManager, self.group))
 
@@ -942,8 +1102,8 @@ class HireButton(pygame.sprite.Sprite):
 
     def Clicked(self):
         print("Clicked")
-        print(self.container.staffType)
         if self.container.staffType == "Chef":
+            print(self.container.level)
             ev = HireChefEvent(self.container.level, self.container.cuisine)
             self.evManager.Post(ev)
 
@@ -1147,7 +1307,7 @@ class MenuTab(pygame.sprite.Sprite):
         y = self.rect.top + 30
         i = 0
         for dish in dishes:
-            self.contents.append(MenuDishContainer(x, y, dish, self, self.evManager, self.group, self.popUp))
+            self.contents.append(MenuDishContainer(x, y + 8, dish, self, self.evManager, self.group, self.popUp))
             x += 48
 
             i += 1
@@ -1183,14 +1343,14 @@ class MenuDishContainer(pygame.sprite.Sprite):
         self.popUp = popUp
         self.price = dish['price']
 
-        self.image = pygame.Surface((40, 60))
-        self.image.set_colorkey(WHITE)
+        self.image = pygame.Surface((45, 60))
+        self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
         self.contents = []
 
-        self.contents.append(DishSprite(self.x, self.y, self.dish, self.group))
-        self.contents.append(Text(str(self.price), self.x, self.y + 30, WHITE, 14, self.group, CENTER))
+        self.contents.append(DishSprite(self.x, self.y - 7, self.dish, self.group))
+        self.contents.append(Text("$" + " " + str(self.price), self.x, self.y + 23, BLACK, 20, self.group, CENTER))
 
     def Clicked(self):
         self.popUp.empty()
@@ -1396,7 +1556,7 @@ class DishSprite(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         self.image = pygame.Surface((40, 40))
-        self.image.fill(BLACK)
+        self.image.fill(WHITE)
         #self.image = pygame.image.load(os.path.join(imgFolder, self.ingredient.name + ".png")).convert()
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
@@ -1893,7 +2053,7 @@ class View:
 
         #All sprite start from here.
         #Sprite will carry it group from here.
-        self.staffTab = StaffTab(self.evManager, self.mainUI, self.windows)
+        self.staffTab = StaffTab(self.evManager, self.mainUI, self.windows, self.popUp)
         self.restaurantTab = RestaurantTab(self.evManager, self.mainUI, self.popUp)
         self.menuTab = MenuTab(self.evManager, self.mainUI, self.popUp)
         self.inventoryTab = InventoryTab(self.evManager, self.mainUI, self.popUp)
