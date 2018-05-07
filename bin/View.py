@@ -326,7 +326,6 @@ class FinanceWindow:
         self.thirdScreen = StatementScreen(x + 280, y - 80, self, self.evManager, self.group)
 
 
-
 class StatementScreen(pygame.sprite.Sprite):
     def __init__(self, x, y, parent, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
@@ -340,7 +339,6 @@ class StatementScreen(pygame.sprite.Sprite):
         self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
-
 
 
 class FinanceButton(pygame.sprite.Sprite):
@@ -1456,8 +1454,8 @@ class AddDishWindow:
         self.tab = range(5)
 
         self.cuisine = "Western"
-        self.page = 0
-        self.maxPage = math.ceil(len(WESTERN_DISHES) / 12) - 1
+        self.page = 1
+        self.maxPage = math.ceil(len(WESTERN_DISHES) / 12)
 
         PrevPage(WIDTH * 78 / 100, HEIGHT * 30 / 100, 50, 50, self, group)
         NextPage(WIDTH * 78 / 100, HEIGHT * 38 / 100, 50, 50, self, group)
@@ -1533,7 +1531,7 @@ class DishScreen(pygame.sprite.Sprite):
 
         x = WIDTH * 42 / 100
         y = HEIGHT * 17 / 100
-        baseIndex = self.page * 12
+        baseIndex = (self.page - 1) * 12
         for i in range(12):
             try:
                 dish = self.dishList[i + baseIndex]
@@ -1945,8 +1943,6 @@ class MarketCart(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y)
 
         self.cartScreen = CartScreen(self.x, self.y, self.evManager, group)
-        PrevPage(self.rect.right - 20, self.rect.bottom - 43, 25, 25, self, group)
-        NextPage(self.rect.right - 20, self.rect.bottom - 15, 25, 25, self, group)
 
 
 class CartScreen(pygame.sprite.Sprite):
@@ -1963,27 +1959,36 @@ class CartScreen(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
-        self.contents = []
+        self.items = []
+        self.totalPrice = 0
+        self.displayPrice = Numbers(self, "totalPrice", self.rect.left + 170, self.rect.bottom - 35, BLACK, 25,
+                                    self.group)
+
+        Text("Total: $", self.rect.left + 7, self.rect.bottom - 45, BLACK, 25, self.group)
+        BuyButton(self.rect.left + 137, self.rect.bottom - 10, self.evManager, self.group)
+        ClearButton(self.rect.left + 42, self.rect.bottom - 10, self.evManager, self.group)
 
     def Notify(self, event):
         if isinstance(event, CartUpdateEvent):
-            for sprite in self.contents:
+            for sprite in self.items:
                 for s in sprite.contents:
                     s.kill()
-                self.contents = []
                 sprite.kill()
-            self.contents = []
+            self.items = []
 
             x = self.rect.left + 15
             y = self.rect.top + 30
             for item in event.cart:
-                self.contents.append(ItemContainer(x, y, item, self, self.evManager, self.group))
+                self.items.append(ItemContainer(x, y, item, self, self.evManager, self.group))
                 x += 30
-                if len(self.contents) % 6 == 0:
+                if len(self.items) % 6 == 0:
                     x = self.rect.left + 15
                     y += 60
-                if len(self.contents) % 24 == 0:
+                if len(self.items) % 24 == 0:
                     break
+
+            self.totalPrice = event.price
+            self.displayPrice.Update()
 
 
 class ItemContainer(pygame.sprite.Sprite):
@@ -2024,6 +2029,39 @@ class ItemSprite(pygame.sprite.Sprite):
         self.group = group
 
         self.image = pygame.Surface((25, 25))
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+class BuyButton(pygame.sprite.Sprite):
+    def __init__(self, x, y, items, price, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.x = x
+        self.y = y
+        self.items = items
+        self.price = price
+
+        self.image = pygame.Surface((90, 25))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+    def Clicked(self):
+        ev = BuyIngredientsEvent(self.items)
+        self.evManager.Post(ev)
+
+
+class ClearButton(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.x = x
+        self.y = y
+
+        self.image = pygame.Surface((90, 25))
+        self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
