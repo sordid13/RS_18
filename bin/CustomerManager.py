@@ -10,13 +10,6 @@ class CustomerManager:
 
         self.totalCustomers = None
         self.prevCustomers = STARTING_CUSTOMERS
-        self.totalImpression = 100
-
-    def TotalImpression(self, player, rival):
-        impression = player.ImpressionPoints() + rival.ImpressionPoints()
-        self.totalImpression = impression
-        print(player.ImpressionPoints())
-        print(rival.ImpressionPoints())
 
     def TotalCustomers(self):
         # TODO: Implement BETTER system to generate number of customers incorporating random events
@@ -30,11 +23,17 @@ class CustomerManager:
 
         self.totalCustomers = math.floor(customers)
 
-    def CalculateCustomerSplit(self, impression):
-        # TODO: Implement system to calculate customer split
-        customers = math.floor(self.totalCustomers * (impression / self.totalImpression))
+    def CalculateCustomerSplit(self, players):
+        self.TotalCustomers()
 
-        return customers
+        totalImpression = 0
+        for player in players:
+            player.impression = player.CalculateImpression()
+            totalImpression += player.impression
+
+        for player in players:
+            customers = math.floor(self.totalCustomers * (player.impression / totalImpression))
+            player.ProcessSales(customers)
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
