@@ -1,4 +1,5 @@
 from bin import *
+from .Events import *
 import configparser
 import copy
 
@@ -214,7 +215,7 @@ class Player:
             ev = GUICheckDishMenuResponseEvent(d, event.container)
             self.evManager.Post(ev)
 
-        elif isinstance(event, GUIOpenMyStaffEvent):
+        elif isinstance(event, StaffUpdateRequestEvent):
             ev = StaffUpdateEvent(self.chefs, self.waiters)
             self.evManager.Post(ev)
 

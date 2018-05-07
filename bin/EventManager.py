@@ -1,3 +1,5 @@
+from .Events import *
+
 class EventManager:
     # responsible for coordinating most communication
     # between the Model, View, and Controller
@@ -13,7 +15,7 @@ class EventManager:
             del self.listeners[listener]
 
     def Post(self, event):
-        # Post a new event.  It will be broadcast to all listeners
         keys = list(self.listeners.keys())
         for listener in keys:
             listener.Notify(event)
+
