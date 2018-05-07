@@ -34,9 +34,6 @@ class CustomerManager:
         # TODO: Implement system to calculate customer split
         customers = math.floor(self.totalCustomers * (impression / self.totalImpression))
 
-        if customers < 0:
-            customers = 0
-
         return customers
 
     def Notify(self, event):

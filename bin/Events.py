@@ -53,11 +53,39 @@ class MenuUpdateEvent:
         self.name = "Update Menu Event"
         self.dishes = dishes
 
+
 class AddDishEvent:
     def __init__(self, dish, price):
         self.name = "Add Dish Event"
         self.dish = dish
         self.price = price
+
+
+class UpdateDishPriceEvent:
+    def __init__(self, dish, price):
+        self.name = "Update Dish Price Event"
+        self.dish = dish
+        self.price = price
+
+
+class RemoveDishEvent:
+    def __init__(self, dish):
+        self.name = "Remove Dish Event"
+        self.dish = dish
+
+
+class GUICheckDishMenuEvent:
+    def __init__(self, dish, container):
+        self.name = "Check Dish Menu Event"
+        self.dish = dish
+        self.container = container
+
+
+class GUICheckDishMenuResponseEvent:
+    def __init__(self, dish, container):
+        self.name = "Check Dish Menu Response Event"
+        self.dish = dish
+        self.container = container
 
 
 class AddToCartEvent:
@@ -96,6 +124,9 @@ class BatchExpiredEvent:
         self.name = "Batch Expired Event"
         self.batch = batch
 
+class InventoryUpdateEvent:
+    def __init__(self, inventory):
+        pass
 
 class GUIOpenHireStaffEvent:
     def __init__(self):
