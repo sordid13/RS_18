@@ -1307,7 +1307,7 @@ class MenuTab(pygame.sprite.Sprite):
         y = self.rect.top + 30
         i = 0
         for dish in dishes:
-            self.contents.append(MenuDishContainer(x, y, dish, self, self.evManager, self.group, self.popUp))
+            self.contents.append(MenuDishContainer(x, y + 8, dish, self, self.evManager, self.group, self.popUp))
             x += 48
 
             i += 1
@@ -1343,14 +1343,14 @@ class MenuDishContainer(pygame.sprite.Sprite):
         self.popUp = popUp
         self.price = dish['price']
 
-        self.image = pygame.Surface((40, 60))
-        self.image.set_colorkey(WHITE)
+        self.image = pygame.Surface((45, 60))
+        self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
         self.contents = []
 
-        self.contents.append(DishSprite(self.x, self.y, self.dish, self.group))
-        self.contents.append(Text(str(self.price), self.x, self.y + 30, WHITE, 14, self.group, CENTER))
+        self.contents.append(DishSprite(self.x, self.y - 7, self.dish, self.group))
+        self.contents.append(Text("$" + " " + str(self.price), self.x, self.y + 23, BLACK, 20, self.group, CENTER))
 
     def Clicked(self):
         self.popUp.empty()
@@ -1556,7 +1556,7 @@ class DishSprite(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         self.image = pygame.Surface((40, 40))
-        self.image.fill(BLACK)
+        self.image.fill(WHITE)
         #self.image = pygame.image.load(os.path.join(imgFolder, self.ingredient.name + ".png")).convert()
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
