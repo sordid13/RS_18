@@ -73,26 +73,26 @@ class Player:
                         c['level'] = chef.level
         return chefs
 
-    def WaitersExperience(self):
-        experience = 0
+    def WaitersLevel(self):
+        total = 0
         for waiter in self.waiters:
-            experience += waiter.level
-        return experience / len(self.waiters)
+            total += waiter.level
+        return total / len(self.waiters)
 
     def ImpressionPoints(self):
-        cuisineDiversityModifer = -0.1 + (self.menu.Cuisines() / 10)
+        cuisineDiversityModifer = -0.1 + (self.menu.NumberOfCuisines() / 10)
         restaurantModifier = 0.05 * self.restaurantLvl
         marketingModifier = 0 # TODO: Call function in marketing module
 
         if self.baseImpression > 0:
-            grossImpression = (self.baseImpression + self.menu.ImpressionPoints())
+            grossImpression = self.baseImpression + self.menu.ImpressionPoints()
         else:
             grossImpression = self.menu.ImpressionPoints()
 
         impression = grossImpression * (1 + restaurantModifier + marketingModifier + cuisineDiversityModifer)
 
         # Impression retention bonus
-        if self.impressionRetention < impression:
+        if impression > self.impressionRetention:
             self.impressionRetention = impression
         else:
             difference = self.impressionRetention - impression
@@ -109,8 +109,7 @@ class Player:
 
         # Calculate gross satisfaction
         for dish in dishesServed:
-
-            qualityModifier = (dish['quality'] / 20) + 1  # Scale from 10 to 1.5, 1 to 1.05
+            qualityModifier = ((dish['quality'] - 2) / 40) + 1  # Scale from 10 to 1.2, 1 to 1.02
             cost = dish['dish'].baseCost ** qualityModifier
             adjustedCost = cost + costModifier
 
@@ -143,12 +142,12 @@ class Player:
         totalSatisfaction -= unfedCustomers * 200
 
         # Customer service modifiers
-        insufficientStaffToCustomers = customers - (len(self.waiters) * 30)
-        if insufficientStaffToCustomers > 0:
-            totalSatisfaction -= insufficientStaffToCustomers ** 2
+        insufficientStaff = customers - (len(self.waiters) * 30)
+        if insufficientStaff > 0:
+            totalSatisfaction -= insufficientStaff ** 2
 
-        x = self.WaitersExperience()
-        totalSatisfaction *= 0.95 + 0.5 * (x ** x)
+        waitersLvl = int(self.WaitersLevel())
+        totalSatisfaction *= 0.95 + 0.5 * (waitersLvl ** 2)
 
         print(dishesServed)
         return math.floor(totalSatisfaction)
@@ -156,17 +155,17 @@ class Player:
     def ProcessSales(self):
         impression = self.ImpressionPoints()
 
-        rawCustomers = self.customerManager.CalculateCustomerSplit(impression) # Number not finalised
+        rawCustomers = self.customerManager.CalculateCustomerSplit(impression) # Number not finalised (Rough number)
         dishesServed = self.dishManager.ProcessDishes(self, rawCustomers)
 
-        actualCustomers = self.dishManager.Customers(dishesServed)
+        customers = self.dishManager.Customers(dishesServed) # Actual number of customers
         unfedCustomers = self.dishManager.UnfedCustomers(dishesServed)
         salesRevenue = self.dishManager.SalesRevenue(dishesServed)
 
-        satisfaction = self.SatisfactionPoints(dishesServed, actualCustomers, unfedCustomers)
+        satisfaction = self.SatisfactionPoints(dishesServed, customers, unfedCustomers)
         self.baseImpression = satisfaction
 
-        return actualCustomers, unfedCustomers, salesRevenue, satisfaction
+        return customers, unfedCustomers, salesRevenue, satisfaction
 
     def ProcessDay(self):
         ev = SalesReportEvent(*self.ProcessSales())
@@ -181,8 +180,12 @@ class Player:
 
         elif isinstance(event, AddDishEvent):
             self.menu.AddDish(event.dish, event.price)
-            print(event.dish.name)
-            print(event.price)
+
+        elif isinstance(event, UpdateDishPriceEvent):
+            self.menu.UpdateDishPrice(event.dish, event.price)
+
+        elif isinstance(event, RemoveDishEvent):
+            self.menu.RemoveDish(event.dish)
 
         elif isinstance(event, BuyIngredientsEvent):
             new = True
@@ -201,6 +204,15 @@ class Player:
 
         elif isinstance(event, HireWaiterEvent):
             self.waiters.append(Waiter(event.level, self.evManager))
+
+        elif isinstance(event, GUICheckDishMenuEvent):
+            d = None
+            for dish in self.menu.dishes:
+                if event.dish == dish['dish']:
+                    d = dish
+
+            ev = GUICheckDishMenuResponseEvent(d, event.container)
+            self.evManager.Post(ev)
 
         elif isinstance(event, GUIOpenMyStaffEvent):
             ev = StaffUpdateEvent(self.chefs, self.waiters)
@@ -356,6 +368,14 @@ class Menu:
             ev = MenuUpdateEvent(self.dishes)
             self.evManager.Post(ev)
 
+    def UpdateDishPrice(self, dish, price):
+        for d in self.dishes:
+            if d['dish'].name == dish.name:
+                d['price'] = price
+
+                ev = MenuUpdateEvent(self.dishes)
+                self.evManager.Post(ev)
+
     def RemoveDish(self, dish):
         for d in self.dishes:
             if d['dish'].name == dish.name:
@@ -364,7 +384,7 @@ class Menu:
                 ev = MenuUpdateEvent(self.dishes)
                 self.evManager.Post(ev)
 
-    def Cuisines(self):
+    def NumberOfCuisines(self):
         cuisines = []
         for dish in self.dishes:
             if dish['dish'].cuisine not in cuisines:
@@ -409,16 +429,15 @@ class Ingredient:
 
         self.name = name
         self.type = ingreType
-        self.baseCost = baseCost
+        self.baseCost = baseCost * 1000
 
         self.quality = None
         self.amount = None
 
     def Price(self, quality):
-        price = self.baseCost * (quality ** 2)
-        price = math.floor(price * 10)
-        price /= 10
-        return price
+        price = self.baseCost ** ((quality - 1)/20 + 1)
+        price = math.ceil(price / 10)
+        return price * 10
 
 
 
@@ -430,7 +449,7 @@ class Inventory:
         self.batches = []
 
     def IngredientStock(self, ingredient):
-        stock = [0, 0, 0, 0, 0, 0] # Initialise based on quality 5 to 0
+        stock = [0, 0, 0, 0, 0] # Initialise based on quality 5 to 1
         for batch in self.batches:
             addStock = batch.IngredientStock(ingredient)
             stock = [sum(x) for x in zip(stock, addStock)] # Sums value of corresponding elements
@@ -478,12 +497,12 @@ class Batch:
         self.age = 0
 
     def IngredientStock(self, ingredient):
-        stock = [0, 0, 0, 0, 0, 0] # Initialise based on quality 0 to 5
+        stock = [0, 0, 0, 0, 0, 0] # Initialise based on quality 1 to 5
         for i in self.batch:
             if i.name == ingredient.name:
                 quality = i.quality
                 amount = i.amount
-                stock[quality] = amount
+                stock[quality - 1] = amount
 
         stock.reverse()
         return stock
