@@ -30,11 +30,11 @@ class DishManager:
 
     def DishesByDemand(self, player, customers):
         dishList = []
-        menuImpression = player.menu.ImpressionPoints()
+        menuImpression = player.menu.CalculateImpression()
 
         # Arrange dishes based on demand
         for dish in player.menu.dishes:
-            demand = math.floor((dish['dish'].ImpressionPoints() / menuImpression) * customers)
+            demand = math.floor((dish['dish'].CalculateImpression() / menuImpression) * customers)
             dishDict = dict(dish=dish['dish'], price=dish['price'], demand=demand, sales=int(0), quality=0)
             if len(dishList) == 0:
                 dishList.append(dishDict)

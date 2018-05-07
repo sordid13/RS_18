@@ -19,6 +19,13 @@ class GameStartedEvent:
         self.name = "Game Started Event"
 
 
+class GUIRequestWindowEvent:
+    def __init__(self, window, draw):
+        self.name = "GUI Request Window Event"
+        self.window = window
+        self.draw = draw
+
+
 class NewDayEvent:
     def __init__(self):
         self.name = "New Day Event"

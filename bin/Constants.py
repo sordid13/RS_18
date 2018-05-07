@@ -4,7 +4,7 @@ STATE_PAUSED = "Game Paused"
 STATE_STARTED = "Game Started"
 
 # Screen settings
-DISPLAY_RESOLUTION = (1280, 720)
+DISPLAY_RESOLUTION = (1920, 1080)
 DRAW_RESOLUTION = (1280, 720)
 
 # Text alignment

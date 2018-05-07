@@ -480,6 +480,8 @@ class StaffTab(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None, windowGroup=None, popUp=None):
         self.evManager = evManager
 
+        self.name = "Staff Window"
+
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((270,50))
         self.image.fill(YELLOW)
@@ -489,14 +491,19 @@ class StaffTab(pygame.sprite.Sprite):
         self.windowGroup = windowGroup
         self.popUp = popUp
 
-    def Clicked(self):
+    def Draw(self):
         self.windowGroup.empty()
         StaffWindow(self.evManager, self.windowGroup, self.popUp)
+
+    def Clicked(self):
+        ev = GUIRequestWindowEvent(self.name, self.Draw)
+        self.evManager.Post(ev)
 
 
 class StaffWindow(MainWindow):
     def __init__(self, evManager, group=None, popUp=None):
         super().__init__(YELLOW, group)
+
         self.evManager = evManager
         self.evManager.RegisterListener(self)
         self.popUp = popUp
@@ -1458,7 +1465,10 @@ class AddDishWindow:
         self.maxPage = math.ceil(len(WESTERN_DISHES) / 12)
 
         PrevPage(WIDTH * 78 / 100, HEIGHT * 30 / 100, 50, 50, self, group)
-        NextPage(WIDTH * 78 / 100, HEIGHT * 38 / 100, 50, 50, self, group)
+        self.pageDisplay = Numbers(self, "page", WIDTH * 77/100, HEIGHT * 38/100, WHITE, 24, self.group)
+        Text("/", WIDTH * 78/100, HEIGHT * 38/100, WHITE, 32, self.group, CENTER)
+        self.maxPageDisplay = Numbers(self, "maxPage", WIDTH * 79/100, HEIGHT * 38 / 100, WHITE, 24, self.group, LEFT)
+        NextPage(WIDTH * 78 / 100, HEIGHT * 46 / 100, 50, 50, self, group)
 
         self.dishScreen = DishScreen(self.page, self.cuisine, self, self.evManager, self.popUp, group)
 
@@ -1470,6 +1480,8 @@ class AddDishWindow:
             y += 50
 
     def Update(self):
+        self.pageDisplay.Update()
+
         self.dishScreen.kill()
         for container in self.dishScreen.dishContainers:
             self.group.remove(contents for contents in container.contents)
@@ -1495,7 +1507,7 @@ class CuisineTab(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y)
 
     def Clicked(self):
-        self.window.page = 0
+        self.window.page = 1
         self.window.cuisine = self.cuisine
         self.window.Update()
 
@@ -1528,6 +1540,8 @@ class DishScreen(pygame.sprite.Sprite):
 
         self.window = window
         self.page = page
+        self.window.maxPage = math.ceil(len(self.dishList) / 12)
+        self.window.maxPageDisplay.Update()
 
         x = WIDTH * 42 / 100
         y = HEIGHT * 17 / 100
@@ -1708,6 +1722,8 @@ class UpdateDishPrice(pygame.sprite.Sprite):
 
         ev = GUICheckDishMenuEvent(self.dish, self.window)
         self.evManager.Post(ev)
+
+        print("hi")
 
 
 class RemoveDish(pygame.sprite.Sprite):
@@ -2075,8 +2091,9 @@ class View:
 
         pygame.init()
 
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        self.background = pygame.Surface(self.screen.get_size())
+        self.screen = pygame.display.set_mode(DISPLAY_RESOLUTION)
+        self.origin = pygame.Surface(DRAW_RESOLUTION)
+        self.background = pygame.Surface(self.origin.get_size())
         self.background.fill(WHITE)
         self.screen.blit(self.background, (0, 0))
         pygame.display.set_caption("Restaurant Simulator")
@@ -2088,6 +2105,7 @@ class View:
         self.mainUI = pygame.sprite.RenderUpdates()
         self.windows = pygame.sprite.RenderUpdates()
         self.popUp = pygame.sprite.RenderUpdates()
+        self.window = None
 
         #All sprite start from here.
         #Sprite will carry it group from here.
@@ -2104,21 +2122,31 @@ class View:
 
     def Notify(self, event):
         if isinstance(event, TickEvent):
+            self.origin.fill(WHITE)
 
-            self.mainUI.clear(self.screen, self.background)
-            self.windows.clear(self.screen, self.background)
-            self.popUp.clear(self.screen, self.background)
-
+            self.mainUI.clear(self.origin, self.background)
+            self.windows.clear(self.origin, self.background)
+            self.popUp.clear(self.origin, self.background)
 
             self.mainUI.update()
             self.windows.update()
             self.popUp.update()
 
-            dirtyRects = self.mainUI.draw(self.screen)
-            dirtyRects += self.windows.draw(self.screen)
-            dirtyRects += self.popUp.draw(self.screen)
+            dirtyRects = self.mainUI.draw(self.origin)
+            dirtyRects += self.windows.draw(self.origin)
+            dirtyRects += self.popUp.draw(self.origin)
+
+            pygame.transform.scale(self.origin, DISPLAY_RESOLUTION, self.screen)
 
             pygame.display.flip()
+            print(len(self.windows))
+
+
+        elif isinstance(event, GUIRequestWindowEvent):
+            if self.window is not event.window:
+                event.draw()
+                self.window = event.window
+
 
         elif isinstance(event, LeftClickEvent):
             for sprite in self.mainUI:
