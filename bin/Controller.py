@@ -26,28 +26,12 @@ class Controller:
             if currentTicks - self.startTicks > 60000:
                 self.startTicks = currentTicks
                 ev = NewDayEvent()
-                self.evManager.Post(ev)
+                #self.evManager.Post(ev)
 
             for event in pygame.event.get():
                 ev = None
                 if event.type == QUIT:
                     ev = QuitEvent()
-
-                # Temporary Test Events
-                elif event.type == KEYDOWN and event.key == K_q:
-                    ev = BuyIngredientEvent(INGREDIENTS_LIST[0], 5, 80)
-
-                elif event.type == KEYDOWN and event.key == K_a:
-                    ev = BuyIngredientEvent(INGREDIENTS_LIST[2], 2, 40)
-
-                elif event.type == KEYDOWN and event.key == K_z:
-                    ev = BuyIngredientEvent(INGREDIENTS_LIST[0], 1, 50)
-
-                elif event.type == KEYDOWN and event.key == K_x:
-                    ev = BuyIngredientEvent(INGREDIENTS_LIST[2], 3, 70)
-
-                elif event.type == KEYDOWN and event.key == K_w:
-                    ev = AddDishEvent(DISHES_LIST[2])
 
                 elif event.type == KEYDOWN and event.key == K_e:
                     ev = NewDayEvent()

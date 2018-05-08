@@ -1,4 +1,5 @@
 from bin import *
+from .Events import *
 from passlib.hash import sha256_crypt
 import json
 from tkinter import *
@@ -6,25 +7,39 @@ import tkinter as tk
 from tkinter import messagebox
 
 
-class TikinterApp(tk.Tk):
-    def __init__(self):
+class Authentication(tk.Tk):
+
+    def __init__(self, evManager):
+        self.evManager = evManager
+        self.evManager.RegisterListener(self)
+
         tk.Tk.__init__(self)
         self._frame = None
         self.switchFrame(StartPage)
+        self.resizable(False, False)
 
     def switchFrame(self, frameClass):
-        newFrame = frameClass(self)
+        newFrame = frameClass(self, self.evManager)
         if self._frame is not None:
             self._frame.destroy()
         self._frame = newFrame
         self._frame.pack()
 
+    def Notify(self, event):
+        if isinstance(event, AuthenticatedEvent):
+            self.destroy()
+
 
 class StartPage(tk.Frame):
-    def __init__(self, master):
+
+    def __init__(self, master, evManager):
+        self.evManager = evManager
+
         tk.Frame.__init__(self, master, width=250, height=250)
-        self.master.title("Restaurant Towkay")
-        startLabel = tk.Label(self, text="Welcome to Restaurant Towkay")
+        self.master.title("Towkay Login")
+        startLabel = tk.Label(self, text="Welcome to Restaurant Towkay!\n"
+                                         "\n"
+                                         "Login to play the game.\n")
         pageLogin = tk.Button(self, text="Login", command=lambda: master.switchFrame(loginPage))
         pageRegister = tk.Button(self, text="Register", command=lambda: master.switchFrame(registerPage))
         startLabel.place(x=40, y=50)
@@ -32,8 +47,12 @@ class StartPage(tk.Frame):
         pageRegister.place(x=108, y=200)
 
 
-class LoginPage(tk.Frame):
-    def __init__(self, master):
+
+class loginPage(tk.Frame):
+
+    def __init__(self, master, evManager):
+        self.evManager = evManager
+
         tk.Frame.__init__(self, master, width=250, height=250)
 
         pageLoginLabel = tk.Label(self, text="Login Page")
@@ -74,7 +93,10 @@ class LoginPage(tk.Frame):
                 hash1 = account['hashValue']
                 if sha256_crypt.verify(password, hash1) is True:
                     messagebox.showinfo("Success!", "Login is successful.")
-                    break
+
+                    ev = AuthenticatedEvent(user)
+                    self.evManager.Post(ev)
+
                 else:
                     messagebox.showerror("Oops!", "Wrong password!")
                     break
@@ -85,27 +107,30 @@ class LoginPage(tk.Frame):
         json_file.close()
 
 
-class RegisterPage(tk.Frame):
-    def __init__(self, master):
+class registerPage(tk.Frame):
+
+    def __init__(self, master, evManager):
+        self.evManager = evManager
+
         tk.Frame.__init__(self, master, width=250, height=250)
 
         pageRegisterLabel = tk.Label(self, text="Register New User")
         startButton = tk.Button(self, text="Home", command=lambda: master.switchFrame(StartPage))
         enterButton = tk.Button(self, text="Enter", command=self.newUser)
 
-        Label(self, text="Username :").place(x=10, y=65)
+        Label(self, text="Username :").place(x=10, y=40)
         self.userNewEntry = Entry(self)
-        self.userNewEntry.place(x=80, y=65)
+        self.userNewEntry.place(x=80, y=40)
 
-        Label(self, text="Password :").place(x=10, y=100)
+        Label(self, text="Password :").place(x=10, y=75)
         self.passwordNewEntry = Entry(self, show="*")
-        self.passwordNewEntry.place(x=80, y=100)
+        self.passwordNewEntry.place(x=80, y=75)
 
-        Label(self, text="Confirm :").place(x=10, y=135)
+        Label(self, text="Confirm\n Password :").place(x=10, y=110)
         self.passwordConfirmEntry = Entry(self, show="*")
-        self.passwordConfirmEntry.place(x=80, y=135)
+        self.passwordConfirmEntry.place(x=80, y=125)
 
-        pageRegisterLabel.place(x=85, y=10)
+        pageRegisterLabel.place(x=75, y=10)
         enterButton.place(x=110, y=160)
         startButton.place(x=108, y=200)
 
@@ -121,6 +146,7 @@ class RegisterPage(tk.Frame):
 
         redundantUser = False
         blankUser = False
+        blankPassword = False
         matchPassword = True
         message = ""
 
@@ -134,11 +160,15 @@ class RegisterPage(tk.Frame):
             blankUser = True
             message += "Username blank! \n"
 
+        if passwordNew == "":
+            blankPassword = True
+            message += "Password blank! \n"
+
         if passwordNew != passwordConfirm:
             matchPassword = False
             message += "Password does not match! \n"
 
-        if not redundantUser and not blankUser and matchPassword:
+        if not redundantUser and not blankUser and not blankPassword and matchPassword:
             keys = {}
             keys['user'] = userNew
             keys['hashValue'] = sha256_crypt.encrypt(passwordNew)
@@ -148,11 +178,7 @@ class RegisterPage(tk.Frame):
                 json.dump(keyList, json_file, indent=4)
             json_file.close()
             messagebox.showinfo("Success!", "Registration successful!")
+            self.master.switchFrame(StartPage)
         else:
             messagebox.showerror("Oops!", message)
 
-
-if __name__ == "__main__":
-    app = TikinterApp()
-    app.geometry("350x250")
-    app.mainloop()
