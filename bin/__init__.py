@@ -9,3 +9,4 @@ from .Date import *
 from .CustomerManager import *
 from .DishManager import *
 from .TrendManager import *
+from .Finance import *

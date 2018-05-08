@@ -7,7 +7,6 @@ from tkinter import messagebox
 
 
 class TikinterApp(tk.Tk):
-
     def __init__(self):
         tk.Tk.__init__(self)
         self._frame = None
@@ -22,7 +21,6 @@ class TikinterApp(tk.Tk):
 
 
 class StartPage(tk.Frame):
-
     def __init__(self, master):
         tk.Frame.__init__(self, master, width=250, height=250)
         self.master.title("Restaurant Towkay")
@@ -34,8 +32,7 @@ class StartPage(tk.Frame):
         pageRegister.place(x=108, y=200)
 
 
-class loginPage(tk.Frame):
-
+class LoginPage(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master, width=250, height=250)
 
@@ -60,7 +57,7 @@ class loginPage(tk.Frame):
         user = self.userEntry.get()
         password = self.passwordEntry.get()
 
-        with open('security/hash.json','r') as json_file:
+        with open('security/hash.json', 'r') as json_file:
             keyList = json.load(json_file)
 
         noUser = True
@@ -88,8 +85,7 @@ class loginPage(tk.Frame):
         json_file.close()
 
 
-class registerPage(tk.Frame):
-
+class RegisterPage(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master, width=250, height=250)
 

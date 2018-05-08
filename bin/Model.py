@@ -90,6 +90,7 @@ class Player:
         self.game = game
         self.rival = self.game.rival
 
+        self.finance = Finance(self, self.evManager)
         self.customerManager = self.game.customerManager
         self.dishManager = self.game.dishManager
 
@@ -255,6 +256,8 @@ class AI(Player):
         super().__init__(game, evManager)
         self.name = "AI 1 "
         self.rival = self.game.player
+
+        self.finance = None
 
         self.chefs = [Chef(CUISINE_WESTERN, 0, self.evManager), Chef(CUISINE_WESTERN, 3, self.evManager),
                       Chef(CUISINE_CHINESE, 0, self.evManager), Chef(CUISINE_CHINESE, 3, self.evManager),

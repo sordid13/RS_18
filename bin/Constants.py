@@ -51,10 +51,17 @@ INGREDIENT_TYPE_MISC = "Misc"
 STARTING_CUSTOMERS = 100
 
 # Finance related
-INGREDIENTS = "Ingredients"
+INVENTORY = "Inventory"
 RENOVATION = "Renovation"
-UTILITY = "Overhead"
-TAX = "TAX"
-MISC = "Miscellaneous"
+SALARY = "Salary"
+EXPENSE = "Expense"
+SALES = "Sales"
+PROFIT = "Profit"
+MARKETING = "Marketing"
+CASH = "Cash"
+MISC = "Misc"
 
-
+# Fiscal Term
+DAILY = "daily"
+MONTHLY = "monthly"
+YEARLY = "yearly"
