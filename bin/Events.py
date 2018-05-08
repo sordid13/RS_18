@@ -138,6 +138,19 @@ class InventoryUpdateEvent:
         self.name = "Inventory Update Event"
         self.inventory = inventory
 
+
+class UpdateItemDetailEvent:
+    def __init__(self, ingredient):
+        self.name = "Update Item Detail"
+        self.ingredient = ingredient
+
+
+class ReturnAmountEvent:
+    def __init__(self, amount, expire):
+        self.name = "Return Amount Event"
+        self.amount = amount
+        self.expire = expire
+
 class GUIOpenHireStaffEvent:
     def __init__(self):
         self.name = "Open Hire Staff Event"
