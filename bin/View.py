@@ -1435,6 +1435,7 @@ class InventoryTab(pygame.sprite.Sprite):
     def Notify(self, event):
         if isinstance(event, InventoryUpdateEvent):
             for sprite in self.contents:
+                self.evManager.UnregisterListener(sprite)
                 try:
                     for s in sprite.contents:
                         s.kill()
@@ -1459,6 +1460,8 @@ class InventoryItemContainer(pygame.sprite.Sprite):
         self.popUp = popUp
         self.item = item
 
+        self.name = item.name + " Detail Window"
+
         self.image = pygame.Surface((45, 60))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
@@ -1472,9 +1475,13 @@ class InventoryItemContainer(pygame.sprite.Sprite):
         self.amounts = []
         self.expiredAmounts = []
 
-    def Clicked(self):
+    def Draw(self):
         self.popUp.empty()
-        InventoryItemDetail(self.item, self.evManager, self.popUp)
+        InventoryItemDetail(self, self.item, self.evManager, self.popUp)
+
+    def Clicked(self):
+        ev = GUIRequestWindowEvent(self.name, self.Draw)
+        self.evManager.Post(ev)
 
         ev = UpdateItemDetailEvent(self.item)
         self.evManager.Post(ev)
@@ -1485,15 +1492,22 @@ class InventoryItemContainer(pygame.sprite.Sprite):
             self.amounts = [sum(x) for x in zip(event.amount, event.expire)]
             self.expiredAmounts = event.expire
 
+            ev = GUIRequestWindowRedrawEvent(self.name, self.Draw)
+            self.evManager.Post(ev)
+
+        elif isinstance(event, BuyIngredientsEvent):
+            ev = UpdateItemDetailEvent(self.item)
+            self.evManager.Post(ev)
+
 
 
 class InventoryItemDetail(pygame.sprite.Sprite):
-    def __init__(self, item, evManager, group=None):
+    def __init__(self, parent, item, evManager, group=None):
         self.evManager = evManager
-        self.evManager.RegisterListener(self)
 
         pygame.sprite.Sprite.__init__(self, group)
         self.group = group
+        self.parent = parent
         self.item = item
         self.x = WIDTH * 9 / 100
         self.y = HEIGHT * 37 / 100
@@ -1507,35 +1521,28 @@ class InventoryItemDetail(pygame.sprite.Sprite):
 
         x = self.rect.right - 20
         y = self.rect.top + 20
-        self.closeButton = CloseButton(x, y, self.group)
+        self.closeButton = CloseButton(x, y, self.evManager, self.group)
 
-        self.contents = []
-        self.amounts = []
-        self.expiredAmounts = []
-        self.Display()
+        IngredientSprite(self.x, self.y - 110, self.item, self.evManager, self.group)
+        Text(self.item.name, self.x, self.y - 80, BLACK, 25, self.group, CENTER)
+        Text("Stock:", self.x - 110, self.y - 70, BLACK, 25, self.group)
 
-    def Display(self):
-        self.contents.append(IngredientSprite(self.x, self.y - 110, self.item, self.evManager, self.group))
-        self.contents.append(Text(self.item.name, self.x, self.y - 80, BLACK, 25, self.group, CENTER))
-        self.contents.append(Text("Stock:", self.x - 110, self.y - 70, BLACK, 25, self.group))
-
-        self.contents.append(Text("Quality", self.x - 100, self.y - 53, BLACK, 22, self.group))
-        self.contents.append(Text("Amount", self.x - 30, self.y - 53, BLACK, 22, self.group))
-        self.contents.append(Text("Expiring", self.x + 40, self.y - 53, BLACK, 22, self.group))
+        Text("Quality", self.x - 100, self.y - 53, BLACK, 22, self.group)
+        Text("Amount", self.x - 30, self.y - 53, BLACK, 22, self.group)
+        Text("Expiring", self.x + 40, self.y - 53, BLACK, 22, self.group)
 
         y = self.y - 32
         for q in reversed(range(1, 6)):
-            self.contents.append(Text(str(q), self.x - 75, y, BLACK, 22, self.group))
+            Text(str(q), self.x - 75, y, BLACK, 22, self.group)
             y += 20
 
-    def UpdateItemDetail(self, amounts, expiredAmounts):
         y = self.y - 32
-        for amount in amounts:
-            self.amounts.append(Text(str(amount), self.x - 30, y, BLACK, 22, self.group))
+        for amount in parent.amounts:
+            Text(str(amount), self.x - 30, y, BLACK, 22, self.group)
             y += 20
         y = self.y - 32
-        for expiredAmount in expiredAmounts:
-            self.expiredAmounts.append(Text(str(expiredAmount), self.x + 40, y, BLACK, 22, self.group))
+        for expiredAmount in parent.expiredAmounts:
+            Text(str(expiredAmount), self.x + 40, y, BLACK, 22, self.group)
             y += 20
 
 
@@ -1921,7 +1928,7 @@ class MarketWindow:
         self.popUp = popUp
         
         self.window = MainWindow(GREEN, self.evManager, self.group)
-        self.tab = range(6)
+        self.tab = range(5)
 
         x = WIDTH * 25/100
         y = HEIGHT * 15/100
