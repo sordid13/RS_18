@@ -2139,7 +2139,6 @@ class View:
             pygame.transform.scale(self.origin, DISPLAY_RESOLUTION, self.screen)
 
             pygame.display.flip()
-            print(len(self.windows))
 
 
         elif isinstance(event, GUIRequestWindowEvent):
