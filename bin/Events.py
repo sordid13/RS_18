@@ -47,8 +47,9 @@ class NewYearEvent:
 
 
 class SalesReportEvent:
-    def __init__(self, customers, unfedCustomers, revenue, satisfaction):
+    def __init__(self, player, customers, unfedCustomers, revenue, satisfaction):
         self.name = "Sales Report Event"
+        self.player = player
         self.customers = customers
         self.unfedCustomers = unfedCustomers
         self.revenue = revenue
@@ -224,13 +225,3 @@ class CtrlLeftClickEvent:
         self.name = "Ctrl Left Click Event"
         self.pos = pos
 
-
-# AI-Related Events
-
-class RivalSalesReportEvent:
-    def __init__(self, customers, unfedCustomers, revenue, satisfaction):
-        self.name = "Rival Sales Report Event"
-        self.customers = customers
-        self.unfedCustomers = unfedCustomers
-        self.revenue = revenue
-        self.satisfaction = satisfaction
