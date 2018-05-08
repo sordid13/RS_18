@@ -143,7 +143,7 @@ class Finance:
 
                 json_file.close()
 
-    def Graph(self, category, type):
+    """def Graph(self, category, type):
         graph = []
         with open(self.folder + '/cashFlow.json', 'r') as json_file:
             cashFlow = json.load(json_file)
@@ -173,7 +173,7 @@ class Finance:
 
         surf = pygame.image.fromstring(raw_data, size, "RGB")
         screen.blit(surf, (0, 0))
-        pygame.display.flip()
+        pygame.display.flip()"""
 
     def CashBook(self, fiscalTerm, type):
         with open(self.folder + '/cashFlow.json', 'r') as json_file:
@@ -183,17 +183,23 @@ class Finance:
         if fiscalTerm == DAILY:
             for book in cashFlow[fiscalTerm]:
                 if book['Day'] == date.day and book['Month'] == date.month and book['Year'] == date.year:
-                    Cash = book[CASH]
-                    Sales = book[SALES]
-                    Inventory = book[INVENTORY]
-                    Marketing = book[MARKETING]
-                    Renovation = book[RENOVATION]
-                    Salary = book[SALARY]
-                    Misc = book[MISC]
-                    Expense = book[EXPENSE]
-                    Profit = book[PROFIT]
-                    dayBefore = book['DayNumber']
+                    i = cashFlow[fiscalTerm].index(book)
 
+                    statementList = [book, cashFlow[fiscalTerm][i - 1], cashFlow[fiscalTerm][i - 2]]
+
+        if fiscalTerm == MONTHLY:
+            for book in cashFlow[fiscalTerm]:
+                if book['Month'] == date.month and book['Year'] == date.year:
+                    i = cashFlow[fiscalTerm].index(book)
+
+                    statementList = [book, cashFlow[fiscalTerm][i - 1], cashFlow[fiscalTerm][i - 2]]
+
+        if fiscalTerm == YEARLY:
+            for book in cashFlow[fiscalTerm]:
+                if book['Month'] == date.month and book['Year'] == date.year:
+                    i = cashFlow[fiscalTerm].index(book)
+
+                    statementList = [book, cashFlow[fiscalTerm][i - 1], cashFlow[fiscalTerm][i - 2]]
 
     # get daily or monthly or yearly
     # check date
@@ -202,7 +208,7 @@ class Finance:
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
             self.NewDay()
-            self.Graph(CASH, "daily")
+            """self.Graph(CASH, "daily")"""
 
         elif isinstance(event, NewMonthEvent):
             self.NewMonth()
