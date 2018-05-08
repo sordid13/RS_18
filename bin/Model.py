@@ -14,7 +14,8 @@ class Game:
         self.dishManager = DishManager(self.evManager)
         self.cart = Cart(self.evManager)
 
-        self.players = [Player(self, self.evManager), AI(CUISINE_WESTERN, self, self.evManager)]
+        self.players = [Player(self, self.evManager), AI(CUISINE_WESTERN, self, self.evManager),
+                        AI(CUISINE_CHINESE, self, self.evManager), AI(CUISINE_KOREAN, self, self.evManager)]
         for player in self.players:
             playerList = self.players[:]
             playerList.remove(player)
@@ -236,8 +237,9 @@ class AI(Player):
     def __init__(self, cuisine, game, evManager):
         super().__init__(game, evManager)
         self.ai = ""
+        self.cuisine = cuisine
 
-        self.chefs = [Chef(3, CUISINE_WESTERN, self.evManager)]
+        self.chefs = [Chef(3, self.cuisine, self.evManager)]
         self.waiters = [Waiter(3, self.evManager), Waiter(3, self.evManager), Waiter(3, self.evManager)]
 
         self.baseImpression = 80
@@ -274,12 +276,13 @@ class AI(Player):
         while len(self.menu.dishes) < self.menu.dishLimit:
             dish = None
             for d in DISHES_LIST:
-                if d not in (x['dish'] for x in self.menu.dishes):
-                    if dish:
-                        if d.ImpressionPoints() > dish.ImpressionPoints():
+                if d.cuisine == self.cuisine:
+                    if d not in (x['dish'] for x in self.menu.dishes):
+                        if dish:
+                            if d.ImpressionPoints() > dish.ImpressionPoints():
+                                dish = d
+                        else:
                             dish = d
-                    else:
-                        dish = d
             quality = 5
             self.menu.AddDish( dish, math.floor(dish.baseCost ** ((quality - 1)/20 + 1)) )
 
@@ -436,8 +439,7 @@ class Ingredient:
 
 class Inventory:
     def __init__ (self, evManager):
-        self.evManager = evManager
-        self.evManager.RegisterListener(self)
+        self.evManager = evManager=
 
         self.batches = []
         self.expiredList = []
@@ -488,32 +490,31 @@ class Inventory:
                                 countIngredient = False
                 quality -= 1
 
-    def ExpiredList(self, batch):
+    def IngredientExpiredAmount(self, ingredient):
+        stock = [0, 0, 0, 0, 0] # Initialise based on quality 5 to 1
+        for i in self.expiredList:
+            if i.name == ingredient.name:
+                stock[5 - i.quality] = i.amount
+
+        return stock
+
+    def AddToExpiredList(self, batch):
         self.expiredList = []
         for ingredient in batch.ingredients:
             new = True
             for i in self.expiredList:
-                if ingredient.name == i.name:
+                if ingredient.name == i.name and ingredient.quality == i.quality:
                     i.amount += ingredient.amount
                     new = False
 
             if new:
                 if ingredient.amount > 0:
-                    ingredient.quality = 0 # No need quality
                     self.expiredList.append(ingredient)
-
-        for ingredient in self.expiredList:
-            print(ingredient.name + " expired " + str(ingredient.amount))
 
     def RemoveBatch(self, batch):
         for b in self.batches:
             if b is batch:
                 self.batches.remove(b)
-
-    def Notify(self, event):
-        if isinstance(event, BatchExpiredEvent):
-            self.ExpiredList(event.batch)
-            self.RemoveBatch(event.batch)
 
 
 class Batch:
@@ -565,7 +566,7 @@ class Batch:
         if isinstance(event, NewDayEvent):
             self.age += 1
             if self.age > 6:
-                self.inventory.ExpiredList(self)
+                self.inventory.AddToExpiredList(self)
                 self.inventory.RemoveBatch(self)
 
 
