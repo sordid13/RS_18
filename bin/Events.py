@@ -1,3 +1,9 @@
+class AuthenticatedEvent:
+    def __init__(self, user):
+        self.name = "Authenticated Event"
+        self.user = user
+
+
 class TickEvent:
     def __init__(self):
         self.name = "Tick Event"
@@ -34,12 +40,19 @@ class NewYearEvent:
 
 
 class SalesReportEvent:
-    def __init__(self, customers, unfedCustomers, revenue, satisfaction):
+    def __init__(self, player, customers, unfedCustomers, revenue, satisfaction):
         self.name = "Sales Report Event"
+        self.player = player
         self.customers = customers
         self.unfedCustomers = unfedCustomers
         self.revenue = revenue
         self.satisfaction = satisfaction
+
+
+class MenuUpdateEvent:
+    def __init__(self, dishes):
+        self.name = "Update Menu Event"
+        self.dishes = dishes
 
 
 class AddDishEvent:
@@ -47,6 +60,33 @@ class AddDishEvent:
         self.name = "Add Dish Event"
         self.dish = dish
         self.price = price
+
+
+class UpdateDishPriceEvent:
+    def __init__(self, dish, price):
+        self.name = "Update Dish Price Event"
+        self.dish = dish
+        self.price = price
+
+
+class RemoveDishEvent:
+    def __init__(self, dish):
+        self.name = "Remove Dish Event"
+        self.dish = dish
+
+
+class GUICheckDishMenuEvent:
+    def __init__(self, dish, container):
+        self.name = "Check Dish Menu Event"
+        self.dish = dish
+        self.container = container
+
+
+class GUICheckDishMenuResponseEvent:
+    def __init__(self, dish, container):
+        self.name = "Check Dish Menu Response Event"
+        self.dish = dish
+        self.container = container
 
 
 class AddToCartEvent:
@@ -75,9 +115,10 @@ class ClearCartEvent:
 
 
 class BuyIngredientsEvent:
-    def __init__(self, cart):
+    def __init__(self, cart, price):
         self.name = "Buy Ingredients Event"
         self.cart = cart
+        self.price = price
 
 
 class BatchExpiredEvent:
@@ -85,27 +126,54 @@ class BatchExpiredEvent:
         self.name = "Batch Expired Event"
         self.batch = batch
 
+class InventoryUpdateEvent:
+    def __init__(self, inventory):
+        self.name = "Inventory Update Event"
+        self.inventory = inventory
 
-class OpenHireStaffEvent:
+
+class UpdateItemDetailEvent:
+    def __init__(self, ingredient):
+        self.name = "Update Item Detail"
+        self.ingredient = ingredient
+
+
+class ReturnAmountEvent:
+    def __init__(self, amount, expire):
+        self.name = "Return Amount Event"
+        self.amount = amount
+        self.expire = expire
+
+class GUIOpenHireStaffEvent:
     def __init__(self):
-        self.name = "Open Hire Staff"
+        self.name = "Open Hire Staff Event"
 
-
-class OpenMyStaffEvent:
+      
+class GUIOpenMyStaffEvent:
     def __init__(self):
-        self.name = "Open My Staff"
+        self.name = "Open My Staff Event"
 
-
-class SelectStaffEvent:
+        
+class GUISelectStaffEvent:
     def __init__(self, staffType):
-        self.name = "Select Staff"
+        self.name = "Select Staff Event"
         self.staffType = staffType
 
 
-class SelectCuisineEvent:
+class GUISelectCuisineEvent:
     def __init__(self, cuisine):
-        self.name = "Select Cuisine"
+        self.name = "Select Cuisine Event"
         self.cuisine = cuisine
+
+class StaffUpdateRequestEvent:
+    def __init__(self):
+        self.name = "Staff Update Request Event"
+
+class StaffUpdateEvent:
+    def __init__(self, chefs, waiters):
+        self.name = "Staff Update Event"
+        self.chefs = chefs
+        self.waiters = waiters
 
 
 class HireChefEvent:
@@ -125,6 +193,22 @@ class NoChefEvent:
         self.name = "No Chef Event"
 
 
+#UPGRADE RELATED EVENT
+class UpgradeLevelEvent:
+    def __init__(self, level, cost):
+        self.name = "Upgrade Level Event"
+        self.level = level
+        self.cost = cost
+
+
+class UpgradeCapacityEvent:
+    def __init__(self, capacity, cost):
+        self.name = "Upgrade Capacity Event"
+        self.capacity = capacity
+        self.cost = cost
+
+
+#Controller Related Event
 class LeftClickEvent:
     def __init__(self, pos):
         self.name = "Left Click Event"
@@ -150,12 +234,19 @@ class CtrlLeftClickEvent:
         self.pos = pos
 
 
-# AI-Related Events
+class GUIRequestWindowEvent:
+    def __init__(self, window, draw):
+        self.name = "GUI Request Window Event"
+        self.window = window
+        self.draw = draw
 
-class RivalSalesReportEvent:
-    def __init__(self, customers, unfedCustomers, revenue, satisfaction):
-        self.name = "Rival Sales Report Event"
-        self.customers = customers
-        self.unfedCustomers = unfedCustomers
-        self.revenue = revenue
-        self.satisfaction = satisfaction
+class GUIRequestWindowRedrawEvent:
+    def __init__(self, window, draw):
+        self.name = "GUI Request Window Redraw Event"
+        self.window = window
+        self.draw = draw
+
+class GUICloseWindowEvent:
+    def __init__(self, group):
+        self.name = "GUI Close Window Event"
+        self.group = group

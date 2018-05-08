@@ -79,7 +79,8 @@ class DishManager:
                             lowestAmount = ingredientAmount
                     first = False
 
-                dish['sales'] = lowestAmount
+                if lowestAmount > 0:
+                    dish['sales'] = lowestAmount
                 if dish['sales'] > 0:
                     stockCopy.UseIngredients(dish['dish'], dish['sales'])
 
@@ -142,12 +143,11 @@ class DishManager:
                 # Chef quality modifier
                 qualityModifier = 1
                 if dish['dish'].cuisine not in (c['cuisine'] for c in chefs):
-                    qualityModifier -= 0.30 # -20% quality
+                    qualityModifier -= 0.30 # -30% quality
                 else:
                     for chef in chefs:
                         if dish['dish'].cuisine == chef['cuisine']:
                             qualityModifier -= 0.10 * (3 - chef['level']) # 3 is max level
-
                 dish['quality'] = math.floor(averageQuality * qualityModifier)
 
         return dishList
