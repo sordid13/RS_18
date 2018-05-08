@@ -14,13 +14,11 @@ class Game:
         self.dishManager = DishManager(self.evManager)
         self.cart = Cart(self.evManager)
 
-        """self.player1 = Player(self, self.evManager)
-        self.player2 = AI(self, self.evManager)
-
-        self.player1.rival = self.player2
-        self.player2.rival = self.player1"""
-
-        self.players = [Player(self, self.evManager), AI(self, self.evManager)]
+        self.players = [Player(self, self.evManager), AI(CUISINE_WESTERN, self, self.evManager)]
+        for player in self.players:
+            playerList = self.players[:]
+            playerList.remove(player)
+            player.rivals = playerList
 
         ev = GameStartedEvent()
         self.evManager.Post(ev)
@@ -36,7 +34,7 @@ class Player:
         self.evManager = evManager
         self.evManager.RegisterListener(self)
         self.game = game
-        self.rival = None
+        self.rivals = None
 
         self.customerManager = self.game.customerManager
         self.dishManager = self.game.dishManager
@@ -117,21 +115,30 @@ class Player:
             cost = dish['dish'].baseCost ** qualityModifier
             adjustedCost = cost + costModifier
 
-            qualitySatisfaction = math.floor((adjustedCost / dish['price']) * 100)
-            if qualitySatisfaction > 100:
+            if dish['price'] == 0:
                 qualitySatisfaction = 100
+            else:
+                qualitySatisfaction = math.floor( ((adjustedCost / dish['price']) * 100) * qualityModifier )
+                if qualitySatisfaction > 100:
+                    qualitySatisfaction = 100
 
             dish['satisfaction'] = qualitySatisfaction # To calculate dish competition for next day
 
             # Dish competition comparison modifier
-            rivalDish = None
-            for d in self.rival.menu.dishes:
-                if d['dish'].name == dish['dish'].name:
-                    rivalDish = d
-                    break
+            rivalsDishSatisfaction = None
+            rivalDishes = []
+            for rival in self.rivals:
+                for d in rival.menu.dishes:
+                    if d['dish'].name == dish['dish'].name:
+                        rivalDishes.append(d)
+                        break
+                try:
+                    rivalsDishSatisfaction = sum(d['satisfaction'] for d in rivalDishes) / len(rivalDishes)
+                except:
+                    pass
 
-            if rivalDish:
-                competitionModifier = qualitySatisfaction / rivalDish['satisfaction']
+            if rivalsDishSatisfaction:
+                competitionModifier = qualitySatisfaction / rivalsDishSatisfaction
                 satisfaction = qualitySatisfaction * competitionModifier
             else:
                 satisfaction = qualitySatisfaction
@@ -166,24 +173,32 @@ class Player:
         satisfaction = self.CalculateSatisfaction(dishesServed, customers, unfedCustomers)
         self.baseImpression = satisfaction
 
-        return customers, unfedCustomers, salesRevenue, satisfaction
+        ev = SalesReportEvent(self, customers, unfedCustomers, salesRevenue, satisfaction)
+        self.evManager.Post(ev)
 
+        self.ProcessDay(customers) # For AI usage
+
+    def ProcessDay(self, customers):
+        pass
 
     def Notify(self, event):
-        if isinstance(event, NewDayEvent):
-            self.ProcessSales()
-
-        elif isinstance(event, SalesReportEvent):
-            self.baseImpression = event.satisfaction
-
-        elif isinstance(event, AddDishEvent):
+        if isinstance(event, AddDishEvent):
             self.menu.AddDish(event.dish, event.price)
+
+            ev = MenuUpdateEvent(self.menu.dishes)
+            self.evManager.Post(ev)
 
         elif isinstance(event, UpdateDishPriceEvent):
             self.menu.UpdateDishPrice(event.dish, event.price)
 
+            ev = MenuUpdateEvent(self.menu.dishes)
+            self.evManager.Post(ev)
+
         elif isinstance(event, RemoveDishEvent):
             self.menu.RemoveDish(event.dish)
+
+            ev = MenuUpdateEvent(self.menu.dishes)
+            self.evManager.Post(ev)
 
         elif isinstance(event, BuyIngredientsEvent):
             new = True
@@ -193,7 +208,7 @@ class Player:
                     batch.AddIngredients(event.cart)
                     new = False
             if new:
-                newBatch = Batch(self.evManager)
+                newBatch = Batch(self.inventory, self.evManager)
                 newBatch.AddIngredients(event.cart)
                 self.inventory.batches.append(newBatch)
             print("Updated")
@@ -219,28 +234,28 @@ class Player:
 
 
 class AI(Player):
-    def __init__(self, game, evManager):
+    def __init__(self, cuisine, game, evManager):
         super().__init__(game, evManager)
-        self.name = "AI 1 "
+        self.ai = ""
 
-        self.chefs = [Chef(0, CUISINE_WESTERN, self.evManager), Chef(3, CUISINE_WESTERN, self.evManager),
-                      Chef(0, CUISINE_CHINESE, self.evManager), Chef(3, CUISINE_CHINESE, self.evManager),
-                      Chef(0, CUISINE_INDIAN, self.evManager)]
+        self.chefs = [Chef(3, CUISINE_WESTERN, self.evManager)]
         self.waiters = [Waiter(3, self.evManager), Waiter(3, self.evManager), Waiter(3, self.evManager)]
 
         self.baseImpression = 80
         self.impressionRetention = 80
 
         self.cash = 10000
-        self.restaurantLvl = 1
+        self.restaurantLvl = 2
         self.restaurantCapacity = 100
-        self.menu.dishLimit = 5 + (5 * self.restaurantLvl)
+        self.menu.dishLimit = 4 * self.restaurantLvl
+
+        self.ProcessDay(80)
 
     def GetLeastPopularDish(self):
         dish = None
         for d in self.menu.dishes:
             if dish:
-                if d['dish'].CalculateImpression() < dish.ImpressionPoints():
+                if d['dish'].ImpressionPoints() < dish.ImpressionPoints():
                     dish = d['dish']
             else:
                 dish = d['dish']
@@ -256,24 +271,18 @@ class AI(Player):
             if dishImpression < averageImpression * 0.75:
                 self.menu.RemoveDish(dish)
 
-    def EvaluatePricing(self):
-        for dish in self.menu.dishes:
-            for d in self.rival.menu.dishes:
-                if dish['dish'] == d['dish'] and dish['satisfaction'] < d['dish']:
-                    dish['price'] = d['price'] - 1
-
     def UpdateMenu(self):
         while len(self.menu.dishes) < self.menu.dishLimit:
             dish = None
             for d in DISHES_LIST:
                 if d not in (x['dish'] for x in self.menu.dishes):
                     if dish:
-                        if d.CalculateImpression() > dish.ImpressionPoints():
+                        if d.ImpressionPoints() > dish.ImpressionPoints():
                             dish = d
                     else:
                         dish = d
-
-            self.menu.AddDish(dish, dish.baseCost * 2)
+            quality = 5
+            self.menu.AddDish( dish, math.floor(dish.baseCost ** ((quality - 1)/20 + 1)) )
 
 
     def EvaluateInventory(self, customers):
@@ -285,7 +294,7 @@ class AI(Player):
             for ingredient in dish['dish'].ingredients:
                 new = True
 
-                amount = math.floor(dish['demand'] * 1.2)
+                amount = math.ceil(dish['demand'] * 1.2)
                 for i in ingredientsList:
                     if i.name == ingredient.name:
                         i.amount += amount
@@ -301,37 +310,31 @@ class AI(Player):
         for ingredient in ingredientsList:
             stock = sum(self.inventory.IngredientStock(ingredient))
             ingredient.amount -= stock
+            if ingredient.amount < 0:
+                ingredient.amount = 0
+
+            print(ingredient.name + " " + str(ingredient.amount))
 
         return ingredientsList
 
     def PurchaseIngredients(self, ingredientList):
-        newBatch = Batch(self.evManager)
+        newBatch = Batch(self.inventory, self.evManager)
         newBatch.AddIngredients(ingredientList)
         self.inventory.batches.append(newBatch)
 
 
-    def ProcessDay(self):
-        customers = self.customerManager.CalculateCustomerSplit(self.CalculateImpression())
-
+    def ProcessDay(self, customers):
+        print(customers)
         self.EvaluateMenu()
-        self.EvaluatePricing()
         self.UpdateMenu()
 
         ingredientList = self.EvaluateInventory(customers)
         self.PurchaseIngredients(ingredientList)
 
-        salesReport = customers, unfedCustomers, salesRevenue, satisfaction = self.ProcessSales()
-
-        print(self.name + str(satisfaction))
-        #print(unfedCustomers)
-        #print(customers)
-
-        ev = RivalSalesReportEvent(*salesReport)
-        self.evManager.Post(ev)
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
-            self.ProcessDay()
+            pass
 
 
 class Chef:
@@ -365,24 +368,15 @@ class Menu:
         if dish not in (d['dish'] for d in self.dishes):
             self.dishes.append(dishDict)
 
-            ev = MenuUpdateEvent(self.dishes)
-            self.evManager.Post(ev)
-
     def UpdateDishPrice(self, dish, price):
         for d in self.dishes:
             if d['dish'].name == dish.name:
                 d['price'] = price
 
-                ev = MenuUpdateEvent(self.dishes)
-                self.evManager.Post(ev)
-
     def RemoveDish(self, dish):
         for d in self.dishes:
             if d['dish'].name == dish.name:
                 self.dishes.remove(d)
-
-                ev = MenuUpdateEvent(self.dishes)
-                self.evManager.Post(ev)
 
     def NumberOfCuisines(self):
         cuisines = []
@@ -396,7 +390,7 @@ class Menu:
         points = 0
         cuisines = []
         for dish in self.dishes:
-            points += dish['dish'].CalculateImpression()
+            points += dish['dish'].ImpressionPoints()
 
         return points
 
@@ -447,6 +441,24 @@ class Inventory:
         self.evManager.RegisterListener(self)
 
         self.batches = []
+        self.expiredList = []
+
+    def Stock(self):
+        stock = []
+        for batch in self.batches:
+            new = True
+            for ingredient in batch.batch:
+                for i in stock:
+                    if ingredient.name == i.name:
+                        i.amount += ingredient.amount
+                        new = False
+
+                if new:
+                    ing = copy.deepcopy(ingredient)
+                    ing.quality = 0 # No need quality
+                    ing.amount = ingredient.amount
+
+        return stock
 
     def IngredientStock(self, ingredient):
         stock = [0, 0, 0, 0, 0] # Initialise based on quality 5 to 1
@@ -465,7 +477,7 @@ class Inventory:
             countIngredient = True
             while countIngredient:
                 for batch in self.batches:
-                    for i in batch.batch:
+                    for i in batch.ingredients:
                         if i.name == ingredient.name and i.quality == quality:
                             i.amount -= useAmount
                             if i.amount < 0:
@@ -477,6 +489,22 @@ class Inventory:
                                 countIngredient = False
                 quality -= 1
 
+    def ExpiredList(self, batch):
+        self.expiredList = []
+        for ingredient in batch.ingredients:
+            new = True
+            for i in self.expiredList:
+                if ingredient.name == i.name:
+                    i.amount += ingredient.amount
+                    new = False
+
+            if new:
+                if ingredient.amount > 0:
+                    ingredient.quality = 0 # No need quality
+                    self.expiredList.append(ingredient)
+
+        for ingredient in self.expiredList:
+            print(ingredient.name + " expired " + str(ingredient.amount))
 
     def RemoveBatch(self, batch):
         for b in self.batches:
@@ -485,6 +513,7 @@ class Inventory:
 
     def Notify(self, event):
         if isinstance(event, BatchExpiredEvent):
+            self.ExpiredList(event.batch)
             self.RemoveBatch(event.batch)
 
         if isinstance(event, BuyIngredientsEvent):
@@ -492,16 +521,18 @@ class Inventory:
             self.evManager.Post(ev)
 
 class Batch:
-    def __init__(self, evManager):
+    def __init__(self, inventory, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
 
-        self.batch = []
+        self.inventory = inventory
+
+        self.ingredients = []
         self.age = 0
 
     def IngredientStock(self, ingredient):
-        stock = [0, 0, 0, 0, 0, 0] # Initialise based on quality 1 to 5
-        for i in self.batch:
+        stock = [0, 0, 0, 0, 0] # Initialise based on quality 1 to 5
+        for i in self.ingredients:
             if i.name == ingredient.name:
                 quality = i.quality
                 amount = i.amount
@@ -513,33 +544,33 @@ class Batch:
     def AddIngredients(self, list):
         new = True
         for ingredient in list:
-            for i in self.batch:
+            for i in self.ingredients:
                 if i.name == ingredient.name and i.quality == ingredient.quality:
                     i.amount += ingredient.amount
                     new = False
             if new:
-                self.batch.append(ingredient)
+                self.ingredients.append(ingredient)
 
     def RemoveIngredients(self, ingredient, quality, amount):
-        for ing in self.batch:
+        for ing in self.ingredients:
             if ing.name == ingredient.name \
                     and ing.quality == quality:
                 ing.amount -= amount
 
                 if ing.amount == 0:
-                    for i in self.batch:
+                    for i in self.ingredients:
                         if i is ing:
-                            self.batch.remove(ing)
+                            self.ingredients.remove(ing)
 
     def Clear(self):
-        self.batch = []
+        self.ingredients = []
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
             self.age += 1
             if self.age > 6:
-                ev = BatchExpiredEvent(self)
-                self.evManager.Post(ev)
+                self.inventory.ExpiredList(self)
+                self.inventory.RemoveBatch(self)
 
 
 class Cart:
