@@ -196,6 +196,7 @@ class Player:
                 newBatch = Batch(self.evManager)
                 newBatch.AddIngredients(event.cart)
                 self.inventory.batches.append(newBatch)
+            print("Updated")
 
         elif isinstance(event, HireChefEvent):
             self.chefs.append(Chef(event.level, event.cuisine, self.evManager))
@@ -486,6 +487,9 @@ class Inventory:
         if isinstance(event, BatchExpiredEvent):
             self.RemoveBatch(event.batch)
 
+        if isinstance(event, BuyIngredientsEvent):
+            ev = InventoryUpdateEvent(self.batches)
+            self.evManager.Post(ev)
 
 class Batch:
     def __init__(self, evManager):
@@ -561,6 +565,7 @@ class Cart:
 
         self.totalPrice += ingredient.Price(quality) * amount
 
+
         # Tell View to update cart list
         ev = CartUpdateEvent(self.cart, self.totalPrice)
         self.evManager.Post(ev)
@@ -581,3 +586,17 @@ class Cart:
 
         elif isinstance(event, RemoveFromCartEvent):
             self.RemoveFromCart(event.ingredient)
+
+        elif isinstance(event, BuyIngredientsEvent):
+            self.cart = []
+            self.totalPrice = 0
+
+            ev = CartUpdateEvent(self.cart, self.totalPrice)
+            self.evManager.Post(ev)
+
+        elif isinstance(event, ClearCartEvent):
+            self.cart = []
+            self.totalPrice = 0
+
+            ev = CartUpdateEvent(self.cart, self.totalPrice)
+            self.evManager.Post(ev)

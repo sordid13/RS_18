@@ -121,9 +121,10 @@ class ClearCartEvent:
 
 
 class BuyIngredientsEvent:
-    def __init__(self, cart):
+    def __init__(self, cart, price):
         self.name = "Buy Ingredients Event"
         self.cart = cart
+        self.price = price
 
 
 class BatchExpiredEvent:
@@ -133,7 +134,8 @@ class BatchExpiredEvent:
 
 class InventoryUpdateEvent:
     def __init__(self, inventory):
-        pass
+        self.name = "Inventory Update Event"
+        self.inventory = inventory
 
 class GUIOpenHireStaffEvent:
     def __init__(self):
