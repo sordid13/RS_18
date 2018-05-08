@@ -12,8 +12,7 @@
       "Profit": 0,
       "Day": 29,
       "Month": 12,
-      "Year": 2017,
-      "DayNumber": 0
+      "Year": 2017
     },
     {
       "Cash": 10000,
@@ -27,8 +26,7 @@
       "Profit": 0,
       "Day": 30,
       "Month": 12,
-      "Year": 2017,
-      "DayNumber": 1
+      "Year": 2017
     },
     {
       "Cash": 10000,
@@ -42,8 +40,7 @@
       "Profit": 0,
       "Day": 31,
       "Month": 12,
-      "Year": 2017,
-      "DayNumber": 2
+      "Year": 2017
     },
     {
       "Cash": 10000,
@@ -57,23 +54,7 @@
       "Profit": 0,
       "Day": 1,
       "Month": 1,
-      "Year": 2018,
-      "DayNumber": 3
-    },
-    {
-      "Cash": 10000,
-      "Sales": 0,
-      "Inventory": 0,
-      "Marketing": 0,
-      "Renovation": 0,
-      "Salary": 0,
-      "Misc": 0,
-      "Expense": 0,
-      "Profit": 0,
-      "Day": 2,
-      "Month": 1,
-      "Year": 2018,
-      "DayNumber": 4
+      "Year": 2018
     }
   ],
   "monthly": [
