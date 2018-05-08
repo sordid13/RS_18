@@ -81,7 +81,7 @@ class Numbers(pygame.sprite.Sprite):
 
 
 class MainWindow(pygame.sprite.Sprite):
-    def __init__(self, color, group=None):
+    def __init__(self, color, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
 
         self.group = group
@@ -94,10 +94,7 @@ class MainWindow(pygame.sprite.Sprite):
         x = WIDTH / 1.25
         y = HEIGHT / 8
 
-        self.closeButton = CloseButton(x, y, group)
-
-    def Clicked(self):
-        pass
+        self.closeButton = CloseButton(x, y, evManager, group)
 
 
 class OpenWindowButton(pygame.sprite.Sprite):
@@ -125,7 +122,9 @@ class OpenWindowButton(pygame.sprite.Sprite):
 
 
 class CloseButton(pygame.sprite.Sprite):
-    def __init__(self, x, y, group=None, window=None):
+    def __init__(self, x, y, evManager, group=None, window=None):
+        self.evManager = evManager
+
         pygame.sprite.Sprite.__init__(self, group)
         self.group = group
         self.window = window
@@ -138,11 +137,8 @@ class CloseButton(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y)
 
     def Clicked(self):
-        self.group.empty()
-        try:
-            self.window.RemoveContents()
-        except AttributeError:
-            pass
+        ev = GUICloseWindowEvent(self.group)
+        self.evManager.Post(ev)
 
 
 class ArrowLeft(pygame.sprite.Sprite):
@@ -297,7 +293,7 @@ class FinanceWindow:
     def __init__(self, evManager, group=None):
         self.evManager = evManager
         self.group = group
-        self.window = MainWindow(GREEN, self.group)
+        self.window = MainWindow(GREEN, self.evManager, self.group)
         self.screen = None
 
         x = WIDTH/2
@@ -366,6 +362,9 @@ class FinanceButton(pygame.sprite.Sprite):
 class CustomersTab(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None, windowGroup=None):
         self.evManager = evManager
+        self.evManager.RegisterListener(self)
+
+        self.name = "Customers Window"
 
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((230, 50))
@@ -375,38 +374,81 @@ class CustomersTab(pygame.sprite.Sprite):
 
         self.windowGroup = windowGroup
 
-    def Clicked(self):
+        self.dishesServed = 0
+
+        self.customers = 0
+        self.unfedCustomers = 0
+        self.satisfaction = 0
+        self.prevCustomers = 0
+        self.prevUnfedCustomers = 0
+        self.prevSatisfaction = 0
+
+    def Draw(self):
         self.windowGroup.empty()
-        CustomersWindow(self.evManager, self.windowGroup)
+        CustomersWindow(self, self.evManager, self.windowGroup)
+
+    def Clicked(self):
+
+        ev = GUIRequestWindowEvent(self.name, self.Draw)
+        self.evManager.Post(ev)
+
+    def Notify(self, event):
+        if isinstance(event, SalesReportEvent):
+            if hasattr(event.player, "ai"):
+                self.prevCustomers = self.customers
+                self.prevUnfedCustomers = self.unfedCustomers
+                self.prevSatisfaction = self.satisfaction
+
+                self.customers = event.customers
+                self.unfedCustomers = event.unfedCustomers
+                self.satisfaction = event.satisfaction
+
+                ev = GUIRequestWindowRedrawEvent(self.name, self.Draw)
+                self.evManager.Post(ev)
 
 
 class CustomersWindow:
-    def __init__(self, evManager, group=None):
+    def __init__(self, parent, evManager, group=None):
         self.evManager = evManager
         self.group = group
-        self.window = MainWindow(BLUE, self.group)
-        self.previousTodayCustomer = PreviousTodayCustomer( WIDTH * 50/100, HEIGHT * 18/100, self.evManager, self.group)
-        self.dishPercentage = DishPercentage(WIDTH * 50/100, HEIGHT * 43/100, self.evManager, self.group)
+        self.window = MainWindow(BLUE, self.evManager, self.group)
+        self.previousTodayCustomer = PreviousTodayCustomer(self.window.rect.left + 10, self.window.rect.top + 60,
+                                                           parent, self.evManager, self.group)
+
+
+        # self.dishPercentage = DishPercentage(WIDTH * 50/100, HEIGHT * 43/100, self.evManager, self.group)
 
 class PreviousTodayCustomer(pygame.sprite.Sprite):
-    def __init__(self, x, y, evManager, group=None):
+    def __init__(self, x, y, parent, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
         self.group = group
+
+        self.parent = parent
         self.x = x
         self.y = y
-        self.image = pygame.Surface((600, 90))
+        self.image = pygame.Surface((360, 300))
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
-        self.rect.center = (self.x,  self.y)
+        self.rect.x = self.x
+        self.rect.y = self.y
 
-        self.contents = []
-        self.contents.append(Text("No. Customers", self.x - 150, self.y - 30, BLACK, 20, self.group))
-        self.contents.append(Text("Unserved Customer", self.x, self.y - 30, BLACK, 20, self.group))
-        self.contents.append(Text("Satisfaction", self.x + 170, self.y - 30, BLACK, 20, self.group))
-        self.contents.append(Text("Today", self.x - 270, self.y - 10, BLACK, 20, self.group))
-        self.contents.append(Text("Previous Day", self.x - 270, self.y + 20, BLACK, 20, self.group))
+        pygame.draw.line(self.image, BLACK, (180, 10), (180, 350), 1)
+        pygame.draw.line(self.image, BLACK, (270, 10), (270, 350), 1)
 
+        Text("Number of Customers", self.x + 10, self.y + 100, BLACK, 20, self.group)
+        Text("Unserved Customer", self.x + 10, self.y + 150, BLACK, 20, self.group)
+        Text("Satisfaction", self.x + 10, self.y + 200, BLACK, 20, self.group)
+        Text("Today", self.x + 225, self.y + 30, BLACK, 20, self.group, CENTER)
+        Text("Yesterday", self.x + 315, self.y + 30, BLACK, 20, self.group, CENTER)
+
+        Text(str(self.parent.customers), self.x + 225, self.y + 100, BLACK, 20, self.group, CENTER)
+        Text(str(self.parent.unfedCustomers), self.x + 225, self.y + 150, BLACK, 20, self.group)
+        Text(str(self.parent.satisfaction), self.x + 225, self.y + 200, BLACK, 20, self.group)
+
+        Text(str(self.parent.prevCustomers), self.x + 315, self.y + 100, BLACK, 20, self.group, CENTER)
+        Text(str(self.parent.prevUnfedCustomers), self.x + 315, self.y + 150, BLACK, 20, self.group)
+        Text(str(self.parent.prevSatisfaction), self.x + 315, self.y + 200, BLACK, 20, self.group)
 
 class DishPercentage(pygame.sprite.Sprite):
     def __init__(self, x, y, evManager, group=None):
@@ -445,7 +487,7 @@ class RivalWindow:
     def __init__(self, evManager, group=None):
         self.evManager = evManager
         self.group = group
-        self.window = MainWindow(YELLOW, self.group)
+        self.window = MainWindow(YELLOW, self.evManager, self.group)
 
         x = WIDTH/2
         y = HEIGHT/2
@@ -502,12 +544,12 @@ class StaffTab(pygame.sprite.Sprite):
 
 class StaffWindow(MainWindow):
     def __init__(self, evManager, group=None, popUp=None):
-        super().__init__(YELLOW, group)
+
 
         self.evManager = evManager
         self.evManager.RegisterListener(self)
         self.popUp = popUp
-
+        super().__init__(YELLOW, self.evManager, group)
 
         MyStaffsTab(self.evManager, self.group)
         HireStaffsTab(self.evManager, self.group)
@@ -850,7 +892,7 @@ class ChefDetail(pygame.sprite.Sprite):
 
         x = self.rect.right - 20
         y = self.rect.top + 20
-        self.closeButton = CloseButton(x, y, self.group)
+        self.closeButton = CloseButton(x, y, self.evManager, self.group)
 
         self.contents.append(Text("CHEF", self.x, self.y - 130, BLACK, 35, self.group, CENTER))
         self.contents.append(StaffSprite(self.x, self.y - 80, 40, 40, self.evManager, self.group, "Chef"))
@@ -897,7 +939,7 @@ class WaiterDetail(pygame.sprite.Sprite):
 
         x = self.rect.right - 20
         y = self.rect.top + 20
-        self.closeButton = CloseButton(x, y, self.group)
+        self.closeButton = CloseButton(x, y, self.evManager, self.group)
 
         self.contents.append(Text("WAITER", self.x, self.y - 130, BLACK, 35, self.group, CENTER))
         self.contents.append(StaffSprite(self.x, self.y - 80, 40, 40, self.evManager, self.group, "Waiter"))
@@ -1168,7 +1210,7 @@ class RestaurantDetail(pygame.sprite.Sprite):
 
         x = self.rect.right - 20
         y = self.rect.top + 20
-        self.closeButton = CloseButton(x, y, self.group)
+        self.closeButton = CloseButton(x, y, self.evManager, self.group)
 
     def Remove(self):
         self.levelDisplay.kill()
@@ -1567,7 +1609,7 @@ class MarketingWindow:
         self.evManager = evManager
 
         self.group = group
-        self.window = MainWindow(PURPLE, self.group)
+        self.window = MainWindow(PURPLE, self.evManager, self.group)
         self.popUp = popUp
 
 # MENU CATALOGUE & ADD DISH TO PLAYER's MENUS ----------------------------------------------------------------
@@ -1578,7 +1620,7 @@ class AddDishWindow:
         self.evManager = evManager
 
         self.group = group
-        self.window = MainWindow(BLUE, self.group)
+        self.window = MainWindow(BLUE, self.evManager, self.group)
         self.popUp = popUp
         self.tab = range(5)
 
@@ -1743,7 +1785,7 @@ class DishDetail(pygame.sprite.Sprite):
 
         x = self.rect.right - 20
         y = self.rect.top + 20
-        self.closeButton = CloseButton(x, y, self.group)
+        self.closeButton = CloseButton(x, y, self.evManager, self.group)
 
         self.price = 0 # For price
         self.contents = []
@@ -1877,8 +1919,9 @@ class MarketWindow:
 
         self.group = group
         self.popUp = popUp
-        self.window = MainWindow(GREEN, self.group)
-        self.tab = range(5)
+        
+        self.window = MainWindow(GREEN, self.evManager, self.group)
+        self.tab = range(6)
 
         x = WIDTH * 25/100
         y = HEIGHT * 15/100
@@ -2280,6 +2323,14 @@ class View:
             if self.window is not event.window:
                 event.draw()
                 self.window = event.window
+
+        elif isinstance(event, GUIRequestWindowRedrawEvent):
+            if self.window == event.window:
+                event.draw()
+
+        elif isinstance(event, GUICloseWindowEvent):
+            event.group.empty()
+            self.window = None
 
 
         elif isinstance(event, LeftClickEvent):

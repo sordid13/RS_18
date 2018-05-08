@@ -19,13 +19,6 @@ class GameStartedEvent:
         self.name = "Game Started Event"
 
 
-class GUIRequestWindowEvent:
-    def __init__(self, window, draw):
-        self.name = "GUI Request Window Event"
-        self.window = window
-        self.draw = draw
-
-
 class NewDayEvent:
     def __init__(self):
         self.name = "New Day Event"
@@ -240,3 +233,20 @@ class CtrlLeftClickEvent:
         self.name = "Ctrl Left Click Event"
         self.pos = pos
 
+
+class GUIRequestWindowEvent:
+    def __init__(self, window, draw):
+        self.name = "GUI Request Window Event"
+        self.window = window
+        self.draw = draw
+
+class GUIRequestWindowRedrawEvent:
+    def __init__(self, window, draw):
+        self.name = "GUI Request Window Redraw Event"
+        self.window = window
+        self.draw = draw
+
+class GUICloseWindowEvent:
+    def __init__(self, group):
+        self.name = "GUI Close Window Event"
+        self.group = group
