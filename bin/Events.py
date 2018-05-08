@@ -215,11 +215,11 @@ class LeftClickEvent:
         self.pos = pos
 
         
-class SpendRequestEvent:
-    def __init__(self, cost, function):
-        self.name = "Spend Request Event"
-        self.cost = cost
-        self.function = function
+class CashFlowUpdateEvent:
+    def __init__(self, value, category):
+        self.name = "Cash Flow Update Event"
+        self.value = value
+        self.category = category
 
 
 class ShiftLeftClickEvent:

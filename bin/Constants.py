@@ -53,8 +53,15 @@ STARTING_CUSTOMERS = 100
 # Finance related
 INVENTORY = "Inventory"
 RENOVATION = "Renovation"
-UTILITY = "Overhead"
-TAX = "TAX"
-MISC = "Miscellaneous"
+SALARY = "Salary"
+EXPENSE = "Expense"
+SALES = "Sales"
+PROFIT = "Profit"
+MARKETING = "Marketing"
+CASH = "Cash"
+MISC = "Misc"
 
-
+# Fiscal Term
+DAILY = "daily"
+MONTHLY = "monthly"
+YEARLY = "yearly"

@@ -37,6 +37,7 @@ class Player:
         self.game = game
         self.rivals = None
 
+        self.finance = Finance(self, self.evManager)
         self.customerManager = self.game.customerManager
         self.dishManager = self.game.dishManager
 
@@ -249,6 +250,8 @@ class AI(Player):
         self.ai = ""
         self.cuisine = cuisine
 
+
+        self.finance = None
         self.chefs = [Chef(3, self.cuisine, self.evManager)]
         self.waiters = [Waiter(3, self.evManager), Waiter(3, self.evManager), Waiter(3, self.evManager)]
 
