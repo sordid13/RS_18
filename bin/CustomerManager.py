@@ -29,7 +29,10 @@ class CustomerManager:
         totalImpression = 0
         for player in players:
             player.impression = player.CalculateImpression()
-            totalImpression += player.impression
+            if player.impression > 0:
+                totalImpression += player.impression
+            else:
+                player.impression = 0
 
         for player in players:
             customers = math.floor(self.totalCustomers * (player.impression / totalImpression))
