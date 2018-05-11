@@ -13,8 +13,7 @@ class Game:
         self.dishManager = DishManager(self.evManager)
         self.cart = Cart(self.evManager)
 
-        self.players = [Player(self, self.evManager), AI(CUISINE_WESTERN, self, self.evManager),
-                        AI(CUISINE_CHINESE, self, self.evManager), AI(CUISINE_KOREAN, self, self.evManager)]
+        self.players = [Player(self, self.evManager), AI(CUISINE_WESTERN, self, self.evManager)]
         for player in self.players:
             playerList = self.players[:]
             playerList.remove(player)
@@ -59,8 +58,6 @@ class Player:
         self.restaurantLvl = 0
         self.restaurantCapacity = 50
         self.menu.dishLimit = 4 * self.restaurantLvl
-
-
 
     def SpendMoney(self, value):
         self.cash -= value
@@ -177,9 +174,13 @@ class Player:
         salesRevenue = self.dishManager.SalesRevenue(dishesServed)
 
         satisfaction = self.CalculateSatisfaction(dishesServed, customers, unfedCustomers)
-        self.baseImpression = satisfaction
+        if customers > 0:
+            avgSatisfaction = math.floor(satisfaction / customers)
+        else:
+            avgSatisfaction = 0
+        self.baseImpression = satisfaction * (avgSatisfaction / 100)
 
-        ev = SalesReportEvent(self, customers, unfedCustomers, salesRevenue, satisfaction)
+        ev = SalesReportEvent(self, dishesServed, customers, unfedCustomers, salesRevenue, avgSatisfaction)
         self.evManager.Post(ev)
 
         self.ProcessDay(customers) # For AI usage

@@ -464,7 +464,7 @@ class CustomersTab(pygame.sprite.Sprite):
 
         self.windowGroup = windowGroup
 
-        self.dishesServed = 0
+        self.dishesServed = []
 
         self.customers = 0
         self.unfedCustomers = 0
@@ -489,6 +489,7 @@ class CustomersTab(pygame.sprite.Sprite):
                 self.prevUnfedCustomers = self.unfedCustomers
                 self.prevSatisfaction = self.satisfaction
 
+                self.dishesServed = event.dishesServed
                 self.customers = event.customers
                 self.unfedCustomers = event.unfedCustomers
                 self.satisfaction = event.satisfaction
@@ -505,8 +506,8 @@ class CustomersWindow:
         self.previousTodayCustomer = PreviousTodayCustomer(self.window.rect.left + 10, self.window.rect.top + 60,
                                                            parent, self.evManager, self.group)
 
-
-        # self.dishPercentage = DishPercentage(WIDTH * 50/100, HEIGHT * 43/100, self.evManager, self.group)
+        self.dishBreakdown = DishBreakdown(self.window.rect.left + 380, self.window.rect.top + 60,
+                                           parent, self.evManager, self.group)
 
 class PreviousTodayCustomer(pygame.sprite.Sprite):
     def __init__(self, x, y, parent, evManager, group=None):
@@ -540,17 +541,50 @@ class PreviousTodayCustomer(pygame.sprite.Sprite):
         Text(str(self.parent.prevUnfedCustomers), self.x + 315, self.y + 150, BLACK, 20, self.group)
         Text(str(self.parent.prevSatisfaction), self.x + 315, self.y + 200, BLACK, 20, self.group)
 
-class DishPercentage(pygame.sprite.Sprite):
-    def __init__(self, x, y, evManager, group=None):
+class DishBreakdown(pygame.sprite.Sprite):
+    def __init__(self, x, y, parent, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
-        self.group = group
         self.evManager = evManager
+        self.group = group
+        self.parent = parent
         self.x = x
         self.y = y
-        self.image = pygame.Surface((650, 250))
-        self.image.fill(RED)
+
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        import matplotlib.backends.backend_agg as agg
+
+        sizes = []
+        labels = []
+        for dish in parent.dishesServed:
+            if dish['sales'] > 0:
+                sizes.append(dish['sales'])
+                labels.append(dish['dish'].name)
+
+        if len(sizes) == 0:
+            sizes = [1]
+
+        # Pie chart
+        fig, ax = plt.subplots()
+        ax.pie(sizes, startangle=90, radius=0.1)
+        ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
+        ax.legend(labels, loc="best")
+
+        canvas = agg.FigureCanvasAgg(fig)
+        canvas.draw()
+        renderer = canvas.get_renderer()
+        rawData = renderer.tostring_rgb()
+        size = canvas.get_width_height()
+
+        #self.image = pygame.image.tostring(pygame.Surface((360, 360)), "RGB")
+        self.image = pygame.Surface((400, 300))
+        self.piechart = pygame.image.fromstring(rawData, size, "RGB").convert()
+        pygame.transform.scale(self.piechart, (400, 300), self.image)
+
         self.rect = self.image.get_rect()
-        self.rect.center = (self.x, self.y)
+        self.rect.x = self.x
+        self.rect.y = self.y
 
 
 # RIVAL--------------------------------------------------------------------------------------------------
@@ -1829,8 +1863,8 @@ class DishSprite(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         self.image = pygame.Surface((40, 40))
-        self.image.fill(WHITE)
-        #self.image = pygame.image.load(os.path.join(imgFolder, self.ingredient.name + ".png")).convert()
+        self.image.fill(BLACK)
+        #self.image = pygame.image.load(os.path.join(imgFolder, self.dish.name + ".png")).convert()
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
