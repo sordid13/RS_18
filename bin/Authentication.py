@@ -47,6 +47,7 @@ class StartPage(tk.Frame):
         pageRegister.place(x=108, y=200)
 
 
+
 class loginPage(tk.Frame):
 
     def __init__(self, master, evManager):
@@ -75,7 +76,7 @@ class loginPage(tk.Frame):
         user = self.userEntry.get()
         password = self.passwordEntry.get()
 
-        with open('security/hash.json','r') as json_file:
+        with open('security/hash.json', 'r') as json_file:
             keyList = json.load(json_file)
 
         noUser = True

@@ -50,6 +50,17 @@ class SalesReportEvent:
         self.satisfaction = satisfaction
 
 
+class RequestFinanceWindowEvent:
+    def __init__(self, fiscalTerm):
+        self.name = "Request Finance Window"
+        self.fiscalTerm = fiscalTerm
+
+class UpdateFinanceWindowEvent:
+    def __init__(self, cashBook):
+        self.name = "Open Finance Window"
+        self.cashBook = cashBook
+
+
 class MenuUpdateEvent:
     def __init__(self, dishes):
         self.name = "Update Menu Event"
@@ -216,11 +227,11 @@ class LeftClickEvent:
         self.pos = pos
 
         
-class SpendRequestEvent:
-    def __init__(self, cost, function):
-        self.name = "Spend Request Event"
-        self.cost = cost
-        self.function = function
+class CashFlowUpdateEvent:
+    def __init__(self, value, category):
+        self.name = "Cash Flow Update Event"
+        self.value = value
+        self.category = category
 
 
 class ShiftLeftClickEvent:

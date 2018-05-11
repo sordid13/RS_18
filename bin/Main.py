@@ -80,6 +80,7 @@ if __name__ == '__main__':
     evManager = EventManager()
     #auth = Authentication(evManager)
     main = Main(evManager)
+    dateManager = DateManager(evManager)
     main.LoadAssets()
     main.Start()
     #auth.mainloop()

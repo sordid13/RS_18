@@ -9,7 +9,6 @@ class Game:
         self.evManager = evManager
         self.evManager.RegisterListener(self)
 
-        self.dateManager = DateManager(self.evManager)
         self.customerManager = CustomerManager(self.evManager)
         self.dishManager = DishManager(self.evManager)
         self.cart = Cart(self.evManager)
@@ -19,6 +18,9 @@ class Game:
             playerList = self.players[:]
             playerList.remove(player)
             player.rivals = playerList
+
+            if not hasattr(player, "ai"):
+                player.finance = Finance(player, self.evManager)
 
         ev = GameStartedEvent()
         self.evManager.Post(ev)
@@ -36,6 +38,7 @@ class Player:
         self.game = game
         self.rivals = None
 
+        self.finance = None
         self.customerManager = self.game.customerManager
         self.dishManager = self.game.dishManager
 
@@ -55,11 +58,6 @@ class Player:
         self.restaurantLvl = 0
         self.restaurantCapacity = 50
         self.menu.dishLimit = 4 * self.restaurantLvl
-
-        # Values to display daily
-        self.customers = 0
-        self.unfedCustomers = 0
-        self.dishesServed = []
 
     def SpendMoney(self, value):
         self.cash -= value
