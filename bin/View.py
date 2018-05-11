@@ -1630,7 +1630,6 @@ class MidTab(pygame.sprite.Sprite):
         self.rect.center = (WIDTH * 50/100, HEIGHT * 85/100)
 
 
-
 class AddDishButton(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None, popUp=None, windowGroup=None):
         pygame.sprite.Sprite.__init__(self, group)
@@ -1717,6 +1716,7 @@ class MarketingButton(pygame.sprite.Sprite):
 
 # MARKETING ------------------------------------------------------------------------------------------------
 
+
 class MarketingWindow:
     def __init__(self, parent, evManager, group=None):
         self.evManager = evManager
@@ -1724,6 +1724,12 @@ class MarketingWindow:
 
         self.group = group
         self.window = MainWindow(PURPLE, self.evManager, self.group)
+
+
+class MarketingContainer(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self.group)
+
 
 # MENU CATALOGUE & ADD DISH TO PLAYER's MENUS ----------------------------------------------------------------
 
