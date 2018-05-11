@@ -470,7 +470,7 @@ class DishBreakdown(pygame.sprite.Sprite):
         for dish in parent.dishesServed:
             if dish['sales'] > 0:
                 sizes.append(dish['sales'])
-                labels.append(dish['dish'])
+                labels.append(dish['dish'].name)
 
         if len(sizes) == 0:
             sizes = [1]
@@ -1955,7 +1955,7 @@ class MarketWindow:
         self.popUp = popUp
         
         self.window = MainWindow(GREEN, self.evManager, self.group)
-        self.tab = range(6)
+        self.tab = range(5)
 
         x = WIDTH * 25/100
         y = HEIGHT * 15/100
