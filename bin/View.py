@@ -322,7 +322,6 @@ class FinanceWindow:
         self.thirdScreen = StatementScreen(x + 280, y - 80, self, self.evManager, self.group)
 
 
-
 class StatementScreen(pygame.sprite.Sprite):
     def __init__(self, x, y, parent, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
@@ -336,7 +335,6 @@ class StatementScreen(pygame.sprite.Sprite):
         self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
-
 
 
 class FinanceButton(pygame.sprite.Sprite):
@@ -1184,9 +1182,7 @@ class HireButton(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y)
 
     def Clicked(self):
-        print("Clicked")
         if self.container.staffType == "Chef":
-            print(self.container.level)
             ev = HireChefEvent(self.container.level, self.container.cuisine)
             self.evManager.Post(ev)
 
@@ -1444,6 +1440,8 @@ class InventoryTab(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None, popUp=None):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
+        self.group = group
+        self.popUp = popUp
 
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((500, 200))
@@ -1451,9 +1449,131 @@ class InventoryTab(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH * 73/100, HEIGHT * 85/100)
 
+        self.contents = []
+
+    def UpdateInventory(self, inventory):
+        x = self.rect.left + 33
+        y = self.rect.top + 30
+        i = 0
+
+        for ingredient in inventory:
+            self.contents.append(InventoryItemContainer(x, y + 8, ingredient, self.evManager, self.group, self.popUp))
+            x += 48
+
+            i += 1
+            if i >= 10:
+                x = self.rect.left + 33
+                y += 70
+                i = 0
+
     def Notify(self, event):
         if isinstance(event, InventoryUpdateEvent):
-            pass
+            for sprite in self.contents:
+                try:
+                    for s in sprite.contents:
+                        s.kill()
+                except AttributeError:
+                    pass
+                sprite.kill()
+            self.contents = []
+            self.UpdateInventory(event.inventory)
+
+
+
+class InventoryItemContainer(pygame.sprite.Sprite):
+    def __init__(self, x, y, item, evManager, group=None, popUp=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.evManager.RegisterListener(self)
+
+        self.x = x
+        self.y = y
+
+        self.group = group
+        self.popUp = popUp
+        self.item = item
+
+        self.image = pygame.Surface((45, 60))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+        self.contents = []
+        self.amount = self.item.amount
+
+        self.contents.append(IngredientSprite(self.x, self.y - 7, self.item,self.evManager, self.group))
+        self.contents.append(Numbers(self, "amount", self.x, self.y + 25,WHITE, 20, self.group, CENTER))
+
+        self.amounts = []
+        self.expiredAmounts = []
+
+    def Clicked(self):
+        self.popUp.empty()
+        InventoryItemDetail(self.item, self.evManager, self.popUp)
+
+        ev = UpdateItemDetailEvent(self.item)
+        self.evManager.Post(ev)
+
+    def Notify(self, event):
+        if isinstance(event, ReturnAmountEvent):
+            print(event.amount)
+            self.amounts = [sum(x) for x in zip(event.amount, event.expire)]
+            self.expiredAmounts = event.expire
+
+
+
+class InventoryItemDetail(pygame.sprite.Sprite):
+    def __init__(self, item, evManager, group=None):
+        self.evManager = evManager
+        self.evManager.RegisterListener(self)
+
+        pygame.sprite.Sprite.__init__(self, group)
+        self.group = group
+        self.item = item
+        self.x = WIDTH * 9 / 100
+        self.y = HEIGHT * 37 / 100
+        self.w = 230
+        self.h = 350
+
+        self.image = pygame.Surface((self.w, self.h))
+        self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+        x = self.rect.right - 20
+        y = self.rect.top + 20
+        self.closeButton = CloseButton(x, y, self.group)
+
+        self.contents = []
+        self.amounts = []
+        self.expiredAmounts = []
+        self.Display()
+
+    def Display(self):
+        self.contents.append(IngredientSprite(self.x, self.y - 110, self.item, self.evManager, self.group))
+        self.contents.append(Text(self.item.name, self.x, self.y - 80, BLACK, 25, self.group, CENTER))
+        self.contents.append(Text("Stock:", self.x - 110, self.y - 70, BLACK, 25, self.group))
+
+        self.contents.append(Text("Quality", self.x - 100, self.y - 53, BLACK, 22, self.group))
+        self.contents.append(Text("Amount", self.x - 30, self.y - 53, BLACK, 22, self.group))
+        self.contents.append(Text("Expiring", self.x + 40, self.y - 53, BLACK, 22, self.group))
+
+        y = self.y - 32
+        for q in reversed(range(1, 6)):
+            self.contents.append(Text(str(q), self.x - 75, y, BLACK, 22, self.group))
+            y += 20
+
+    def UpdateItemDetail(self, amounts, expiredAmounts):
+        y = self.y - 32
+        for amount in amounts:
+            self.amounts.append(Text(str(amount), self.x - 30, y, BLACK, 22, self.group))
+            y += 20
+        y = self.y - 32
+        for expiredAmount in expiredAmounts:
+            self.expiredAmounts.append(Text(str(expiredAmount), self.x + 40, y, BLACK, 22, self.group))
+            y += 20
+
+
+
 
 
 # MAIN UI: Add Dish, Market, Marketing -------------------------------------------------------------------------------
@@ -1801,8 +1921,6 @@ class UpdateDishPrice(pygame.sprite.Sprite):
         ev = GUICheckDishMenuEvent(self.dish, self.window)
         self.evManager.Post(ev)
 
-        print("hi")
-
 
 class RemoveDish(pygame.sprite.Sprite):
     def __init__(self, x, y, dish, window, evManager, group=None):
@@ -1835,15 +1953,16 @@ class MarketWindow:
 
         self.group = group
         self.popUp = popUp
+        
         self.window = MainWindow(GREEN, self.evManager, self.group)
         self.tab = range(6)
 
         x = WIDTH * 25/100
         y = HEIGHT * 15/100
-        qualityNumber = 0
+        qualityNumber = 1
 
         self.page = 1
-        self.quality = 0
+        self.quality = 1
         self.maxPage = math.ceil(len(INGREDIENTS_LIST) / 10)
 
     #Instantiate Sprite in the window.
@@ -2037,8 +2156,6 @@ class MarketCart(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y)
 
         self.cartScreen = CartScreen(self.x, self.y, self.evManager, group)
-        PrevPage(self.rect.right - 20, self.rect.bottom - 43, 25, 25, self, group)
-        NextPage(self.rect.right - 20, self.rect.bottom - 15, 25, 25, self, group)
 
 
 class CartScreen(pygame.sprite.Sprite):
@@ -2055,16 +2172,29 @@ class CartScreen(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
+        self.items = []
+
         self.contents = []
+        self.totalPrice = 0
+        self.displayPrice = Numbers(self, "totalPrice", self.rect.left + 170, self.rect.bottom - 35, BLACK, 25,
+                                    self.group)
+
+        Text("Total: $", self.rect.left + 7, self.rect.bottom - 45, BLACK, 25, self.group)
+        BuyButton(self.rect.left + 137, self.rect.bottom - 10, self, self.evManager, self.group)
+        self.clearButton = ClearButton(self.rect.left + 42, self.rect.bottom - 10, self.evManager, self.group)
+
+    def RemoveContents(self):
+        for sprite in self.contents:
+            for s in sprite.contents:
+                s.kill()
+            sprite.kill()
+        self.contents = []
+
 
     def Notify(self, event):
         if isinstance(event, CartUpdateEvent):
-            for sprite in self.contents:
-                for s in sprite.contents:
-                    s.kill()
-                self.contents = []
-                sprite.kill()
-            self.contents = []
+            self.RemoveContents()
+            self.items = event.cart
 
             x = self.rect.left + 15
             y = self.rect.top + 30
@@ -2076,6 +2206,10 @@ class CartScreen(pygame.sprite.Sprite):
                     y += 60
                 if len(self.contents) % 24 == 0:
                     break
+
+            self.totalPrice = event.price
+            self.displayPrice.Update()
+
 
 
 class ItemContainer(pygame.sprite.Sprite):
@@ -2118,6 +2252,46 @@ class ItemSprite(pygame.sprite.Sprite):
         self.image = pygame.Surface((25, 25))
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
+
+class BuyButton(pygame.sprite.Sprite):
+    def __init__(self, x, y, cart, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.x = x
+        self.y = y
+        self.cart = cart
+
+        self.image = pygame.Surface((90, 25))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+    def Clicked(self):
+        #print(self.items)
+        #print(self.price)
+        ev = BuyIngredientsEvent(self.cart.items, self.cart.totalPrice)
+        self.evManager.Post(ev)
+        self.cart.RemoveContents()
+
+
+
+class ClearButton(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.x = x
+        self.y = y
+
+        self.image = pygame.Surface((90, 25))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+    def Clicked(self):
+        ev = ClearCartEvent()
+        self.evManager.Post(ev)
 
 # MAIN VIEW MODULE ---------------------------------------------------------------------------------------------
 

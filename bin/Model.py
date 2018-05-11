@@ -221,6 +221,16 @@ class Player:
                 newBatch.AddIngredients(event.cart)
                 self.inventory.batches.append(newBatch)
 
+            ev = InventoryUpdateEvent(self.inventory.Stock())
+            self.evManager.Post(ev)
+
+        elif isinstance(event, UpdateItemDetailEvent):
+            amount = self.inventory.IngredientStock(event.ingredient)
+            expired = self.inventory.IngredientExpiredAmount(event.ingredient)
+            ev = ReturnAmountEvent(amount, expired)
+
+            self.evManager.Post(ev)
+
         elif isinstance(event, HireChefEvent):
             self.chefs.append(Chef(event.level, event.cuisine, self.evManager))
 
@@ -456,7 +466,7 @@ class Inventory:
         stock = []
         for batch in self.batches:
             new = True
-            for ingredient in batch.batch:
+            for ingredient in batch.ingredients:
                 for i in stock:
                     if ingredient.name == i.name:
                         i.amount += ingredient.amount
@@ -466,6 +476,7 @@ class Inventory:
                     ing = copy.deepcopy(ingredient)
                     ing.quality = 0 # No need quality
                     ing.amount = ingredient.amount
+                    stock.append(ing)
 
         return stock
 
@@ -621,3 +632,18 @@ class Cart:
 
         elif isinstance(event, RemoveFromCartEvent):
             self.RemoveFromCart(event.ingredient)
+
+        elif isinstance(event, BuyIngredientsEvent):
+            self.cart = []
+            self.totalPrice = 0
+
+            ev = CartUpdateEvent(self.cart, self.totalPrice)
+            self.evManager.Post(ev)
+
+        elif isinstance(event, ClearCartEvent):
+            self.cart = []
+            self.totalPrice = 0
+
+            ev = CartUpdateEvent(self.cart, self.totalPrice)
+            self.evManager.Post(ev)
+

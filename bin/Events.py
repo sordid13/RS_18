@@ -116,9 +116,10 @@ class ClearCartEvent:
 
 
 class BuyIngredientsEvent:
-    def __init__(self, cart):
+    def __init__(self, cart, price):
         self.name = "Buy Ingredients Event"
         self.cart = cart
+        self.price = price
 
 
 class BatchExpiredEvent:
@@ -128,7 +129,21 @@ class BatchExpiredEvent:
 
 class InventoryUpdateEvent:
     def __init__(self, inventory):
-        pass
+        self.name = "Inventory Update Event"
+        self.inventory = inventory
+
+
+class UpdateItemDetailEvent:
+    def __init__(self, ingredient):
+        self.name = "Update Item Detail"
+        self.ingredient = ingredient
+
+
+class ReturnAmountEvent:
+    def __init__(self, amount, expire):
+        self.name = "Return Amount Event"
+        self.amount = amount
+        self.expire = expire
 
 class GUIOpenHireStaffEvent:
     def __init__(self):
