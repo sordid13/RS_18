@@ -214,6 +214,7 @@ class Player:
                 if batch.age == 0:
                     batch.AddIngredients(event.cart)
                     new = False
+
             if new:
                 newBatch = Batch(self.inventory, self.evManager)
                 newBatch.AddIngredients(event.cart)
@@ -222,11 +223,11 @@ class Player:
             ev = InventoryUpdateEvent(self.inventory.Stock())
             self.evManager.Post(ev)
 
-        elif isinstance(event, UpdateItemDetailEvent):
+        elif isinstance(event, RequestIngredientAmountEvent):
             amount = self.inventory.IngredientStock(event.ingredient)
             expired = self.inventory.IngredientExpiredAmount(event.ingredient)
-            ev = ReturnAmountEvent(amount, expired)
 
+            ev = ReturnIngredientAmountEvent(event.ingredient, amount, expired)
             self.evManager.Post(ev)
 
         elif isinstance(event, HireChefEvent):
@@ -463,8 +464,8 @@ class Inventory:
     def Stock(self):
         stock = []
         for batch in self.batches:
-            new = True
             for ingredient in batch.ingredients:
+                new = True
                 for i in stock:
                     if ingredient.name == i.name:
                         i.amount += ingredient.amount
@@ -562,6 +563,7 @@ class Batch:
                 if i.name == ingredient.name and i.quality == ingredient.quality:
                     i.amount += ingredient.amount
                     new = False
+
             if new:
                 self.ingredients.append(ingredient)
 
