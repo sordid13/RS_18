@@ -40,9 +40,10 @@ class NewYearEvent:
 
 
 class SalesReportEvent:
-    def __init__(self, player, customers, unfedCustomers, revenue, satisfaction):
+    def __init__(self, player, dishesServed, customers, unfedCustomers, revenue, satisfaction):
         self.name = "Sales Report Event"
         self.player = player
+        self.dishesServed = dishesServed
         self.customers = customers
         self.unfedCustomers = unfedCustomers
         self.revenue = revenue
