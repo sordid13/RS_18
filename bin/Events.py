@@ -49,6 +49,17 @@ class SalesReportEvent:
         self.satisfaction = satisfaction
 
 
+class RequestFinanceWindowEvent:
+    def __init__(self, fiscalTerm):
+        self.name = "Request Finance Window"
+        self.fiscalTerm = fiscalTerm
+
+class UpdateFinanceWindowEvent:
+    def __init__(self, cashBook):
+        self.name = "Open Finance Window"
+        self.cashBook = cashBook
+
+
 class MenuUpdateEvent:
     def __init__(self, dishes):
         self.name = "Update Menu Event"

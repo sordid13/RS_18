@@ -39,6 +39,10 @@ class Text(pygame.sprite.Sprite):
 
         if align is CENTER:
             self.rect.center = (self.x, self.y)
+
+        elif align is RIGHT:
+            self.rect.midright = (self.x, self.y)
+
         else:
             self.rect.x = self.x
             self.rect.y = self.y
@@ -275,6 +279,9 @@ class DateTime(pygame.sprite.Sprite):
 class FinanceTab(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None, windowGroup=None):
         self.evManager = evManager
+        self.evManager.RegisterListener(self)
+
+        self.name = "Finance Window"
 
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((230,50))
@@ -283,28 +290,50 @@ class FinanceTab(pygame.sprite.Sprite):
         self.rect.center = (WIDTH * 17 / 100, HEIGHT * 4/100)
 
         self.windowGroup = windowGroup
+        self.fiscalTerm = DAILY
+        self.cashBook = []
+        self.window = None
+
+
+    def Draw(self):
+        self.windowGroup.empty()
+        self.window = FinanceWindow(self, self.evManager, self.windowGroup)
 
     def Clicked(self):
-        self.windowGroup.empty()
-        FinanceWindow(self.evManager, self.windowGroup)  # The value passed here, the FinanceWindow will instantiate under windowGroup.
+        ev = GUIRequestWindowEvent(self.name, self.Draw)
+        self.evManager.Post(ev)
 
+        ev = RequestFinanceWindowEvent(self.fiscalTerm)
+        self.evManager.Post(ev)
+
+    def Notify(self, event):
+        if isinstance(event, UpdateFinanceWindowEvent):
+            self.cashBook = event.cashBook
+            print(self.cashBook)
+
+            ev = GUIRequestWindowRedrawEvent(self.name, self.Draw)
+            self.evManager.Post(ev)
+
+        elif isinstance(event, NewDayEvent):
+            ev = RequestFinanceWindowEvent(self.fiscalTerm)
+            self.evManager.Post(ev)
 
 class FinanceWindow:
-    def __init__(self, evManager, group=None):
+    def __init__(self, parent, evManager, group=None):
         self.evManager = evManager
         self.group = group
+        self.parent = parent
         self.window = MainWindow(GREEN, self.evManager, self.group)
-        self.screen = None
+        self.screens = []
 
         x = WIDTH/2
         y = HEIGHT/2
         #Button
-        self.dayButton = FinanceButton(x - 300, y - 260, 140, 30, self, "Day", YELLOW, self.evManager, self.group)
-        self.weekButton = FinanceButton(x - 150, y - 260, 140, 30, self, "Week", PURPLE, self.evManager, self.group)
-        self.monthButton = FinanceButton(x , y - 260, 140, 30, self, "Month", BLUE, self.evManager, self.group)
-        self.yearButton = FinanceButton(x + 150, y - 260, 140, 30, self, "Year", RED, self.evManager, self.group)
-        self.statementButton = FinanceButton(x + 250, y - 260, 30, 40, self, "Statement", BLACK, self.evManager, self.group)
-        self.graphButton = FinanceButton(x + 285, y - 260, 30, 40, self, "Graph", BLACK, self.evManager, self.group)
+        self.dayButton = FinanceButton(x - 300, y - 260, 140, 30, self.parent, "Day", YELLOW, self.evManager, self.group, DAILY)
+        self.monthButton = FinanceButton(x - 150, y - 260, 140, 30, self.parent, "Month", BLUE, self.evManager, self.group, MONTHLY)
+        self.yearButton = FinanceButton(x, y - 260, 140, 30, self.parent,  "Year", RED, self.evManager, self.group, YEARLY)
+        self.statementButton = FinanceButton(x + 250, y - 260, 30, 40, self.parent, "Statement", BLACK, self.evManager, self.group)
+        self.graphButton = FinanceButton(x + 285, y - 260, 30, 40, self.parent, "Graph", BLACK, self.evManager, self.group)
 
         #Text
         Text("Income:", x - 350, y - 200, BLACK, 25, self.group)
@@ -316,29 +345,80 @@ class FinanceWindow:
         Text("Salary", x - 330, y - 40, BLACK, 25, self.group)
         Text("Misc.", x - 330, y - 10, BLACK, 25, self.group)
         Text("Profit/Loss", x - 350, y + 20, BLACK, 25, self.group)
+        Text("Total Cash:", x - 350, y + 55, BLACK, 25, self.group)
 
-        self.firstScreen = StatementScreen(x - 120, y - 80, self, self.evManager, self.group)
-        self.secondScreen = StatementScreen(x + 80, y - 80, self, self.evManager, self.group)
-        self.thirdScreen = StatementScreen(x + 280, y - 80, self, self.evManager, self.group)
+        x = WIDTH * 40/100
+        y = HEIGHT * 41/100
+        for statement in self.parent.cashBook:
+            self.screens.append(StatementScreen(x, y, statement, self.evManager, self.group))
+            x += 180
+
 
 
 class StatementScreen(pygame.sprite.Sprite):
-    def __init__(self, x, y, parent, evManager, group=None):
+    def __init__(self, x, y, statement, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
         self.group = group
-        self.parent = parent
+        self.statement = statement
         self.x = x
         self.y = y
 
-        self.image = pygame.Surface((190, 270))
+        self.image = pygame.Surface((170, 290))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
+        self.contents = []
+
+        for key, value in statement.items():
+            if key == SALES:
+                sales = Text(str(value), self.rect.right - 10, y - 107, BLACK, 27, self.group, RIGHT)
+                self.contents.append(sales)
+
+            elif key == INVENTORY:
+                inventory = Text(str(value), self.rect.right - 10, y - 55, BLACK, 27, self.group, RIGHT)
+                self.contents.append(inventory)
+
+            elif key == MARKETING:
+                marketing = Text(str(value), self.rect.right - 10, y - 25, BLACK, 27, self.group, RIGHT)
+                self.contents.append(marketing)
+
+            elif key == RENOVATION:
+                renovation = Text(str(value), self.rect.right - 10, y + 5, BLACK, 27, self.group, RIGHT)
+                self.contents.append(renovation)
+
+            elif key == SALARY:
+                salary = Text(str(value), self.rect.right - 10, y + 35, BLACK, 27, self.group, RIGHT)
+                self.contents.append(salary)
+
+            elif key == MISC:
+                misc = Text(str(value), self.rect.right - 10, y + 65, BLACK, 27, self.group, RIGHT)
+                self.contents.append(misc)
+
+            elif key == "Profit":
+                profit = Text(str(value), self.rect.right - 10, y + 95, BLACK, 27, self.group, RIGHT)
+                self.contents.append(profit)
+
+            elif key == CASH:
+                cash = Text(str(value), self.rect.right - 10, y + 130, BLACK, 27, self.group, RIGHT)
+                self.contents.append(cash)
+
+            elif key == "Day":
+                day = Text(str(value), self.x, self.rect.top, BLACK, 27, self.group, RIGHT)
+                self.contents.append(day)
+
+            elif key == "Month":
+                month = Text(str(value), self.x + 30, self.rect.top, BLACK, 27, self.group, RIGHT)
+                self.contents.append(month)
+
+            elif key == "Year":
+                year = Text(str(value), self.x + 80, self.rect.top, BLACK, 27, self.group, RIGHT)
+                self.contents.append(year)
+
 
 class FinanceButton(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, h, parent, name, color, evManager, group=None):
+    def __init__(self, x, y, w, h, parent, name, color, evManager, group=None, type=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
         self.group = group
@@ -349,11 +429,21 @@ class FinanceButton(pygame.sprite.Sprite):
         self.y = y
         self.w = w
         self.h = h
+        self.type = type
 
         self.image = pygame.Surface((self.w, self.h))
         self.image.fill(self.color)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
+
+    def Clicked(self):
+        if self.type == None:
+            pass
+        else:
+            self.parent.fiscalTerm = self.type
+            ev = RequestFinanceWindowEvent(self.type)
+            print(self.type)
+            self.evManager.Post(ev)
 
 
 # CUSTOMERS-------------------------------------------------------------------------------------------------
@@ -2292,21 +2382,22 @@ class View:
         self.popUp = pygame.sprite.RenderUpdates()
         self.window = None
 
-        #All sprite start from here.
-        #Sprite will carry it group from here.
-        self.staffTab = StaffTab(self.evManager, self.mainUI, self.windows, self.popUp)
-        self.restaurantTab = RestaurantTab(self.evManager, self.mainUI, self.popUp)
-        self.menuTab = MenuTab(self.evManager, self.mainUI, self.popUp)
-        self.inventoryTab = InventoryTab(self.evManager, self.mainUI, self.popUp)
-        self.midTab = MidTab(self.evManager, self.mainUI, self.mainUI, self.popUp, self.windows)
-        self.financeTab = FinanceTab(self.evManager, self.mainUI, self.windows)
-        self.customersTab = CustomersTab(self.evManager, self.mainUI, self.windows)
-        self.rivalTab = RivalTab(self.evManager, self.mainUI, self.windows)
-        self.datetime = DateTime(self.evManager, self.mainUI)
-
 
     def Notify(self, event):
-        if isinstance(event, TickEvent):
+        if isinstance(event, GameStartedEvent):
+            # All sprite start from here.
+            # Sprite will carry it group from here.
+            self.staffTab = StaffTab(self.evManager, self.mainUI, self.windows, self.popUp)
+            self.restaurantTab = RestaurantTab(self.evManager, self.mainUI, self.popUp)
+            self.menuTab = MenuTab(self.evManager, self.mainUI, self.popUp)
+            self.inventoryTab = InventoryTab(self.evManager, self.mainUI, self.popUp)
+            self.midTab = MidTab(self.evManager, self.mainUI, self.mainUI, self.popUp, self.windows)
+            self.financeTab = FinanceTab(self.evManager, self.mainUI, self.windows)
+            self.customersTab = CustomersTab(self.evManager, self.mainUI, self.windows)
+            self.rivalTab = RivalTab(self.evManager, self.mainUI, self.windows)
+            self.datetime = DateTime(self.evManager, self.mainUI)
+
+        elif isinstance(event, TickEvent):
             self.origin.fill(WHITE)
 
             self.mainUI.clear(self.origin, self.background)
