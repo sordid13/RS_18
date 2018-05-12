@@ -15,8 +15,9 @@ class QuitEvent:
 
 
 class GameStartedEvent:
-    def __init__(self):
+    def __init__(self, players):
         self.name = "Game Started Event"
+        self.players = players
 
 
 class NewDayEvent:
@@ -144,17 +145,19 @@ class InventoryUpdateEvent:
         self.inventory = inventory
 
 
-class UpdateItemDetailEvent:
+class RequestIngredientAmountEvent:
     def __init__(self, ingredient):
         self.name = "Update Item Detail"
         self.ingredient = ingredient
 
 
-class ReturnAmountEvent:
-    def __init__(self, amount, expire):
+class ReturnIngredientAmountEvent:
+    def __init__(self, ingredient, amount, expire):
         self.name = "Return Amount Event"
+        self.ingredient = ingredient
         self.amount = amount
         self.expire = expire
+
 
 class GUIOpenHireStaffEvent:
     def __init__(self):
@@ -252,11 +255,27 @@ class GUIRequestWindowEvent:
         self.window = window
         self.draw = draw
 
+
 class GUIRequestWindowRedrawEvent:
     def __init__(self, window, draw):
         self.name = "GUI Request Window Redraw Event"
         self.window = window
         self.draw = draw
+
+
+class GUIRequestPopUpEvent:
+    def __init__(self, popUp, draw):
+        self.name = "GUI Request Pop Up Event"
+        self.popUp = popUp
+        self.draw = draw
+
+
+class GUIRequestPopUpRedrawEvent:
+    def __init__(self, popUp, draw):
+        self.name = "GUI Request Pop Up Redraw Event"
+        self.popUp = popUp
+        self.draw = draw
+
 
 class GUICloseWindowEvent:
     def __init__(self, group):
