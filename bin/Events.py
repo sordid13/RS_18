@@ -15,8 +15,9 @@ class QuitEvent:
 
 
 class GameStartedEvent:
-    def __init__(self):
+    def __init__(self, players):
         self.name = "Game Started Event"
+        self.players = players
 
 
 class NewDayEvent:

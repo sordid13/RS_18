@@ -6,14 +6,6 @@ class DishManager:
     def __init__(self, evManager):
         self.evManager = evManager
 
-    def Customers(self, dishList):
-        # Returns actual number of customers in restaurant
-        customers = 0
-        for dish in dishList:
-            customers += dish['demand']
-        return customers
-
-
     def UnfedCustomers(self, dishList):
         customers = 0
         sales = 0
@@ -28,36 +20,60 @@ class DishManager:
             revenue += dish['price'] * dish['sales']
         return revenue
 
-    def DishesByDemand(self, player, customers):
+    def DishesByDemand(self, player, customers, estimate=None):
         dishList = []
+        newDishList = []
         menuImpression = player.menu.ImpressionPoints()
 
-        # Arrange dishes based on demand
+        # Arrange dishes based on trend modifier
         for dish in player.menu.dishes:
-            demand = math.floor((dish['dish'].ImpressionPoints() / menuImpression) * customers)
-            dishDict = dict(dish=dish['dish'], price=dish['price'], demand=demand, sales=int(0), quality=0)
+            dishDict = dict(dish=dish['dish'], price=dish['price'], demand=0, sales=int(0), quality=0)
             if len(dishList) == 0:
                 dishList.append(dishDict)
+                newDishList.append(dishDict)
             else:
                 for d in dishList:
-                    if dishDict not in dishList:
-                        if demand > d['demand'] and dish is not d['dish']:
-                            i = dishList.index(d)
-                            dishList = dishList[:i] + [dishDict] + dishList[i:]
+                    if dishDict not in newDishList:
+                        i = newDishList.index(d)
+                        if dish['dish'].trendModifier > d['dish'].trendModifier or dish['dish'].baseCost > d['dish'].baseCost:
+                            newDishList = newDishList[:i] + [dishDict] + newDishList[i:]
                         else:
-                            dishList.append(dishDict)
+                            newDishList.append(dishDict)
 
-        return dishList
+            dishList = newDishList
+
+        customersCounted = 0
+        for dish in newDishList:
+            baseDemand = (dish['dish'].ImpressionPoints() / menuImpression) * customers
+            lowerLimit = round(baseDemand * 0.9)
+            upperLimit = round(baseDemand * 1.1)
+
+            demand = round(random.uniform(lowerLimit, upperLimit))
+
+            if demand > (customers - customersCounted) or dish is dishList[-1]:
+                demand = customers - customersCounted
+
+            if demand < 0:
+                demand = 0
+
+            customersCounted += demand
+            dish['demand'] = demand
+
+        if estimate:
+            for dish in newDishList:
+                dish['demand'] = math.ceil((dish['dish'].ImpressionPoints() / menuImpression) * customers)
+
+        return newDishList
 
     def GetDishAvailable(self, dishList, player):
         checkDishes = copy.deepcopy(dishList)
-        stock = copy.deepcopy(player.inventory)
+        stock = player.inventory.Stock()
 
         doLoop = True
         while doLoop:
             toStopCheck = []
             leftoverDemand = 0
-            stockCopy = copy.deepcopy(stock)
+            stockCopy = stock[:]
 
             for d1 in checkDishes:
                 dish = None
@@ -68,7 +84,10 @@ class DishManager:
                 first = True
                 lowestAmount = 0
                 for ingredient in dish['dish'].ingredients:
-                    ingredientAmount = sum(stockCopy.IngredientStock(ingredient))
+                    ingredientAmount = 0
+                    for i in stock:
+                        if i.name == ingredient.name:
+                            ingredientAmount = i.amount
                     if first:
                         if ingredientAmount < d1['demand']:
                             lowestAmount = ingredientAmount
@@ -82,7 +101,10 @@ class DishManager:
                 if lowestAmount > 0:
                     dish['sales'] = lowestAmount
                 if dish['sales'] > 0:
-                    stockCopy.UseIngredients(dish['dish'], dish['sales'])
+                    for ingredient in dish['dish'].ingredients:
+                        for i in stockCopy:
+                            if i.name == ingredient.name:
+                                i.amount -= dish['sales']
 
                 missingDemand = d1['demand'] - dish['sales']
                 leftoverDemand += missingDemand
@@ -90,7 +112,10 @@ class DishManager:
                 if missingDemand:
                     toStopCheck.append(d1)
                     if dish['sales'] > 0:
-                        stock.UseIngredients(dish['dish'], dish['sales'])
+                        for ingredient in dish['dish'].ingredients:
+                            for i in stock:
+                                if i.name == ingredient.name:
+                                    i.amount -= dish['sales']
 
             for dish in toStopCheck:
                 if dish in checkDishes:

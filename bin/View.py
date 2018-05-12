@@ -460,7 +460,7 @@ class CustomersTab(pygame.sprite.Sprite):
 
     def Notify(self, event):
         if isinstance(event, SalesReportEvent):
-            if hasattr(event.player, "ai"):
+            if not hasattr(event.player, "ai"):
                 self.prevCustomers = self.customers
                 self.prevUnfedCustomers = self.unfedCustomers
                 self.prevSatisfaction = self.satisfaction
@@ -511,12 +511,12 @@ class PreviousTodayCustomer(pygame.sprite.Sprite):
         Text("Yesterday", self.x + 315, self.y + 30, BLACK, 20, self.group, CENTER)
 
         Text(str(self.parent.customers), self.x + 225, self.y + 100, BLACK, 20, self.group, CENTER)
-        Text(str(self.parent.unfedCustomers), self.x + 225, self.y + 150, BLACK, 20, self.group)
-        Text(str(self.parent.satisfaction), self.x + 225, self.y + 200, BLACK, 20, self.group)
+        Text(str(self.parent.unfedCustomers), self.x + 225, self.y + 150, BLACK, 20, self.group, CENTER)
+        Text(str(self.parent.satisfaction), self.x + 225, self.y + 200, BLACK, 20, self.group, CENTER)
 
         Text(str(self.parent.prevCustomers), self.x + 315, self.y + 100, BLACK, 20, self.group, CENTER)
-        Text(str(self.parent.prevUnfedCustomers), self.x + 315, self.y + 150, BLACK, 20, self.group)
-        Text(str(self.parent.prevSatisfaction), self.x + 315, self.y + 200, BLACK, 20, self.group)
+        Text(str(self.parent.prevUnfedCustomers), self.x + 315, self.y + 150, BLACK, 20, self.group, CENTER)
+        Text(str(self.parent.prevSatisfaction), self.x + 315, self.y + 200, BLACK, 20, self.group, CENTER)
 
 
 class DishBreakdown(pygame.sprite.Sprite):
@@ -569,8 +569,11 @@ class DishBreakdown(pygame.sprite.Sprite):
 
 
 class RivalTab(pygame.sprite.Sprite):
-    def __init__(self, evManager, group=None, windowGroup=None):
+    def __init__(self, players, evManager, group=None, windowGroup=None):
         self.evManager = evManager
+        self.evManager.RegisterListener(self)
+
+        self.name = "Rival Window"
 
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((230, 50))
@@ -580,33 +583,53 @@ class RivalTab(pygame.sprite.Sprite):
 
         self.windowGroup = windowGroup
 
-    def Clicked(self):
-        self.windowGroup.empty()
-        RivalWindow(self.evManager, self.windowGroup)
+        self.rivals = []
+        for player in players:
+            if hasattr(player, "ai"):
+                self.rivals.append(player)
 
+        self.currentRival = self.rivals[0]
+
+    def Draw(self):
+        self.windowGroup.empty()
+        RivalWindow(self, self.evManager, self.windowGroup)
+
+    def Update(self):
+        ev = GUIRequestWindowRedrawEvent(self.name, self.Draw)
+        self.evManager.Post(ev)
+
+    def Clicked(self):
+        ev = GUIRequestWindowEvent(self.name, self.Draw)
+        self.evManager.Post(ev)
+
+    def Notify(self, event):
+        if isinstance(event, NewDayEvent):
+            self.Update()
 
 class RivalWindow:
-    def __init__(self, evManager, group=None):
+    def __init__(self, parent, evManager, group=None):
         self.evManager = evManager
         self.group = group
+        self.parent = parent
         self.window = MainWindow(YELLOW, self.evManager, self.group)
 
         x = WIDTH/2
         y = HEIGHT/2
         self.customersNumber = 100
 
-        Text("Rival's Restaurant", x, y - 270, BLACK, 35, self.group, CENTER)
-        Text("Today Customers:", x - 220, y - 240, BLACK, 25, self.group)
-        self.customersDisplay = Numbers(self, "customersNumber", x + 20, y - 230, BLACK, 38, self.group)
+        RivalScreen(x, y, self.parent.currentRival, self.evManager, self.group)
 
-        Text("MENU", x, y - 190,  BLACK, 35, self.group, CENTER)
-        self.menuScreen = RivalMenuScreen(x, y, self.evManager, self.group)
+        for rival in self.parent.rivals:
+            RivalButton(x - 200, y - 265, rival, parent, self.evManager, self.group)
+            x += 150
 
 
-class RivalMenuScreen(pygame.sprite.Sprite):
-    def __init__(self, x, y, evManager, group=None):
+class RivalScreen(pygame.sprite.Sprite):
+    def __init__(self, x, y, rival, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
+
+        self.rival = rival
         self.group = group
         self.x = x
         self.y = y
@@ -616,6 +639,64 @@ class RivalMenuScreen(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y - 50)
 
+        Text(self.rival.name, x, y - 230, BLACK, 35, self.group, CENTER)
+        Text("Today Customers:", x - 30, y - 195, BLACK, 25, self.group, CENTER)
+        Text(str(self.rival.customers), x + 80, y - 195, BLACK, 38, self.group, CENTER)
+
+        Text("MENU", x, y - 155, WHITE, 35, self.group, CENTER)
+
+
+        x = self.rect.left + 115
+        y = self.rect.top + 100
+        i = 0
+        for dish in self.rival.menu.dishes:
+            RivalDishContainer(x, y + 8, dish, self.evManager, self.group)
+            x += 60
+
+            i += 1
+            if i >= 10:
+                x = self.rect.left + 33
+                y += 70
+                i = 0
+
+
+class RivalButton(pygame.sprite.Sprite):
+    def __init__(self, x, y, rival, parent, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.parent = parent
+        self.rival = rival
+        self.group = group
+        self.x = x
+        self.y = y
+
+        self.image = pygame.Surface((130, 30))
+        self.image.fill(BLUE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+    def Clicked(self):
+        self.parent.currentRival = self.rival
+        self.parent.Update()
+
+
+class RivalDishContainer(pygame.sprite.Sprite):
+    def __init__(self, x, y, dish, evManager, group):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+
+        self.x = x
+        self.y = y
+        self.dish = dish['dish']
+        self.group = group
+        self.price = dish['price']
+
+        self.image = pygame.Surface((45, 60))
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+        DishSprite(self.x, self.y - 7, self.dish, self.group)
 
 # STAFFs/WORKERs--------------------------------------------------------------------------------------------------
 
@@ -1409,7 +1490,7 @@ class MenuTab(pygame.sprite.Sprite):
         y = self.rect.top + 30
         i = 0
         for dish in dishes:
-            self.contents.append(MenuDishContainer(x, y + 8, dish, self, self.evManager, self.group, self.popUp))
+            self.contents.append(MenuDishContainer(x, y + 8, dish, self.evManager, self.group, self.popUp))
             x += 48
 
             i += 1
@@ -1433,14 +1514,13 @@ class MenuTab(pygame.sprite.Sprite):
 
 
 class MenuDishContainer(pygame.sprite.Sprite):
-    def __init__(self, x, y, dish, window, evManager, group=None, popUp=None):
+    def __init__(self, x, y, dish, evManager, group=None, popUp=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
 
         self.x = x
         self.y = y
         self.dish = dish['dish']
-        self.window = window
         self.group = group
         self.popUp = popUp
         self.price = dish['price']
@@ -2385,7 +2465,7 @@ class View:
             self.midTab = MidTab(self.evManager, self.mainUI)
             self.financeTab = FinanceTab(self.evManager, self.mainUI, self.windows)
             self.customersTab = CustomersTab(self.evManager, self.mainUI, self.windows)
-            self.rivalTab = RivalTab(self.evManager, self.mainUI, self.windows)
+            self.rivalTab = RivalTab(event.players, self.evManager, self.mainUI, self.windows)
             self.datetime = DateTime(self.evManager, self.mainUI)
             self.marketingButton = MarketingButton(self.evManager, self.mainUI, self.windows)
             self.marketButton = MarketButton(self.evManager, self.mainUI, self.windows)

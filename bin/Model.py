@@ -13,16 +13,22 @@ class Game:
         self.dishManager = DishManager(self.evManager)
         self.cart = Cart(self.evManager)
 
-        self.players = [Player(self, self.evManager), AI(CUISINE_WESTERN, self, self.evManager)]
+        self.players = [Player(self, self.evManager),
+                        AI("Deen's Cafe", CUISINE_WESTERN, self, self.evManager),
+                        AI("Bap Bap", CUISINE_KOREAN, self, self.evManager)]
+        """,
+                        AI("Ching Chong Spice", CUISINE_CHINESE, self, self.evManager),
+                        """
+
         for player in self.players:
             playerList = self.players[:]
             playerList.remove(player)
             player.rivals = playerList
 
-            if hasattr(player, "ai"):
+            if not hasattr(player, "ai"):
                 player.finance = Finance(player, self.evManager)
 
-        ev = GameStartedEvent()
+        ev = GameStartedEvent(self.players)
         self.evManager.Post(ev)
 
 
@@ -37,13 +43,14 @@ class Player:
         self.evManager.RegisterListener(self)
         self.game = game
         self.rivals = None
+        self.name = "Bitch bitch na"
 
         self.finance = None
         self.customerManager = self.game.customerManager
         self.dishManager = self.game.dishManager
 
         self.menu = Menu(self.evManager)
-        self.inventory = Inventory(self.evManager)
+        self.inventory = Inventory()
         self.chefs = [Chef(0, CUISINE_WESTERN, self.evManager), Chef(3, CUISINE_WESTERN, self.evManager),
                       Chef(0, CUISINE_CHINESE, self.evManager), Chef(3, CUISINE_CHINESE, self.evManager),
                       Chef(0, CUISINE_INDIAN, self.evManager)]
@@ -163,13 +170,11 @@ class Player:
         waitersLvl = int(self.WaitersLevel())
         totalSatisfaction *= 0.95 + 0.5 * (waitersLvl ** 2)
 
-        print(dishesServed)
         return math.floor(totalSatisfaction)
 
-    def ProcessSales(self, rawCustomers):
-        dishesServed = self.dishManager.ProcessDishes(self, rawCustomers)
+    def ProcessSales(self, customers):
+        dishesServed = self.dishManager.ProcessDishes(self, customers)
 
-        customers = self.dishManager.Customers(dishesServed) # Actual number of customers
         unfedCustomers = self.dishManager.UnfedCustomers(dishesServed)
         salesRevenue = self.dishManager.SalesRevenue(dishesServed)
 
@@ -178,7 +183,11 @@ class Player:
             avgSatisfaction = math.floor(satisfaction / customers)
         else:
             avgSatisfaction = 0
-        self.baseImpression = satisfaction * (avgSatisfaction / 100)
+
+        if satisfaction > 0:
+            self.baseImpression = satisfaction * (avgSatisfaction / 100)
+        else:
+            self.baseImpression = 0
 
         ev = SalesReportEvent(self, dishesServed, customers, unfedCustomers, salesRevenue, avgSatisfaction)
         self.evManager.Post(ev)
@@ -189,7 +198,11 @@ class Player:
         pass
 
     def Notify(self, event):
-        if isinstance(event, AddDishEvent):
+        if isinstance(event, NewDayEvent):
+            ev = InventoryUpdateEvent(self.inventory.Stock())
+            self.evManager.Post(ev)
+
+        elif isinstance(event, AddDishEvent):
             self.menu.AddDish(event.dish, event.price)
 
             ev = MenuUpdateEvent(self.menu.dishes)
@@ -251,9 +264,10 @@ class Player:
 
 
 class AI(Player):
-    def __init__(self, cuisine, game, evManager):
+    def __init__(self, name, cuisine, game, evManager):
         super().__init__(game, evManager)
         self.ai = ""
+        self.name = name
         self.cuisine = cuisine
 
         self.chefs = [Chef(3, self.cuisine, self.evManager)]
@@ -266,6 +280,8 @@ class AI(Player):
         self.restaurantLvl = 2
         self.restaurantCapacity = 100
         self.menu.dishLimit = 4 * self.restaurantLvl
+
+        self.customers = 0 # For RivalsTab
 
         self.ProcessDay(80)
 
@@ -332,8 +348,6 @@ class AI(Player):
             if ingredient.amount < 0:
                 ingredient.amount = 0
 
-            print(ingredient.name + " " + str(ingredient.amount))
-
         return ingredientsList
 
     def PurchaseIngredients(self, ingredientList):
@@ -343,7 +357,7 @@ class AI(Player):
 
 
     def ProcessDay(self, customers):
-        print(customers)
+        self.customers = customers
         self.EvaluateMenu()
         self.UpdateMenu()
 
@@ -455,9 +469,7 @@ class Ingredient:
 
 
 class Inventory:
-    def __init__ (self, evManager):
-        self.evManager = evManager
-
+    def __init__ (self):
         self.batches = []
         self.expiredList = []
 
