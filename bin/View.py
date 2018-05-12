@@ -17,12 +17,35 @@ GREEN = (0, 230, 0)
 BLUE = (0, 0, 255)
 YELLOW = (250, 250, 0)
 PURPLE = (128, 0, 128)
+PINK = (255, 182, 193)
 
 fontName = ''
 
 imgFolder = os.path.join("asset")
 
 # --------------------------------------------------------------------------------------------------------------
+
+class DynamicText(pygame.sprite.Sprite):
+    def __init__(self, text, x, y, parent, color, fontSize, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        print(text)
+        self.text = text
+        self.color = color
+        self.fontSize = fontSize
+        self.parent = parent
+        self.x = x
+        self.y = y
+        font = pygame.font.Font(None, 48)
+        self.image = font.render(self.text, True, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.midright = (0, self.y)
+
+    def Update(self):
+        if self.rect.left < self.parent.rect.right:
+            self.rect.move_ip(1, 0)
+        else:
+            self.kill()
+            self.parent.dynamic = None
 
 
 class Text(pygame.sprite.Sprite):
@@ -287,7 +310,6 @@ class FinanceTab(pygame.sprite.Sprite):
     def Notify(self, event):
         if isinstance(event, UpdateFinanceWindowEvent):
             self.cashBook = event.cashBook
-            print(self.cashBook)
 
             ev = GUIRequestWindowRedrawEvent(self.name, self.Draw)
             self.evManager.Post(ev)
@@ -420,7 +442,6 @@ class FinanceButton(pygame.sprite.Sprite):
         else:
             self.parent.fiscalTerm = self.type
             ev = RequestFinanceWindowEvent(self.type)
-            print(self.type)
             self.evManager.Post(ev)
 
 
@@ -595,10 +616,10 @@ class StaffTab(pygame.sprite.Sprite):
         self.name = "Staff Window"
 
         pygame.sprite.Sprite.__init__(self, group)
-        self.image = pygame.Surface((270,50))
+        self.image = pygame.Surface((100, 200))
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 36/100, HEIGHT * 67/100)
+        self.rect.center = (WIDTH * 43.5/100, HEIGHT * 85/100)
 
         self.windowGroup = windowGroup
         self.popUp = popUp
@@ -1234,10 +1255,10 @@ class RestaurantTab(pygame.sprite.Sprite):
         self.evManager = evManager
 
         pygame.sprite.Sprite.__init__(self, group)
-        self.image = pygame.Surface((270,50))
+        self.image = pygame.Surface((100, 200))
         self.image.fill(PURPLE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 64/100, HEIGHT * 67/100)
+        self.rect.center = (WIDTH * 56.7 / 100, HEIGHT * 85 / 100)
 
         self.popUp = popUp
 
@@ -1411,7 +1432,7 @@ class MenuTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((500, 200))
         self.image.fill(BLUE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 27 / 100, HEIGHT * 85/100)
+        self.rect.center = (WIDTH * 20 / 100, HEIGHT * 85/100)
 
         self.contents = []
 
@@ -1481,7 +1502,7 @@ class InventoryTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((500, 200))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 73/100, HEIGHT * 85/100)
+        self.rect.center = (WIDTH * 80/100, HEIGHT * 85/100)
 
         self.contents = []
 
@@ -1556,7 +1577,6 @@ class InventoryItemContainer(pygame.sprite.Sprite):
 
     def Notify(self, event):
         if isinstance(event, ReturnAmountEvent):
-            print(event.amount)
             self.amounts = [sum(x) for x in zip(event.amount, event.expire)]
             self.expiredAmounts = event.expire
 
@@ -1702,6 +1722,8 @@ class MarketingButton(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y)
         self.windowGroup = windowGroup
 
+        self.strategy = [1, 2, 3, 4, 5, 6]
+
 
     def Draw(self):
         self.windowGroup.empty()
@@ -1725,10 +1747,54 @@ class MarketingWindow:
         self.group = group
         self.window = MainWindow(PURPLE, self.evManager, self.group)
 
+        x = WIDTH * 29.75/100
+        y = HEIGHT * 26.5/100
+        s = 0
+        for strategy in self.parent.strategy:
+            MarketingContainer(x, y, strategy, self.evManager, self.group)
+            x += 260
+            s += 1
+            if s == 3:
+                x = WIDTH * 29.75 / 100
+                y += 170
+
 
 class MarketingContainer(pygame.sprite.Sprite):
-    def __init__(self, x, y, evManager, group=None):
-        pygame.sprite.Sprite.__init__(self.group)
+    def __init__(self, x, y, strategy, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.x = x
+        self.y = y
+        self.evManager = evManager
+        self.group = group
+        self.strategy = strategy
+
+        self.image = pygame.Surface((250, 150))
+        self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+        Text("NAME", self.x, self.rect.top, BLACK, 23, self.group, CENTER)
+        Text("Upfront Payment:", self.rect.left + 10, self.y + 30, BLACK, 20, self.group)
+        Text("Weekly Payment:", self.rect.left + 10, self.y + 50, BLACK, 20, self.group)
+
+        StrategyButton(self.rect.right - 25, self.rect.bottom - 28, self.strategy, self.evManager, self.group)
+
+
+class StrategyButton(pygame.sprite.Sprite):
+    def __init__(self, x, y, strategy, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.x = x
+        self.y = y
+        self.evManager = evManager
+        self.group = group
+        self.strategy = strategy
+
+        self.image = pygame.Surface((35, 35))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+
 
 
 # MENU CATALOGUE & ADD DISH TO PLAYER's MENUS ----------------------------------------------------------------
@@ -1894,9 +1960,9 @@ class DishDetail(pygame.sprite.Sprite):
         self.group = group
         self.dish = dish
         self.x = WIDTH * 9 / 100
-        self.y = HEIGHT * 40 / 100
+        self.y = HEIGHT * 36.5 / 100
         self.w = 230
-        self.h = 300
+        self.h = 380
 
         self.image = pygame.Surface((self.w, self.h))
         self.image.fill(YELLOW)
@@ -1910,19 +1976,19 @@ class DishDetail(pygame.sprite.Sprite):
         self.price = 0 # For price
         self.contents = []
 
-        DishSprite(self.x, self.y - 90, self.dish, self.group)
-        Text(self.dish.name, self.x, self.y - 50, BLACK, 18, self.group, CENTER)
+        DishSprite(self.x, self.y - 140, self.dish, self.group)
+        Text(self.dish.name, self.x, self.y - 95, BLACK, 18, self.group, CENTER)
 
-        Text("Type:", self.rect.left + 10, self.y - 30, BLACK, 16, self.group)
-        Text(self.dish.type, self.rect.left + 17, self.y - 10, BLACK, 14, self.group)
+        Text("Type:", self.rect.left + 10, self.y - 80, BLACK, 18, self.group)
+        Text(self.dish.type, self.rect.left + 17, self.y - 60, BLACK, 18, self.group)
 
-        Text("Cuisine:", self.rect.left + 10, self.y + 20, BLACK, 16, self.group)
-        Text(self.dish.cuisine, self.rect.left + 17, self.y + 40, BLACK, 14, self.group)
+        Text("Cuisine:", self.rect.left + 10, self.y - 30, BLACK, 18, self.group)
+        Text(self.dish.cuisine, self.rect.left + 17, self.y - 10, BLACK, 18, self.group)
 
-        Text("Ingredients:", self.x - 10, self.y - 30, BLACK, 16, self.group)
-        i = 10
+        Text("Ingredients:", self.x - 10, self.y - 80, BLACK, 18, self.group)
+        i = 62
         for ingredients in self.dish.ingredients:
-            Text(ingredients.name, self.x - 3, self.y - i, BLACK, 14, self.group)
+            Text(ingredients.name, self.x - 3, self.y - i, BLACK, 18, self.group)
             i -= 17
 
         ArrowLeft(self.x - 30, self.y + 90, self, "price", self.group)
@@ -2375,6 +2441,42 @@ class ClearButton(pygame.sprite.Sprite):
         ev = ClearCartEvent()
         self.evManager.Post(ev)
 
+ # TREND PopUp --------------------------------------------------------------------------------------------------
+
+class TrendNews(pygame.sprite.Sprite):
+    def __init__(self, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.evManager.RegisterListener(self)
+
+        self.evManager = evManager
+        self.trend = None
+        self.group = group
+
+        x = WIDTH * 50/100
+        y = HEIGHT * 68/100
+        self.image = pygame.Surface((1270, 40))
+        self.image.fill(PINK)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.text = None
+        self.dynamic = None
+
+    def Notify(self, event):
+        x = WIDTH * 50 / 100
+        y = HEIGHT * 68 / 100
+        if isinstance(event, SetTrendEvent):
+            self.trend = event.trend
+            if self.trend in DISHES_LIST:
+                self.text = self.trend.name
+            else:
+                self.text = self.trend
+
+            self.dynamic = DynamicText(self.text, x, y, self, BLACK, 25, self.group)
+
+
+
+
 # MAIN VIEW MODULE ---------------------------------------------------------------------------------------------
 
 
@@ -2395,7 +2497,6 @@ class View:
 
 
         #Sprite Layers and Groups
-        self.mainUI = pygame.sprite.RenderUpdates()
         self.mainUI = pygame.sprite.RenderUpdates()
         self.windows = pygame.sprite.RenderUpdates()
         self.popUp = pygame.sprite.RenderUpdates()
@@ -2418,8 +2519,14 @@ class View:
             self.marketingButton = MarketingButton(self.evManager, self.mainUI, self.windows)
             self.marketButton = MarketButton(self.evManager, self.mainUI, self.windows)
             self.addDishButton = AddDishButton(self.evManager, self.mainUI, self.popUp, self.windows)
+            self.trendNews = TrendNews(self.evManager, self.mainUI)
 
         elif isinstance(event, TickEvent):
+            try:
+                self.trendNews.dynamic.Update()
+            except AttributeError:
+                pass
+
             self.origin.fill(WHITE)
 
             self.mainUI.clear(self.origin, self.background)
@@ -2437,7 +2544,6 @@ class View:
             pygame.transform.scale(self.origin, DISPLAY_RESOLUTION, self.screen)
 
             pygame.display.flip()
-
 
         elif isinstance(event, GUIRequestWindowEvent):
             if self.window is not event.window:

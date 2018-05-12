@@ -9,6 +9,7 @@ class Game:
         self.evManager = evManager
         self.evManager.RegisterListener(self)
 
+        self.trendManager = TrendManager(self.evManager)
         self.customerManager = CustomerManager(self.evManager)
         self.dishManager = DishManager(self.evManager)
         self.cart = Cart(self.evManager)
@@ -163,7 +164,7 @@ class Player:
         waitersLvl = int(self.WaitersLevel())
         totalSatisfaction *= 0.95 + 0.5 * (waitersLvl ** 2)
 
-        print(dishesServed)
+
         return math.floor(totalSatisfaction)
 
     def ProcessSales(self, rawCustomers):
@@ -331,7 +332,7 @@ class AI(Player):
             if ingredient.amount < 0:
                 ingredient.amount = 0
 
-            print(ingredient.name + " " + str(ingredient.amount))
+
 
         return ingredientsList
 
@@ -342,7 +343,7 @@ class AI(Player):
 
 
     def ProcessDay(self, customers):
-        print(customers)
+
         self.EvaluateMenu()
         self.UpdateMenu()
 
