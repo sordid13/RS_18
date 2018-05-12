@@ -20,7 +20,7 @@ class Game:
             playerList.remove(player)
             player.rivals = playerList
 
-            if not hasattr(player, "ai"):
+            if hasattr(player, "ai"):
                 player.finance = Finance(player, self.evManager)
 
         ev = GameStartedEvent()

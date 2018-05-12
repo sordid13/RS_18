@@ -612,6 +612,7 @@ class RivalMenuScreen(pygame.sprite.Sprite):
 class StaffTab(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None, windowGroup=None, popUp=None):
         self.evManager = evManager
+        self.evManager.RegisterListener(self)
 
         self.name = "Staff Window"
 
@@ -624,66 +625,78 @@ class StaffTab(pygame.sprite.Sprite):
         self.windowGroup = windowGroup
         self.popUp = popUp
 
-    def Draw(self):
+        self.chefs = []
+        self.waiters = []
+        self.mode = "My Staff"
+
+        self.staffType = "Chef"
+        self.cuisine = CUISINE_WESTERN
+
+    def Update(self):
+        # TODO: Display no. of chefs & waiters on tab
+        pass
+
+    def DrawMyStaff(self):
         self.windowGroup.empty()
-        StaffWindow(self.evManager, self.windowGroup, self.popUp)
+        MyStaffScreen(self, self.evManager, self.windowGroup, self.popUp)
+        self.mode = "My Staff"
+
+    def DrawHireStaff(self):
+        self.windowGroup.empty()
+        HireStaffScreen(self, self.evManager, self.windowGroup)
+        self.mode = "Hire Staff"
+
 
     def Clicked(self):
-        ev = GUIRequestWindowEvent(self.name, self.Draw)
+        ev = GUIRequestWindowEvent(self.name, self.DrawMyStaff)
         self.evManager.Post(ev)
 
-
-class StaffWindow(MainWindow):
-    def __init__(self, evManager, group=None, popUp=None):
-
-        self.evManager = evManager
-        self.evManager.RegisterListener(self)
-        self.popUp = popUp
-        super().__init__(YELLOW, self.evManager, group)
-
-        MyStaffsTab(self.evManager, self.group)
-        HireStaffsTab(self.evManager, self.group)
-
-        self.screen = None
-
-        ev = GUIOpenMyStaffEvent()
+        ev = StaffUpdateRequestEvent()
         self.evManager.Post(ev)
-
-    def RemoveContents(self):
-        try:
-            for content in self.screen.contents:
-                content.kill()
-            self.screen.kill()
-        except AttributeError:
-            pass
-
-        try:
-            for container in self.screen.container:
-                for content in container.contents:
-                    content.kill()
-                container.kill()
-            self.screen.RemoveContents()
-            self.screen.kill()
-        except AttributeError:
-            pass
-
-        try:
-            for tab in self.screen.staffTab:
-                tab.kill()
-            self.screen.kill()
-        except AttributeError:
-            pass
 
     def Notify(self, event):
-        if isinstance(event, GUIOpenHireStaffEvent):
-            self.RemoveContents()
-            self.screen = None
-            self.screen = HireStaffScreen(self.evManager, self.group)
+        if isinstance(event, StaffUpdateEvent):
+            self.chefs = event.chefs
+            self.waiters = event.waiters
+
+            if self.mode == "My Staff":
+                ev = GUIRequestWindowRedrawEvent(self.name, self.DrawMyStaff)
+                self.evManager.Post(ev)
 
         elif isinstance(event, GUIOpenMyStaffEvent):
-            self.RemoveContents()
-            self.screen = None
-            self.screen = MyStaffScreen(self.evManager, self.group, self.popUp)
+            ev = GUIRequestWindowRedrawEvent(self.name, self.DrawMyStaff)
+            self.evManager.Post(ev)
+
+        elif isinstance(event, GUIOpenHireStaffEvent):
+            ev = GUIRequestWindowRedrawEvent(self.name, self.DrawHireStaff)
+            self.evManager.Post(ev)
+
+        elif isinstance(event, GUISelectStaffEvent):
+            self.staffType = event.staffType
+
+            ev = GUIRequestWindowRedrawEvent(self.name, self.DrawHireStaff)
+            self.evManager.Post(ev)
+
+        elif isinstance(event, GUISelectCuisineEvent):
+            self.cuisine = event.cuisine
+
+            ev = GUIRequestWindowRedrawEvent(self.name, self.DrawHireStaff)
+            self.evManager.Post(ev)
+
+
+class StaffWindow(pygame.sprite.Sprite):
+    def __init__(self, parent, evManager, group=None, popUp=None):
+        self.evManager = evManager
+
+        self.parent = parent
+        self.group = group
+        self.popUp = popUp
+
+        MainWindow(YELLOW, self.evManager, group)
+
+        MyStaffsTab(self.parent, self.evManager, self.group)
+        HireStaffsTab(self.parent, self.evManager, self.group)
+
 
 
 class StaffSprite(pygame.sprite.Sprite):
@@ -711,27 +724,31 @@ class StaffSprite(pygame.sprite.Sprite):
 
 
 class MyStaffsTab(pygame.sprite.Sprite):
-    def __init__(self, evManager, group=None):
+    def __init__(self, parent, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
         self.group = group
+        self.parent = parent
 
         self.image = pygame.Surface((110, 35))
         self.image.fill(BLUE)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH * 45/100, HEIGHT * 15/100)
 
-
     def Clicked(self):
-        ev = GUIOpenMyStaffEvent()
-        self.evManager.Post(ev)
+        if self.parent.mode == "My Staff":
+            pass
+        else:
+            ev = GUIOpenMyStaffEvent()
+            self.evManager.Post(ev)
 
 
 class HireStaffsTab(pygame.sprite.Sprite):
-    def __init__(self, evManager, group=None):
+    def __init__(self, parent, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
         self.group = group
+        self.parent = parent
 
         self.image = pygame.Surface((110, 35))
         self.image.fill(PURPLE)
@@ -739,20 +756,18 @@ class HireStaffsTab(pygame.sprite.Sprite):
         self.rect.center = (WIDTH * 55/100, HEIGHT * 15/100)
 
     def Clicked(self):
-        ev = GUIOpenHireStaffEvent()
-        self.evManager.Post(ev)
+        if self.parent.mode == "Hire Staff":
+            pass
+        else:
+            ev = GUIOpenHireStaffEvent()
+            self.evManager.Post(ev)
 
 
-class MyStaffScreen(pygame.sprite.Sprite):
-    def __init__(self, evManager, group=None, popUp=None):
-        pygame.sprite.Sprite.__init__(self, group)
-
-        self.evManager = evManager
-        self.evManager.RegisterListener(self)
-        self.group = group
+class MyStaffScreen(StaffWindow):
+    def __init__(self, parent, evManager, group=None, popUp=None):
+        super().__init__(parent, evManager, group, popUp)
         self.x = WIDTH * 50/100
         self.y = HEIGHT * 40/100
-        self.popUp = popUp
 
         self.image = pygame.Surface((780, 300))
         self.image.fill(BLUE)
@@ -760,58 +775,33 @@ class MyStaffScreen(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
-        self.contents = []
-        self.container = []
         self.page = 1
 
-        self.contents.append(Text("Restaurant's Staff", self.x, self.y - 130, BLACK, 30, self.group, CENTER))
+        Text("Restaurant's Staff", self.x, self.y - 130, BLACK, 30, self.group, CENTER)
 
-        ev = StaffUpdateRequestEvent()
-        self.evManager.Post(ev)
-
-    def LoadStaff(self, chefs, waiters):
         x = self.x - 350
         y = self.y - 75
         i = 0
 
-        for chef in chefs:
-            self.container.append(MyChefContainer(x, y, chef, self.evManager, self.group, self.popUp))
+        for chef in self.parent.chefs:
+            MyChefContainer(x, y, chef, self.evManager, self.group, self.popUp)
             x += 65
             i += 1
             if i % 10 == 0:
                 x = self.x - 350
                 y += 75
-        for waiter in waiters:
-            self.container.append(MyWaiterContainer(x, y, waiter, self.evManager, self.group, self.popUp))
+        for waiter in parent.waiters:
+            MyWaiterContainer(x, y, waiter, self.evManager, self.group, self.popUp)
             x += 65
             i += 1
             if i % 10 == 0:
                 x = self.x - 350
                 y += 75
 
-    def RemoveContents(self):
-        for container in self.container:
-            for contents in container.contents:
-                contents.kill()
-            container.kill()
-        self.container = []
-        for content in self.contents:
-            content.kill()
-        self.contents = []
 
-
-    def Notify(self, event):
-        if isinstance(event, StaffUpdateEvent):
-            self.LoadStaff(event.chefs, event.waiters)
-
-
-class HireStaffScreen(pygame.sprite.Sprite):
-    def __init__(self, evManager, group=None):
-        pygame.sprite.Sprite.__init__(self, group)
-
-        self.evManager = evManager
-        self.evManager.RegisterListener(self)
-        self.group = group
+class HireStaffScreen(StaffWindow):
+    def __init__(self, parent, evManager, group=None):
+        super().__init__(parent, evManager, group)
 
         self.image = pygame.Surface((780, 300))
         self.image.fill(PURPLE)
@@ -819,20 +809,12 @@ class HireStaffScreen(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH * 50/100, HEIGHT * 40/100)
 
-        self.staffType = "Chef"
-        self.cuisine = "Western"
+        ChefTab(self.evManager, self.group)
+        WaiterTab(self.evManager, self.group)
 
-        self.staffTab = []
-        self.cuisineTabs = []
-        self.container = []
-
-
-        self.staffTab.append(ChefTab(self.evManager, self.group))
-        self.staffTab.append(WaiterTab(self.evManager, self.group))
-
-        if self.staffType == "Chef":
+        if self.parent.staffType == "Chef":
             self.LoadHireChefContents()
-        elif self.staffType == "Waiter":
+        elif self.parent.staffType == "Waiter":
             self.LoadHireWaiterContents()
 
 
@@ -844,12 +826,12 @@ class HireStaffScreen(pygame.sprite.Sprite):
         level = 3
 
         for cuisine in CUISINES_LIST:
-            self.cuisineTabs.append(ChefCuisine(tab_x, tab_y, cuisine, self.evManager, self.group))
+            ChefCuisine(tab_x, tab_y, cuisine, self.evManager, self.group)
             tab_y += 50
 
         while level >= 0:
-            self.container.append(HireChefContainer(container_x, container_y, 500, 60, self.cuisine, level,
-                                                   self.evManager, self.group))
+            HireChefContainer(container_x, container_y, 500, 60, self.parent.cuisine, level,
+                                                   self.evManager, self.group)
             level -= 1
             container_y += 70
 
@@ -860,37 +842,12 @@ class HireStaffScreen(pygame.sprite.Sprite):
         level = 3
 
         while level >= 0:
-            self.container.append(HireWaiterContainer(x, y, 330, 130, level, self.evManager, self.group))
+            HireWaiterContainer(x, y, 330, 130, level, self.evManager, self.group)
             x += 340
             level -= 1
             if level == 1:
                 x = WIDTH * 26.5 / 100
                 y += 145
-
-    def RemoveContents(self):
-        for container in self.container:
-            for content in container.contents:
-                content.kill()
-            container.kill()
-        for tab in self.cuisineTabs:
-            tab.kill()
-        self.cuisineTabs = []
-        self.container = []
-
-
-    def Notify(self, event):
-        if isinstance(event, GUISelectStaffEvent):
-            self.RemoveContents()
-            self.staffType = event.staffType
-            if self.staffType == "Chef":
-                self.LoadHireChefContents()
-            elif self.staffType == "Waiter":
-                self.LoadHireWaiterContents()
-
-        elif isinstance(event, GUISelectCuisineEvent):
-            self.cuisine = event.cuisine
-            self.RemoveContents()
-            self.LoadHireChefContents()
 
 
 class ChefTab(pygame.sprite.Sprite):
