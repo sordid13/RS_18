@@ -9,6 +9,7 @@ class Game:
         self.evManager = evManager
         self.evManager.RegisterListener(self)
 
+        self.trendManager = TrendManager(self.evManager)
         self.customerManager = CustomerManager(self.evManager)
         self.dishManager = DishManager(self.evManager)
         self.cart = Cart(self.evManager)
@@ -358,6 +359,7 @@ class AI(Player):
 
     def ProcessDay(self, customers):
         self.customers = customers
+        
         self.EvaluateMenu()
         self.UpdateMenu()
 
