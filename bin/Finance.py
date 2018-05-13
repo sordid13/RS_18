@@ -260,4 +260,3 @@ class Finance:
         elif isinstance(event, RequestFinanceWindowEvent):
             ev = UpdateFinanceWindowEvent(self.CashBook(event.fiscalTerm))
             self.evManager.Post(ev)
-            print(event.fiscalTerm)

@@ -281,3 +281,9 @@ class GUICloseWindowEvent:
     def __init__(self, group):
         self.name = "GUI Close Window Event"
         self.group = group
+
+
+class SetTrendEvent:
+    def __init__(self, trend):
+        self.name = "Set Trend Event"
+        self.trend = trend

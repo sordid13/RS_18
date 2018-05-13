@@ -39,4 +39,8 @@ class DateManager:
             elif Date.day == 32:
                 self.NewMonth()
 
+            if Date.dayNumber % 7 == 0:
+                ev = NewWeekEvent()
+                self.evManager.Post(ev)
+
             print(Date.day, Date.month, Date.year)
