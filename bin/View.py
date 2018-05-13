@@ -107,6 +107,22 @@ class Numbers(pygame.sprite.Sprite):
             self.rect.midright = (self.x, self.y)
 
 
+class Tooltip(pygame.sprite.Sprite):
+    def __init__(self, text, pos, evManager, group=None):
+        self.evManager = evManager
+        self.group = group
+        pygame.sprite.Sprite.__init__(self, self.group)
+
+        (x,y) = pos
+
+        self.text = Text(text, x + 2, y + 2, WHITE, 16, self.group)
+
+        self.image = pygame.Surface((self.text.rect.w + 4, self.text.rect.h + 4))
+        self.image.fill(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.topleft = pos
+
+
 class MainWindow(pygame.sprite.Sprite):
     def __init__(self, color, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
@@ -715,7 +731,7 @@ class RivalButton(pygame.sprite.Sprite):
 
 
 class RivalDishContainer(pygame.sprite.Sprite):
-    def __init__(self, x, y, dish, evManager, group):
+    def __init__(self, x, y, dish, evManager, group=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.evManager = evManager
 
@@ -725,15 +741,19 @@ class RivalDishContainer(pygame.sprite.Sprite):
         self.group = group
         self.price = dish['price']
 
-        self.image = pygame.Surface((45, 60))
-        self.image.set_colorkey(BLACK)
+        self.image = pygame.Surface((45, 45))
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
-        DishSprite(self.x, self.y - 7, self.dish, self.group)
+        DishSprite(self.x, self.y, self.dish, self.group)
 
-# STAFFs/WORKERs--------------------------------------------------------------------------------------------------
+    def Hover(self):
+        text = self.dish.name
+        ev = GUITooltipEvent(text)
+        self.evManager.Post(ev)
 
+
+#STAFFs/WORKERs--------------------------------------------------------------------------------------------------
 
 class StaffTab(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None, windowGroup=None, popUp=None):
@@ -2572,8 +2592,51 @@ class View:
         self.mainUI = pygame.sprite.RenderUpdates()
         self.windows = pygame.sprite.RenderUpdates()
         self.popUp = pygame.sprite.RenderUpdates()
+        self.misc = pygame.sprite.RenderUpdates()
         self.activeWindow = None
         self.activePopUp = None
+
+        self.hoverTicks = 0
+        self.currentHover = None
+        self.prevHover = []
+
+    def CheckHover(self):
+        pos = pygame.mouse.get_pos()
+
+        if not self.currentHover:
+            for sprite in self.windows:
+                if sprite.rect.collidepoint(pos):
+                    if sprite in self.prevHover:
+                        self.hoverTicks += 1
+                        if self.hoverTicks > 100:
+                            try:
+                                sprite.Hover()
+                                self.currentHover = sprite
+                                break
+
+                            except AttributeError:
+                                continue
+                    else:
+                        self.prevHover.append(sprite)
+                        self.hoverTicks = 0
+
+        else:
+            reset = True
+            for sprite in self.windows:
+                if sprite.rect.collidepoint(pos):
+                    if sprite is self.currentHover:
+                        reset = False
+                        break
+
+            if reset:
+                self.tooltip = None
+                self.currentHover = None
+                self.misc.empty()
+            else:
+                (x,y) = pygame.mouse.get_pos()
+                self.tooltip.rect.topleft = (x + 8, y + 8)
+                self.tooltip.text.rect.topleft = (x + 10, y + 10)
+
 
 
     def Notify(self, event):
@@ -2593,8 +2656,11 @@ class View:
             self.marketButton = MarketButton(self.evManager, self.mainUI, self.windows)
             self.addDishButton = AddDishButton(self.evManager, self.mainUI, self.popUp, self.windows)
             self.trendNews = TrendNews(self.evManager, self.mainUI)
+            self.tooltip = None
+
 
         elif isinstance(event, TickEvent):
+            self.CheckHover()
             try:
                 self.trendNews.dynamic.Update()
             except AttributeError:
@@ -2605,18 +2671,25 @@ class View:
             self.mainUI.clear(self.origin, self.background)
             self.windows.clear(self.origin, self.background)
             self.popUp.clear(self.origin, self.background)
+            self.misc.clear(self.origin, self.background)
 
             self.mainUI.update()
             self.windows.update()
             self.popUp.update()
+            self.misc.update()
 
             dirtyRects = self.mainUI.draw(self.origin)
             dirtyRects += self.windows.draw(self.origin)
             dirtyRects += self.popUp.draw(self.origin)
+            dirtyRects += self.misc.draw(self.origin)
 
             pygame.transform.scale(self.origin, DISPLAY_RESOLUTION, self.screen)
 
             pygame.display.flip()
+
+        elif isinstance(event, GUITooltipEvent):
+            (x,y) = pygame.mouse.get_pos()
+            self.tooltip = Tooltip(event.text, (x + 10, y + 10), self.evManager, self.misc)
 
         elif isinstance(event, GUIRequestWindowEvent):
             if self.activeWindow is not event.window:
@@ -2663,7 +2736,6 @@ class View:
                         sprite.Clicked()
                     except AttributeError:
                         continue
-
 
         elif isinstance(event, ShiftLeftClickEvent):
             for sprite in self.mainUI:
@@ -2722,3 +2794,6 @@ class View:
                             sprite.Clicked()
                         except AttributeError:
                             continue
+
+
+
