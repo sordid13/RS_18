@@ -248,6 +248,12 @@ class CtrlLeftClickEvent:
         self.pos = pos
 
 
+class MouseHoverEvent:
+    def __init__(self, pos):
+        self.name = "Mouse Hover Event"
+        self.pos = pos
+
+
 class GUIRequestWindowEvent:
     def __init__(self, window, draw):
         self.name = "GUI Request Window Event"
@@ -286,3 +292,9 @@ class SetTrendEvent:
     def __init__(self, trend):
         self.name = "Set Trend Event"
         self.trend = trend
+
+
+class GUITooltipEvent:
+    def __init__(self, text):
+        self.name = "GUI Tooltip Event"
+        self.text = text
