@@ -285,10 +285,14 @@ class FinanceTab(pygame.sprite.Sprite):
         self.name = "Finance Window"
 
         pygame.sprite.Sprite.__init__(self, group)
+        self.group = group
         self.image = pygame.Surface((230,50))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH * 17 / 100, HEIGHT * 4/100)
+
+        self.cash = 0
+        self.cashDisplay = Numbers(self, "cash", self.rect.right - 20, self.rect.centery, BLACK, 20, self.group, RIGHT)
 
         self.windowGroup = windowGroup
         self.fiscalTerm = DAILY
@@ -315,6 +319,13 @@ class FinanceTab(pygame.sprite.Sprite):
             self.evManager.Post(ev)
 
         elif isinstance(event, NewDayEvent):
+            ev = RequestFinanceWindowEvent(self.fiscalTerm)
+            self.evManager.Post(ev)
+
+        elif isinstance(event, CashUpdateEvent):
+            self.cash = event.cash
+            self.cashDisplay.Update()
+
             ev = RequestFinanceWindowEvent(self.fiscalTerm)
             self.evManager.Post(ev)
 
@@ -1969,6 +1980,9 @@ class DishSprite(pygame.sprite.Sprite):
         #self.image = pygame.image.load(os.path.join(imgFolder, self.ingredient.name + ".png")).convert()
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
+
+    def Hover(self):
+        print(self.dish.name)
 
 
 class DishContainer(pygame.sprite.Sprite):

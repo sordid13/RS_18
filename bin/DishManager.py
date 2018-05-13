@@ -42,26 +42,27 @@ class DishManager:
 
             dishList = newDishList
 
-        customersCounted = 0
-        for dish in newDishList:
-            baseDemand = (dish['dish'].ImpressionPoints() / menuImpression) * customers
-            lowerLimit = round(baseDemand * 0.9)
-            upperLimit = round(baseDemand * 1.1)
-
-            demand = round(random.uniform(lowerLimit, upperLimit))
-
-            if demand > (customers - customersCounted) or dish is dishList[-1]:
-                demand = customers - customersCounted
-
-            if demand < 0:
-                demand = 0
-
-            customersCounted += demand
-            dish['demand'] = demand
-
         if estimate:
             for dish in newDishList:
-                dish['demand'] = math.ceil((dish['dish'].ImpressionPoints() / menuImpression) * customers)
+                dish['demand'] = math.ceil((dish['dish'].ImpressionPoints() / menuImpression) * customers) * 2
+
+        else:
+            customersCounted = 0
+            for dish in newDishList:
+                baseDemand = (dish['dish'].ImpressionPoints() / menuImpression) * customers
+                lowerLimit = round(baseDemand * 0.8)
+                upperLimit = round(baseDemand * 1.2)
+
+                demand = round(random.uniform(lowerLimit, upperLimit))
+
+                if demand > (customers - customersCounted) or dish is dishList[-1]:
+                    demand = customers - customersCounted
+
+                if demand < 0:
+                    demand = 0
+
+                customersCounted += demand
+                dish['demand'] = demand
 
         return newDishList
 

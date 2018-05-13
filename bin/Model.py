@@ -4,11 +4,13 @@ import configparser
 import copy
 
 
+
 class Game:
     def __init__(self, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
 
+        self.finance = Finance(self.evManager)
         self.trendManager = TrendManager(self.evManager)
         self.customerManager = CustomerManager(self.evManager)
         self.dishManager = DishManager(self.evManager)
@@ -16,10 +18,8 @@ class Game:
 
         self.players = [Player(self, self.evManager),
                         AI("Deen's Cafe", CUISINE_WESTERN, self, self.evManager),
-                        AI("Bap Bap", CUISINE_KOREAN, self, self.evManager)]
-        """,
                         AI("Ching Chong Spice", CUISINE_CHINESE, self, self.evManager),
-                        """
+                        AI("Bap Bap", CUISINE_KOREAN, self, self.evManager)]
 
         for player in self.players:
             playerList = self.players[:]
@@ -27,7 +27,9 @@ class Game:
             player.rivals = playerList
 
             if not hasattr(player, "ai"):
-                player.finance = Finance(player, self.evManager)
+                self.finance.player = player
+                player.finance = self.finance
+                player.inventory.evManager = self.evManager
 
         ev = GameStartedEvent(self.players)
         self.evManager.Post(ev)
@@ -67,11 +69,19 @@ class Player:
         self.restaurantCapacity = 50
         self.menu.dishLimit = 4 * self.restaurantLvl
 
-    def SpendMoney(self, value):
+    def SpendMoney(self, value, category):
         self.cash -= value
+        self.finance.CashFlow(value, category)
 
-    def EarnMoney(self, value):
+        ev = CashUpdateEvent(self.cash)
+        self.evManager.Post(ev)
+
+    def EarnMoney(self, value, category):
         self.cash += value
+        self.finance.CashFlow(value, category)
+
+        ev = CashUpdateEvent(self.cash)
+        self.evManager.Post(ev)
 
     def GetChefs(self):
         # Returns highest level of each cuisine chef in dictionary
@@ -122,14 +132,14 @@ class Player:
 
         # Calculate gross satisfaction
         for dish in dishesServed:
-            qualityModifier = ((dish['quality'] - 2) / 40) + 1  # Scale from 10 to 1.2, 1 to 1.02
+            qualityModifier = (dish['quality']/2) * (1 + ((dish['quality'] - 2) / 20))  # Scale from 10 to 2, 2 to 1
             cost = dish['dish'].baseCost ** qualityModifier
             adjustedCost = cost + costModifier
 
             if dish['price'] == 0:
                 qualitySatisfaction = 100
             else:
-                qualitySatisfaction = math.floor( ((adjustedCost / dish['price']) * 100) * qualityModifier )
+                qualitySatisfaction = math.floor( ((adjustedCost / dish['price']) * 100) * (qualityModifier - 0.2) )
                 if qualitySatisfaction > 100:
                     qualitySatisfaction = 100
 
@@ -169,7 +179,7 @@ class Player:
             totalSatisfaction -= insufficientStaff ** 2
 
         waitersLvl = int(self.WaitersLevel())
-        totalSatisfaction *= 0.95 + 0.5 * (waitersLvl ** 2)
+        totalSatisfaction *= 0.95 + 0.05 * (waitersLvl ** 2)
 
         return math.floor(totalSatisfaction)
 
@@ -184,11 +194,15 @@ class Player:
             avgSatisfaction = math.floor(satisfaction / customers)
         else:
             avgSatisfaction = 0
-
+        print(dishesServed)
+        print(avgSatisfaction)
+        print(customers)
         if satisfaction > 0:
-            self.baseImpression = satisfaction * (avgSatisfaction / 100)
+            self.baseImpression = satisfaction
         else:
             self.baseImpression = 0
+
+        self.EarnMoney(salesRevenue, SALES)
 
         ev = SalesReportEvent(self, dishesServed, customers, unfedCustomers, salesRevenue, avgSatisfaction)
         self.evManager.Post(ev)
@@ -234,6 +248,8 @@ class Player:
                 newBatch.AddIngredients(event.cart)
                 self.inventory.batches.append(newBatch)
 
+            self.SpendMoney(event.price, INVENTORY)
+
             ev = InventoryUpdateEvent(self.inventory.Stock())
             self.evManager.Post(ev)
 
@@ -272,7 +288,7 @@ class AI(Player):
         self.cuisine = cuisine
 
         self.chefs = [Chef(3, self.cuisine, self.evManager)]
-        self.waiters = [Waiter(3, self.evManager), Waiter(3, self.evManager), Waiter(3, self.evManager)]
+        self.waiters = [Waiter(1, self.evManager), Waiter(1, self.evManager), Waiter(1, self.evManager)]
 
         self.baseImpression = 80
         self.impressionRetention = 80
@@ -284,7 +300,13 @@ class AI(Player):
 
         self.customers = 0 # For RivalsTab
 
-        self.ProcessDay(80)
+        self.ProcessDay(100)
+
+    def SpendMoney(self, value, category=None):
+        self.cash -= value
+
+    def EarnMoney(self, value, category=None):
+        self.cash += value
 
     def GetLeastPopularDish(self):
         dish = None
@@ -322,15 +344,15 @@ class AI(Player):
 
 
     def EvaluateInventory(self, customers):
-        dishList = self.dishManager.DishesByDemand(self, customers)
+        dishList = self.dishManager.DishesByDemand(self, customers, estimate=True)
         ingredientsList = []
 
         # Estimate amount of ingredients required
         for dish in dishList:
+            amount = dish['demand']
             for ingredient in dish['dish'].ingredients:
                 new = True
 
-                amount = math.ceil(dish['demand'] * 1.2)
                 for i in ingredientsList:
                     if i.name == ingredient.name:
                         i.amount += amount
@@ -345,7 +367,9 @@ class AI(Player):
         # Calculate ingredients needed to purchase
         for ingredient in ingredientsList:
             stock = sum(self.inventory.IngredientStock(ingredient))
+            expiredStock = sum(self.inventory.IngredientExpiredAmount(ingredient))
             ingredient.amount -= stock
+            ingredient.amount += expiredStock
             if ingredient.amount < 0:
                 ingredient.amount = 0
 
@@ -355,6 +379,12 @@ class AI(Player):
         newBatch = Batch(self.inventory, self.evManager)
         newBatch.AddIngredients(ingredientList)
         self.inventory.batches.append(newBatch)
+
+        price = 0
+        for ingredient in ingredientList:
+            price += ingredient.Price(ingredient.quality) * ingredient.amount
+
+        self.SpendMoney(price)
 
 
     def ProcessDay(self, customers):
@@ -458,20 +488,22 @@ class Ingredient:
 
         self.name = name
         self.type = ingreType
-        self.baseCost = baseCost * 1000
+        self.baseCost = baseCost * 10
 
         self.quality = None
         self.amount = None
 
     def Price(self, quality):
-        price = self.baseCost ** ((quality - 1)/20 + 1)
-        price = math.ceil(price / 10)
-        return price * 10
+        price = self.baseCost * quality * (1 + ((quality - 1) / 10))
+        price = round(price * 100)
+        return round(price / 100)
 
 
 
 class Inventory:
     def __init__ (self):
+        self.evManager = None
+
         self.batches = []
         self.expiredList = []
 
@@ -521,6 +553,21 @@ class Inventory:
                                 useAmount = 0
                                 countIngredient = False
                 quality -= 1
+
+        for batch in self.batches:
+            ingredientsToRemove = []
+            for ingredient in batch.ingredients:
+                if ingredient.amount <= 0:
+                    ingredientsToRemove.append(ingredient)
+
+            for ingredient in ingredientsToRemove:
+                batch.ingredients.remove(ingredient)
+
+                try:
+                    ev = ReturnIngredientAmountEvent(ingredient, self.IngredientStock(ingredient), self.IngredientExpiredAmount(ingredient))
+                    self.evManager.Post(ev)
+                except AttributeError:
+                    pass
 
     def IngredientExpiredAmount(self, ingredient):
         stock = [0, 0, 0, 0, 0] # Initialise based on quality 5 to 1
