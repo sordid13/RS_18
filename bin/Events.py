@@ -230,11 +230,10 @@ class LeftClickEvent:
         self.pos = pos
 
         
-class CashFlowUpdateEvent:
-    def __init__(self, value, category):
+class CashUpdateEvent:
+    def __init__(self, cash):
         self.name = "Cash Flow Update Event"
-        self.value = value
-        self.category = category
+        self.cash = cash
 
 
 class ShiftLeftClickEvent:
