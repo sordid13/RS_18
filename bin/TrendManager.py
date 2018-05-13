@@ -8,13 +8,9 @@ class TrendManager:
         self.evManager.RegisterListener(self)
         self.trends = [self.DishTrend, self.FoodTypeTrend, self.CuisineTypeTrend]
         self.currentTrend = None
-        self.pastTrend = []
-
-        if len(self.pastTrend) == 10:
-            self.pastTrend = []
 
     def SetTrend(self):
-        self.pastTrend.append(self.currentTrend)
+        self.currentTrend = None
         self.currentTrend = random.choices(self.trends, weights=[10, 3, 2], k=1)[0]()
 
         for dish in DISHES_LIST:
