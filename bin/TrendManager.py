@@ -6,7 +6,7 @@ class TrendManager:
     def __init__(self, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
-        self.trends = [self.DishTrend(), self.FoodTypeTrend(), self.CuisineTypeTrend()]
+        self.trends = [self.DishTrend, self.FoodTypeTrend, self.CuisineTypeTrend]
         self.currentTrend = None
         self.pastTrend = []
 
@@ -14,9 +14,8 @@ class TrendManager:
             self.pastTrend = []
 
     def SetTrend(self):
-        random.seed()
         self.pastTrend.append(self.currentTrend)
-        self.currentTrend = random.choice(self.trends)
+        self.currentTrend = random.choices(self.trends, weights=[10, 3, 2], k=1)[0]()
 
         for dish in DISHES_LIST:
             if dish == self.currentTrend:
@@ -28,25 +27,27 @@ class TrendManager:
             elif dish.cuisine == self.currentTrend:
                 dish.trendModifier = 2
 
+            else:
+                dish.trendModifier -= 0.2
+                if float(dish.trendModifier) < 0.4:
+                    dish.trendModifier = 0.4
+
         ev = SetTrendEvent(self.currentTrend)
         print(self.currentTrend)
         self.evManager.Post(ev)
 
 
     def DishTrend(self):
-        random.seed()
         trendItem = random.choice(DISHES_LIST)
 
         return trendItem
 
     def FoodTypeTrend(self):
-        random.seed()
         trendItem = random.choice(FOOD_TYPE_LIST)
 
         return trendItem
 
     def CuisineTypeTrend(self):
-        random.seed()
         trendItem = random.choice(CUISINES_LIST)
 
         return trendItem

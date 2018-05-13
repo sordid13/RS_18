@@ -429,7 +429,7 @@ class Dish:
         for ingredient in self.ingredients:
             self.baseCost += ingredient.baseCost
 
-        self.trendModifier = 1
+        self.trendModifier = 1.0
 
     def ImpressionPoints(self):
         points = DISH_POINTS * self.trendModifier
