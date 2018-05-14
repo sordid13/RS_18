@@ -11,6 +11,8 @@ from .CustomerManager import *
 from .DishManager import *
 from .TrendManager import *
 from .Finance import *
+from .UpgradesManager import *
+from .MarketingManager import *
 
 from .Model import *
 from .Authentication import *

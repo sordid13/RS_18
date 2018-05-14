@@ -5,6 +5,8 @@ class DateManager:
         self.evManager = evManager
         self.evManager.RegisterListener(self)
 
+        self.deltaDay = 0 # To calculate weeks
+
     def NewMonth(self):
         Date.day = 1
         Date.month += 1
@@ -26,6 +28,7 @@ class DateManager:
         if isinstance(event, NewDayEvent):
             Date.day += 1
             Date.dayNumber += 1
+            self.deltaDay += 1
 
             if Date.day == 29:
                 if Date.month == 2 and not self.LeapYear():
@@ -39,7 +42,9 @@ class DateManager:
             elif Date.day == 32:
                 self.NewMonth()
 
-            if Date.dayNumber % 7 == 0:
+            if self.deltaDay % 7 == 0:
+                self.deltaDay = 0
+
                 ev = NewWeekEvent()
                 self.evManager.Post(ev)
 

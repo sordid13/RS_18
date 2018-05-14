@@ -51,6 +51,10 @@ INGREDIENT_TYPE_MISC = "Misc"
 # Customers
 STARTING_CUSTOMERS = 100
 
+# Staff
+CHEF_SALARY = [45000, 50000, 60000, 75000]
+WAITER_SALARY = [10000, 12000, 15000, 20000]
+
 # Finance related
 INVENTORY = "Inventory"
 RENOVATION = "Renovation"
@@ -66,3 +70,6 @@ MISC = "Misc"
 DAILY = "daily"
 MONTHLY = "monthly"
 YEARLY = "yearly"
+
+# Marketing
+MARKETING_LIST = []
