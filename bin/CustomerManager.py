@@ -38,7 +38,6 @@ class CustomerManager:
 
         leftoverCustomers = 0
         for player in players:
-            print(player.name + " " + str(player.impression))
             customers = math.floor(self.totalCustomers * (player.impression / totalImpression))
 
             if customers > player.restaurantCapacity:

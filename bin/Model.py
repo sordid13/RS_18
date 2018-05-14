@@ -202,9 +202,7 @@ class Player:
             avgSatisfaction = math.floor(satisfaction / customers)
         else:
             avgSatisfaction = 0
-        print(dishesServed)
-        print(avgSatisfaction)
-        print(customers)
+
         if satisfaction > 0:
             self.baseImpression = satisfaction
         else:

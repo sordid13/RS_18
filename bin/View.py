@@ -28,7 +28,6 @@ imgFolder = os.path.join("asset")
 class DynamicText(pygame.sprite.Sprite):
     def __init__(self, text, x, y, parent, color, fontSize, group=None):
         pygame.sprite.Sprite.__init__(self, group)
-        print(text)
         self.text = text
         self.color = color
         self.fontSize = fontSize
@@ -115,7 +114,7 @@ class Tooltip(pygame.sprite.Sprite):
 
         (x,y) = pos
 
-        self.text = Text(text, x + 2, y + 2, WHITE, 16, self.group)
+        self.text = Text(text, x + 2, y + 2, WHITE, 23, self.group)
 
         self.image = pygame.Surface((self.text.rect.w + 4, self.text.rect.h + 4))
         self.image.fill(BLACK)
@@ -305,10 +304,12 @@ class FinanceTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((230,50))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 17 / 100, HEIGHT * 4/100)
+        self.rect.center = (WIDTH * 10 / 100, HEIGHT * 4/100)
+
+        FinanceTabIcon(self.rect.left + 20, self.rect.centery, self.evManager, self.group)
 
         self.cash = 0
-        self.cashDisplay = Numbers(self, "cash", self.rect.right - 20, self.rect.centery, BLACK, 20, self.group, RIGHT)
+        self.cashDisplay = Numbers(self, "cash", self.rect.right - 20, self.rect.centery, BLACK, 30, self.group, RIGHT)
 
         self.windowGroup = windowGroup
         self.fiscalTerm = DAILY
@@ -344,6 +345,22 @@ class FinanceTab(pygame.sprite.Sprite):
 
             ev = RequestFinanceWindowEvent(self.fiscalTerm)
             self.evManager.Post(ev)
+
+
+class FinanceTabIcon(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.image = pygame.Surface((30, 30))
+        self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+
+    def Hover(self):
+        text = "Total Cash"
+        ev = GUITooltipEvent(text)
+        self.evManager.Post(ev)
 
 
 class FinanceWindow:
@@ -486,11 +503,11 @@ class CustomersTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((230, 50))
         self.image.fill(BLUE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 35 / 100, HEIGHT * 4 / 100)
-
+        self.rect.center = (WIDTH * 28 / 100, HEIGHT * 4 / 100)
+        self.group = group
         self.windowGroup = windowGroup
 
-        self.dishesServed = []
+        CustomerTabIcon(self.rect.left + 20, self.rect.centery, self.evManager, self.group, "Today Customer")
 
         self.customers = 0
         self.unfedCustomers = 0
@@ -498,6 +515,34 @@ class CustomersTab(pygame.sprite.Sprite):
         self.prevCustomers = 0
         self.prevUnfedCustomers = 0
         self.prevSatisfaction = 0
+        self.dishesServed = []
+
+        self.customersDisplay = Numbers(self, "customers", self.rect.left + 100, self.rect.centery, BLACK, 30,
+                                       self.group, RIGHT)
+        self.satisfactionDisplay = None
+        self.DrawSatisfaction()
+
+    def DrawSatisfaction(self):
+        if 0 <= self.satisfaction <= 20:
+            self.satisfactionDisplay = SatisfactionSmiley(self.rect.centerx + 15, self.rect.centery, self.evManager,
+                                                          self.group, "1")
+
+        elif 21 < self.satisfaction <= 40:
+            self.satisfactionDisplay = SatisfactionSmiley(self.rect.centerx + 15, self.rect.centery, self.evManager,
+                                                          self.group, "2")
+
+        elif 41 < self.satisfaction <= 60:
+            self.satisfactionDisplay = SatisfactionSmiley(self.rect.centerx + 15, self.rect.centery, self.evManager,
+                                                          self.group, "3")
+
+        elif 61 < self.satisfaction <= 80:
+            self.satisfactionDisplay = SatisfactionSmiley(self.rect.centerx + 15, self.rect.centery, self.evManager,
+                                                          self.group, "4")
+
+        elif 81 < self.satisfaction <= 100:
+            self.satisfactionDisplay = SatisfactionSmiley(self.rect.centerx + 15, self.rect.centery, self.evManager,
+                                                          self.group, "5")
+
 
     def Draw(self):
         self.windowGroup.empty()
@@ -511,6 +556,7 @@ class CustomersTab(pygame.sprite.Sprite):
     def Notify(self, event):
         if isinstance(event, SalesReportEvent):
             if not hasattr(event.player, "ai"):
+
                 self.prevCustomers = self.customers
                 self.prevUnfedCustomers = self.unfedCustomers
                 self.prevSatisfaction = self.satisfaction
@@ -519,9 +565,53 @@ class CustomersTab(pygame.sprite.Sprite):
                 self.customers = event.customers
                 self.unfedCustomers = event.unfedCustomers
                 self.satisfaction = event.satisfaction
+                print(self.satisfaction)
+
+                self.customersDisplay.Update()
+
+                self.satisfactionDisplay.kill()
+                self.DrawSatisfaction()
 
                 ev = GUIRequestWindowRedrawEvent(self.name, self.Draw)
                 self.evManager.Post(ev)
+
+
+class SatisfactionSmiley(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager , group=None, type=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.x = x
+        self.y = y
+        self.group = group
+        self.evManager = evManager
+        self.type = type
+        self.image = pygame.image.load(os.path.join(imgFolder, self.type + "Satisfaction.png")).convert_alpha()
+
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+    def Hover(self):
+        text = "Customer Satisfaction"
+        ev = GUITooltipEvent(text)
+        self.evManager.Post(ev)
+
+
+class CustomerTabIcon(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager, group=None, type=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.type = type
+        self.image = pygame.Surface((30, 30))
+        self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+
+    def Hover(self):
+        text = "Today Customer"
+        ev = GUITooltipEvent(text)
+        self.evManager.Post(ev)
+
+
 
 
 class CustomersWindow:
@@ -624,14 +714,17 @@ class RivalTab(pygame.sprite.Sprite):
         self.evManager.RegisterListener(self)
 
         self.name = "Rival Window"
+        self.group = group
 
         pygame.sprite.Sprite.__init__(self, group)
-        self.image = pygame.Surface((230, 50))
+        self.image = pygame.Surface((50, 50))
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 53 / 100, HEIGHT * 4 / 100)
+        self.rect.center = (WIDTH * 78 / 100, HEIGHT * 4 / 100)
 
         self.windowGroup = windowGroup
+
+        RivalTabIcon(self.rect.centerx, self.rect.centery, self.evManager, self.group)
 
         self.rivals = []
         for player in players:
@@ -656,6 +749,24 @@ class RivalTab(pygame.sprite.Sprite):
         if isinstance(event, NewDayEvent):
             self.Update()
 
+
+class RivalTabIcon(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager, group=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.image = pygame.Surface((30, 30))
+        self.image.fill(PINK)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+
+    def Hover(self):
+        text = "Your Rivals"
+        ev = GUITooltipEvent(text)
+        self.evManager.Post(ev)
+
+
+
 class RivalWindow:
     def __init__(self, parent, evManager, group=None):
         self.evManager = evManager
@@ -670,7 +781,7 @@ class RivalWindow:
         RivalScreen(x, y, self.parent.currentRival, self.evManager, self.group)
 
         for rival in self.parent.rivals:
-            RivalButton(x - 200, y - 265, rival, parent, self.evManager, self.group)
+            RivalButton(x - 150, y - 265, rival, parent, self.evManager, self.group)
             x += 150
 
 
@@ -761,7 +872,7 @@ class StaffTab(pygame.sprite.Sprite):
         self.evManager.RegisterListener(self)
 
         self.name = "Staff Window"
-
+        self.group = group
         pygame.sprite.Sprite.__init__(self, group)
         self.image = pygame.Surface((100, 200))
         self.image.fill(YELLOW)
@@ -771,16 +882,21 @@ class StaffTab(pygame.sprite.Sprite):
         self.windowGroup = windowGroup
         self.popUp = popUp
 
+        StaffTabIcon(self.rect.centerx, self.rect.centery - 50, self.evManager, self.group, "Chefs")
+        StaffTabIcon(self.rect.centerx, self.rect.centery + 40, self.evManager, self.group, "Waiters")
+
         self.chefs = []
         self.waiters = []
         self.mode = "My Staff"
-
+        self.chefsNumber = len(self.chefs)
+        self.waitersNumber = len(self.waiters)
         self.staffType = "Chef"
         self.cuisine = CUISINE_WESTERN
 
-    def Update(self):
-        # TODO: Display no. of chefs & waiters on tab
-        pass
+        self.chefsDisplay = Numbers(self, "chefsNumber", self.rect.centerx, self.rect.centery - 10, BLACK, 35,
+                                    self.group, CENTER)
+        self.waitersDisplay = Numbers(self, "waitersNumber", self.rect.centerx, self.rect.centery + 80, BLACK, 35,
+                                    self.group, CENTER)
 
     def DrawMyStaff(self):
         self.windowGroup.empty()
@@ -806,6 +922,7 @@ class StaffTab(pygame.sprite.Sprite):
                 ev = GUIRequestWindowRedrawEvent(self.name, self.DrawMyStaff)
                 self.evManager.Post(ev)
 
+
         elif isinstance(event, GUIOpenMyStaffEvent):
             ev = GUIRequestWindowRedrawEvent(self.name, self.DrawMyStaff)
             self.evManager.Post(ev)
@@ -827,7 +944,28 @@ class StaffTab(pygame.sprite.Sprite):
             self.evManager.Post(ev)
 
 
-class StaffWindow(pygame.sprite.Sprite):
+class StaffTabIcon(pygame.sprite.Sprite):
+    def __init__(self, x, y, evManager, group=None, type=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+        self.group = group
+        self.type = type
+        self.image = pygame.Surface((40, 40))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+
+    def Hover(self):
+        if self.type == "Chefs":
+            ev = GUITooltipEvent(self.type)
+            self.evManager.Post(ev)
+
+        elif self.type == "Waiters":
+            ev = GUITooltipEvent(self.type)
+            self.evManager.Post(ev)
+
+
+class StaffWindow:
     def __init__(self, parent, evManager, group=None, popUp=None):
         self.evManager = evManager
 
@@ -839,7 +977,6 @@ class StaffWindow(pygame.sprite.Sprite):
 
         MyStaffsTab(self.parent, self.evManager, self.group)
         HireStaffsTab(self.parent, self.evManager, self.group)
-
 
 
 class StaffSprite(pygame.sprite.Sprite):
@@ -1329,6 +1466,8 @@ class HireButton(pygame.sprite.Sprite):
             ev = HireWaiterEvent(self.container.level)
             self.evManager.Post(ev)
 
+        ev = StaffUpdateRequestEvent()
+        self.evManager.Post(ev)
 
 
 # RESTAURANT LEVEL & UPGRADE -----------------------------------------------------------------------------------------
@@ -1723,6 +1862,10 @@ class MidTab(pygame.sprite.Sprite):
         self.rect.center = (WIDTH * 50/100, HEIGHT * 85/100)
 
 
+
+      
+# MARKETING ------------------------------------------------------------------------------------------------
+
 class MarketingButton(pygame.sprite.Sprite):
     def __init__(self, evManager, group=None, windowGroup=None):
         pygame.sprite.Sprite.__init__(self, group)
@@ -1740,6 +1883,7 @@ class MarketingButton(pygame.sprite.Sprite):
 
         self.activeBonuses = []
 
+
     def Draw(self):
         self.windowGroup.empty()
         MarketingWindow(self, self.evManager, self.windowGroup)
@@ -1747,6 +1891,11 @@ class MarketingButton(pygame.sprite.Sprite):
     def Clicked(self):
         ev = GUIRequestWindowEvent(self.name, self.Draw)
         self.evManager.Post(ev)
+
+
+    def Hover(self):
+        text = "Promote Your Restaurant"
+        ev = GUITooltipEvent(text)
 
     def Notify(self, event):
         if isinstance(event, MarketingUpdateEvent):
@@ -1782,13 +1931,11 @@ class AddDishButton(pygame.sprite.Sprite):
 
     def Clicked(self):
         ev = GUIRequestWindowEvent(self.name, self.Draw)
+
         self.evManager.Post(ev)
 
     def Notify(self, event):
         pass
-
-      
-# MARKETING ------------------------------------------------------------------------------------------------
 
 
 class MarketingWindow:
@@ -1856,6 +2003,38 @@ class StrategyButton(pygame.sprite.Sprite):
 
 
 # MENU CATALOGUE & ADD DISH TO PLAYER's MENUS ----------------------------------------------------------------
+
+# MENU CATALOGUE & ADD DISH TO PLAYER's MENUS ----------------------------------------------------------------
+
+class AddDishButton(pygame.sprite.Sprite):
+    def __init__(self, evManager, group=None, popUp=None, windowGroup=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.evManager = evManager
+
+        self.name = "Add Dish Window"
+        self.group = group
+        self.popUp = popUp
+
+        self.x = WIDTH * 50 / 100
+        self.y = HEIGHT * 78 / 100
+        self.image = pygame.Surface((40, 40))
+        self.image.fill(BLUE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+        self.windowGroup = windowGroup
+
+    def Draw(self):
+        self.windowGroup.empty()
+        AddDishWindow(self, self.evManager, self.popUp, self.windowGroup)
+
+    def Clicked(self):
+        ev = GUIRequestWindowEvent(self.name, self.Draw)
+        self.evManager.Post(ev)
+
+    def Hover(self):
+        text = "Add Dish to Your Menu"
+        ev = GUITooltipEvent(text)
+        self.evManager.Post(ev)
 
 
 class AddDishWindow:
@@ -1981,8 +2160,6 @@ class DishSprite(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
-    def Hover(self):
-        print(self.dish.name)
 
 
 class DishContainer(pygame.sprite.Sprite):
@@ -2197,6 +2374,11 @@ class MarketButton(pygame.sprite.Sprite):
 
             self.cartScreen.Update()
 
+    def Hover(self):
+        text = "Open Market"
+        ev = GUITooltipEvent(text)
+        self.evManager.Post(ev)
+
 
 class MarketWindow:
     def __init__(self, parent, evManager, group=None, popUp=None):
@@ -2307,6 +2489,7 @@ class IngredientContainer(pygame.sprite.Sprite):
         self.ingredient = ingredient
         self.x = x
         self.y = y
+        self.group = group
         self.image = pygame.Surface((300, 50))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
@@ -2317,20 +2500,23 @@ class IngredientContainer(pygame.sprite.Sprite):
         self.quality = self.window.quality
         self.price = self.ingredient.Price(self.quality)
 
-        self.ingredientQuantity = Numbers(self, "quantity", self.x + 120, self.y - 13, WHITE, 16, group)
-        self.ingredientQuality = Numbers(self, "quality", self.x - 85, self.y + 5, WHITE, 16, group)
-        self.ingredientPrice = Numbers(self, "price", self.x, self.y + 5, WHITE, 16, group)
 
-        self.contents.append(Text(self.ingredient.name, self.x - 100, self.y - 20, WHITE, 14, group))
-        self.contents.append(IngredientSprite(self.x - 120, self.y, ingredient, self.evManager, group))
+        self.ingredientQuantity = Numbers(self, "quantity", self.x + 120, self.y - 13, WHITE, 16, self.group)
+
+        self.ingredientPrice = Numbers(self, "price", self.x + 20, self.y + 5, WHITE, 16, self.group)
+
+
+        self.contents.append(Text(self.ingredient.name, self.x - 100, self.y - 20, WHITE, 14, self.group))
+        self.contents.append(IngredientSprite(self.x - 120, self.y, ingredient, self.evManager, self.group))
 
         self.contents.append(self.ingredientQuantity)
-        self.contents.append(self.ingredientQuality)
         self.contents.append(self.ingredientPrice)
 
-        self.contents.append(ArrowLeft(self.x + 85, self.y - 10,  self, "quantity", group))
-        self.contents.append(ArrowRight(self.x + 135, self.y - 10,  self, "quantity", group))
-        self.contents.append(AddToCart(self.x + 110, self.y + 10, self, self.evManager, group))
+        self.contents.append(ArrowLeft(self.x + 85, self.y - 10,  self, "quantity", self.group))
+        self.contents.append(ArrowRight(self.x + 135, self.y - 10,  self, "quantity", self.group))
+        self.contents.append(AddToCart(self.x + 110, self.y + 10, self, self.evManager, self.group))
+
+        self.displayQuality = QualityStar(self.x - 55, self.y + 5, self.group, str(self.quality))
 
     def Update(self):
         self.quality = self.window.quality
@@ -2341,11 +2527,24 @@ class IngredientContainer(pygame.sprite.Sprite):
         self.quantityDisplay = str(self.quantity)
         self.ingredientQuantity.Update()
 
-        self.qualityDisplay = str(self.quality)
-        self.ingredientQuality.Update()
+        self.displayQuality.kill()
+        self.displayQuality = QualityStar(self.x - 55, self.y + 5, self.group, str(self.quality))
 
         self.price = self.ingredient.Price(self.quality)
         self.ingredientPrice.Update()
+
+
+class QualityStar(pygame.sprite.Sprite):
+    def __init__(self, x, y, group=None, type=None):
+        pygame.sprite.Sprite.__init__(self, group)
+        self.x = x
+        self.y = y
+        self.group = group
+        self.type = type
+        self.image = pygame.image.load(os.path.join(imgFolder, self.type + "QualityStar.png")).convert_alpha()
+
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
 
 
 class IngredientSprite(pygame.sprite.Sprite):
@@ -2600,9 +2799,31 @@ class View:
                         self.prevHover.append(sprite)
                         self.hoverTicks = 0
 
+            for sprite in self.mainUI:
+                if sprite.rect.collidepoint(pos):
+                    if sprite in self.prevHover:
+                        self.hoverTicks += 1
+                        if self.hoverTicks > 100:
+                            try:
+                                sprite.Hover()
+                                self.currentHover = sprite
+                                break
+
+                            except AttributeError:
+                                continue
+                    else:
+                        self.prevHover.append(sprite)
+                        self.hoverTicks = 0
+
+
         else:
             reset = True
             for sprite in self.windows:
+                if sprite.rect.collidepoint(pos):
+                    if sprite is self.currentHover:
+                        reset = False
+                        break
+            for sprite in self.mainUI:
                 if sprite.rect.collidepoint(pos):
                     if sprite is self.currentHover:
                         reset = False
@@ -2613,10 +2834,12 @@ class View:
                 self.currentHover = None
                 self.misc.empty()
             else:
-                (x,y) = pygame.mouse.get_pos()
-                self.tooltip.rect.topleft = (x + 8, y + 8)
-                self.tooltip.text.rect.topleft = (x + 10, y + 10)
-
+                try:
+                    (x,y) = pygame.mouse.get_pos()
+                    self.tooltip.rect.topleft = (x + 8, y + 8)
+                    self.tooltip.text.rect.topleft = (x + 10, y + 10)
+                except AttributeError:
+                    pass
 
 
     def Notify(self, event):
@@ -2640,6 +2863,7 @@ class View:
 
             ev = GameScreenLoadedEvent()
             self.evManager.Post(ev)
+
 
 
         elif isinstance(event, TickEvent):
