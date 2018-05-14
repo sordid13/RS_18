@@ -20,6 +20,11 @@ class GameStartedEvent:
         self.players = players
 
 
+class GameScreenLoadedEvent:
+    def __init__(self):
+        self.name = "Game Screen Loaded Event"
+
+
 class NewDayEvent:
     def __init__(self):
         self.name = "New Day Event"
@@ -203,6 +208,13 @@ class HireWaiterEvent:
         self.name = "Hire Waiter Event"
         self.level = level
 
+
+class FireStaffEvent:
+    def __init__(self, staff):
+        self.name = "Fire Staff Event"
+        self.staff = staff
+
+
 class NoChefEvent:
     def __init__(self):
         self.name = "No Chef Event"
@@ -210,17 +222,35 @@ class NoChefEvent:
 
 #UPGRADE RELATED EVENT
 class UpgradeLevelEvent:
-    def __init__(self, level, cost):
+    def __init__(self):
         self.name = "Upgrade Level Event"
-        self.level = level
-        self.cost = cost
 
 
 class UpgradeCapacityEvent:
-    def __init__(self, capacity, cost):
+    def __init__(self):
         self.name = "Upgrade Capacity Event"
+
+
+class RestaurantUpdateEvent:
+    def __init__(self, level, capacity, operatingCost, upgrades):
+        self.name = "Restaurant Update Event"
+        self.level = level
         self.capacity = capacity
-        self.cost = cost
+        self.operatingCost = operatingCost
+        self.upgrades = upgrades
+
+
+#MARKETING RELATED EVENT
+class AddMarketingEvent:
+    def __init__(self, bonus):
+        self.name = "Add Marketing Event"
+        self.bonus = bonus
+
+
+class MarketingUpdateEvent:
+    def __init__(self, bonuses):
+        self.name = "Marketing Update Event"
+        self.bonuses = bonuses
 
 
 #Controller Related Event

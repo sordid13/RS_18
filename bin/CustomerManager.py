@@ -34,8 +34,16 @@ class CustomerManager:
             else:
                 player.impression = 0
 
+        # TODO: Capacity overflow
+
+        leftoverCustomers = 0
         for player in players:
             customers = math.floor(self.totalCustomers * (player.impression / totalImpression))
+
+            if customers > player.restaurantCapacity:
+                leftoverCustomers = customers - player.restaurantCapacity
+                customers = player.restaurantCapacity
+
             player.ProcessSales(customers)
 
     def Notify(self, event):

@@ -6,11 +6,9 @@ class DishManager:
     def __init__(self, evManager):
         self.evManager = evManager
 
-    def UnfedCustomers(self, dishList):
-        customers = 0
+    def UnfedCustomers(self, customers, dishList):
         sales = 0
         for dish in dishList:
-            customers += dish['demand']
             sales += dish['sales']
         return customers - sales
 
@@ -135,7 +133,7 @@ class DishManager:
         if len(chefs) == 0:
             ev = NoChefEvent()
             self.evManager.Post(ev)
-            return
+            return []
 
         dishList = self.DishesByDemand(player, customers)
         dishList = self.GetDishAvailable(dishList, player)
