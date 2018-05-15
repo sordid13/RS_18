@@ -5,11 +5,13 @@ STATE_STARTED = "Game Started"
 # Screen settings
 DISPLAY_RESOLUTION = (1280, 720)
 DRAW_RESOLUTION = (1280, 720)
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
 
 # Text alignment
-CENTER = "Center"
-RIGHT = "Right"
-LEFT = "Left"
+TEXT_CENTER = "Center"
+TEXT_RIGHT = "Right"
+TEXT_LEFT = "Left"
 
 # List of dishes & ingredients exist in game
 INGREDIENTS_LIST = []
@@ -58,20 +60,20 @@ CUSTOMERS_PER_CHEF = 100
 CUSTOMERS_PER_WAITER = 30
 
 # Finance related
-INVENTORY = "Inventory"
-RENOVATION = "Renovation"
-SALARY = "Salary"
-EXPENSE = "Expense"
-SALES = "Sales"
-PROFIT = "Profit"
-MARKETING = "Marketing"
-CASH = "Cash"
-MISC = "Misc"
+FIN_INVENTORY = "Inventory"
+FIN_RENOVATION = "Renovation"
+FIN_SALARY = "Salary"
+FIN_EXPENSE = "Expense"
+FIN_SALES = "Sales"
+FIN_PROFIT = "Profit"
+FIN_MARKETING = "Marketing"
+FIN_CASH = "Cash"
+FIN_MISC = "Misc"
 
 # Fiscal Term
-DAILY = "daily"
-MONTHLY = "monthly"
-YEARLY = "yearly"
+FIN_TERM_DAILY = "daily"
+FIN_TERM_MONTHLY = "monthly"
+FIN_TERM_YEARLY = "yearly"
 
 # Marketing
 MARKETING_LIST = []

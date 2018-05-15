@@ -240,7 +240,7 @@ class Player:
 
         self.baseImpression = satisfaction
 
-        self.EarnMoney(salesRevenue, SALES)
+        self.EarnMoney(salesRevenue, FIN_SALES)
 
         ev = SalesReportEvent(self, dishesServed, customers, unfedCustomers, salesRevenue, avgSatisfaction)
         self.evManager.Post(ev)
@@ -251,15 +251,15 @@ class Player:
         pass
 
     def HireChef(self, level, cuisine):
-        self.SpendMoney(CHEF_SALARY[level], SALARY)
+        self.SpendMoney(CHEF_SALARY[level], FIN_SALARY)
         self.chefs.append(Chef(level, cuisine, self, self.evManager))
 
     def HireWaiter(self, level):
-        self.SpendMoney(WAITER_SALARY[level], SALARY)
+        self.SpendMoney(WAITER_SALARY[level], FIN_SALARY)
         self.waiters.append(Waiter(level, self, self.evManager))
 
     def FireStaff(self, staff):
-        self.SpendMoney(staff.salary * 3, SALARY)
+        self.SpendMoney(staff.salary * 3, FIN_SALARY)
         try:
             self.chefs.remove(staff)
         except ValueError:
@@ -296,7 +296,7 @@ class Player:
             self.evManager.Post(ev)
 
         elif isinstance(event, AddDishEvent):
-            if self.SpendMoney(ADD_DISH_COST, MISC):
+            if self.SpendMoney(ADD_DISH_COST, FIN_MISC):
                 self.menu.AddDish(event.dish, event.price)
 
                 ev = MenuUpdateEvent(self.menu.dishes)
@@ -315,7 +315,7 @@ class Player:
             self.evManager.Post(ev)
 
         elif isinstance(event, BuyIngredientsEvent):
-            if self.SpendMoney(event.price, INVENTORY):
+            if self.SpendMoney(event.price, FIN_INVENTORY):
                 new = True
                 for batch in self.inventory.batches:
                     # Loop and check for same-day batch
@@ -370,7 +370,7 @@ class Player:
             self.evManager.Post(ev)
 
         elif isinstance(event, UpgradeLevelEvent):
-            if self.SpendMoney(self.upgrades.UpgradeLevelCost(), RENOVATION):
+            if self.SpendMoney(self.upgrades.UpgradeLevelCost(), FIN_RENOVATION):
                 self.upgrades.UpgradeLevel()
 
                 ev = RestaurantUpdateEvent(self.restaurantLvl, self.restaurantCapacity,
@@ -379,7 +379,7 @@ class Player:
                 self.evManager.Post(ev)
 
         elif isinstance(event, UpgradeCapacityEvent):
-            if self.SpendMoney(self.upgrades.UpgradeCapacityCost(), RENOVATION):
+            if self.SpendMoney(self.upgrades.UpgradeCapacityCost(), FIN_RENOVATION):
                 self.upgrades.UpgradeCapacity()
 
                 ev = RestaurantUpdateEvent(self.restaurantLvl, self.restaurantCapacity,
@@ -541,7 +541,7 @@ class Staff:
             self.deltaDay += 1
             if self.deltaDay == 30:
                 self.deltaDay = 0
-                self.player.SpendMoney(self.salary, SALARY)
+                self.player.SpendMoney(self.salary, FIN_SALARY)
 
 class Chef(Staff):
     def __init__(self, level, cuisine, player, evManager):

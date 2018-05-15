@@ -34,11 +34,11 @@ class Finance:
 
         cashFlow[SALES] = 0
         cashFlow[INVENTORY] = 0
-        cashFlow[MARKETING] = 0
+        cashFlow[FIN_MARKETING] = 0
         cashFlow[RENOVATION] = 0
         cashFlow[SALARY] = 0
         cashFlow[MISC] = 0
-        cashFlow[CASH] = self.player.cash
+        cashFlow[FIN_CASH] = self.player.cash
         cashFlow['Profit'] = 0
         cashFlow['Expense'] = 0
         cashFlow['Day'] = Date.day
@@ -58,11 +58,11 @@ class Finance:
         cashFlow = dict()
         cashFlow[SALES] = 0
         cashFlow[INVENTORY] = 0
-        cashFlow[MARKETING] = 0
+        cashFlow[FIN_MARKETING] = 0
         cashFlow[RENOVATION] = 0
         cashFlow[SALARY] = 0
         cashFlow[MISC] = 0
-        cashFlow[CASH] = self.player.cash
+        cashFlow[FIN_CASH] = self.player.cash
         cashFlow['Profit'] = 0
         cashFlow['Expense'] = 0
         cashFlow['Month'] = Date.month
@@ -81,11 +81,11 @@ class Finance:
         cashFlow = dict()
         cashFlow[SALES] = 0
         cashFlow[INVENTORY] = 0
-        cashFlow[MARKETING] = 0
+        cashFlow[FIN_MARKETING] = 0
         cashFlow[RENOVATION] = 0
         cashFlow[SALARY] = 0
         cashFlow[MISC] = 0
-        cashFlow[CASH] = self.player.cash
+        cashFlow[FIN_CASH] = self.player.cash
         cashFlow['Profit'] = 0
         cashFlow['Expense'] = 0
         cashFlow['Year'] = Date.year
@@ -115,10 +115,10 @@ class Finance:
 
         with open(self.folder + '/cashFlow.json', 'w') as json_file:
 
-            cashFlow['daily'][i][CASH] = self.player.cash
+            cashFlow['daily'][i][FIN_CASH] = self.player.cash
             cashFlow['daily'][i][category] += value
 
-            if category in [INVENTORY, MARKETING, RENOVATION, SALARY, MISC]:
+            if category in [INVENTORY, FIN_MARKETING, RENOVATION, SALARY, MISC]:
                 cashFlow['daily'][i]['Expense'] += value
 
             cashFlow['daily'][i]['Profit'] = cashFlow['daily'][i]['Sales'] - cashFlow['daily'][i]['Expense']
@@ -135,10 +135,10 @@ class Finance:
 
         with open(self.folder + '/cashFlow.json', 'w') as json_file:
 
-            cashFlow['monthly'][i][CASH] = self.player.cash
+            cashFlow['monthly'][i][FIN_CASH] = self.player.cash
             cashFlow['monthly'][i][category] += value
 
-            if category in [INVENTORY, MARKETING, RENOVATION, SALARY, MISC]:
+            if category in [INVENTORY, FIN_MARKETING, RENOVATION, SALARY, MISC]:
                 cashFlow['monthly'][i]['Expense'] += value
 
             cashFlow['monthly'][i]['Profit'] = cashFlow['monthly'][i]['Sales'] - cashFlow['monthly'][i]['Expense']
@@ -155,10 +155,10 @@ class Finance:
 
         with open(self.folder + '/cashFlow.json', 'w') as json_file:
 
-            cashFlow['yearly'][i][CASH] = self.player.cash
+            cashFlow['yearly'][i][FIN_CASH] = self.player.cash
             cashFlow['yearly'][i][category] += value
 
-            if category in [INVENTORY, MARKETING, RENOVATION, SALARY, MISC]:
+            if category in [INVENTORY, FIN_MARKETING, RENOVATION, SALARY, MISC]:
                 cashFlow['yearly'][i]['Expense'] += value
 
             cashFlow['yearly'][i]['Profit'] = cashFlow['yearly'][i]['Sales'] - cashFlow['yearly'][i]['Expense']

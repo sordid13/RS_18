@@ -10,8 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.backends.backend_agg as agg
 
 
-WIDTH = 1280
-HEIGHT = 720
+
 FPS = 30
 
 # define colors
@@ -137,10 +136,10 @@ class MainWindow(pygame.sprite.Sprite):
         self.image = pygame.Surface((800, 380))
         self.image.fill(self.color)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH / 2, HEIGHT / 2.75)
+        self.rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2.75)
 
-        x = WIDTH / 1.25
-        y = HEIGHT / 8
+        x = SCREEN_WIDTH / 1.25
+        y = SCREEN_HEIGHT / 8
 
         self.closeButton = CloseButton(x, y, self.evManager, self.group)
 
@@ -281,7 +280,7 @@ class DateTime(pygame.sprite.Sprite):
         self.image = pygame.Surface((230, 50))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 90 / 100, HEIGHT * 4 / 100)
+        self.rect.center = (SCREEN_WIDTH * 90 / 100, SCREEN_HEIGHT * 4 / 100)
 
         self.date = str(Date.day) + " / " + str(Date.month) + " / " + str(Date.year)
         self.display = Numbers(self, "date", self.rect.right - 10, self.rect.centery, WHITE, 24, self.group)
@@ -309,7 +308,7 @@ class FinanceTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((230,50))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 10 / 100, HEIGHT * 4/100)
+        self.rect.center = (SCREEN_WIDTH * 10 / 100, SCREEN_HEIGHT * 4 / 100)
 
         FinanceTabIcon(self.rect.left + 20, self.rect.centery, self.evManager, self.group)
 
@@ -317,7 +316,7 @@ class FinanceTab(pygame.sprite.Sprite):
         self.cashDisplay = Numbers(self, "cash", self.rect.right - 20, self.rect.centery, BLACK, 30, self.group, RIGHT)
 
         self.windowGroup = windowGroup
-        self.fiscalTerm = DAILY
+        self.fiscalTerm = FIN_TERM_DAILY
         self.cashBook = []
         self.window = None
 
@@ -376,12 +375,12 @@ class FinanceWindow:
         self.window = MainWindow(GREEN, self.evManager, self.group)
         self.screens = []
 
-        x = WIDTH/2
-        y = HEIGHT/2
+        x = SCREEN_WIDTH / 2
+        y = SCREEN_HEIGHT / 2
         #Button
-        self.dayButton = FinanceButton(x - 300, y - 260, 140, 30, self.parent, "Day", YELLOW, self.evManager, self.group, DAILY)
-        self.monthButton = FinanceButton(x - 150, y - 260, 140, 30, self.parent, "Month", BLUE, self.evManager, self.group, MONTHLY)
-        self.yearButton = FinanceButton(x, y - 260, 140, 30, self.parent,  "Year", RED, self.evManager, self.group, YEARLY)
+        self.dayButton = FinanceButton(x - 300, y - 260, 140, 30, self.parent, "Day", YELLOW, self.evManager, self.group, FIN_TERM_DAILY)
+        self.monthButton = FinanceButton(x - 150, y - 260, 140, 30, self.parent, "Month", BLUE, self.evManager, self.group, FIN_TERM_MONTHLY)
+        self.yearButton = FinanceButton(x, y - 260, 140, 30, self.parent,  "Year", RED, self.evManager, self.group, FIN_TERM_YEARLY)
         self.statementButton = FinanceButton(x + 250, y - 260, 30, 40, self.parent, "Statement", BLACK, self.evManager, self.group)
         self.graphButton = FinanceButton(x + 285, y - 260, 30, 40, self.parent, "Graph", BLACK, self.evManager, self.group)
 
@@ -397,8 +396,8 @@ class FinanceWindow:
         Text("Profit/Loss", x - 350, y + 20, BLACK, 25, self.group)
         Text("Total Cash:", x - 350, y + 55, BLACK, 25, self.group)
 
-        x = WIDTH * 40/100
-        y = HEIGHT * 41/100
+        x = SCREEN_WIDTH * 40 / 100
+        y = SCREEN_HEIGHT * 41 / 100
         for statement in self.parent.cashBook:
             self.screens.append(StatementScreen(x, y, statement, self.evManager, self.group))
             x += 180
@@ -429,7 +428,7 @@ class StatementScreen(pygame.sprite.Sprite):
                 inventory = Text(str(value), self.rect.right - 10, y - 55, BLACK, 27, self.group, RIGHT)
                 self.contents.append(inventory)
 
-            elif key == MARKETING:
+            elif key == FIN_MARKETING:
                 marketing = Text(str(value), self.rect.right - 10, y - 25, BLACK, 27, self.group, RIGHT)
                 self.contents.append(marketing)
 
@@ -449,7 +448,7 @@ class StatementScreen(pygame.sprite.Sprite):
                 profit = Text(str(value), self.rect.right - 10, y + 95, BLACK, 27, self.group, RIGHT)
                 self.contents.append(profit)
 
-            elif key == CASH:
+            elif key == FIN_CASH:
                 cash = Text(str(value), self.rect.right - 10, y + 130, BLACK, 27, self.group, RIGHT)
                 self.contents.append(cash)
 
@@ -508,7 +507,7 @@ class CustomersTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((230, 50))
         self.image.fill(BLUE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 28 / 100, HEIGHT * 4 / 100)
+        self.rect.center = (SCREEN_WIDTH * 28 / 100, SCREEN_HEIGHT * 4 / 100)
         self.group = group
         self.windowGroup = windowGroup
 
@@ -720,7 +719,7 @@ class RivalTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((50, 50))
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 78 / 100, HEIGHT * 4 / 100)
+        self.rect.center = (SCREEN_WIDTH * 78 / 100, SCREEN_HEIGHT * 4 / 100)
 
         self.windowGroup = windowGroup
 
@@ -774,8 +773,8 @@ class RivalWindow:
         self.parent = parent
         self.window = MainWindow(YELLOW, self.evManager, self.group)
 
-        x = WIDTH/2
-        y = HEIGHT/2
+        x = SCREEN_WIDTH / 2
+        y = SCREEN_HEIGHT / 2
 
         RivalScreen(x, y, self.parent.currentRival, self.evManager, self.group)
 
@@ -876,7 +875,7 @@ class StaffTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((100, 200))
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 43.5/100, HEIGHT * 85/100)
+        self.rect.center = (SCREEN_WIDTH * 43.5 / 100, SCREEN_HEIGHT * 85 / 100)
 
         self.windowGroup = windowGroup
         self.popUp = popUp
@@ -1017,7 +1016,7 @@ class MyStaffsTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((110, 35))
         self.image.fill(BLUE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 45/100, HEIGHT * 15/100)
+        self.rect.center = (SCREEN_WIDTH * 45 / 100, SCREEN_HEIGHT * 15 / 100)
 
     def Clicked(self):
         if self.parent.mode == "My Staff":
@@ -1037,7 +1036,7 @@ class HireStaffsTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((110, 35))
         self.image.fill(PURPLE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 55/100, HEIGHT * 15/100)
+        self.rect.center = (SCREEN_WIDTH * 55 / 100, SCREEN_HEIGHT * 15 / 100)
 
     def Clicked(self):
         if self.parent.mode == "Hire Staff":
@@ -1050,8 +1049,8 @@ class HireStaffsTab(pygame.sprite.Sprite):
 class MyStaffScreen(StaffWindow):
     def __init__(self, parent, evManager, group=None, popUp=None):
         super().__init__(parent, evManager, group, popUp)
-        self.x = WIDTH * 50/100
-        self.y = HEIGHT * 40/100
+        self.x = SCREEN_WIDTH * 50 / 100
+        self.y = SCREEN_HEIGHT * 40 / 100
 
         self.image = pygame.Surface((780, 300))
         self.image.fill(BLUE)
@@ -1091,7 +1090,7 @@ class HireStaffScreen(StaffWindow):
         self.image.fill(PURPLE)
         self.image.set_colorkey(PURPLE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 50/100, HEIGHT * 40/100)
+        self.rect.center = (SCREEN_WIDTH * 50 / 100, SCREEN_HEIGHT * 40 / 100)
 
         ChefTab(self.evManager, self.group)
         WaiterTab(self.evManager, self.group)
@@ -1103,10 +1102,10 @@ class HireStaffScreen(StaffWindow):
 
 
     def LoadHireChefContents(self):
-        tab_x = WIDTH * 31.5 / 100
-        tab_y = HEIGHT * 23 / 100
-        container_x = WIDTH * 38 / 100
-        container_y = HEIGHT * 25.5 / 100
+        tab_x = SCREEN_WIDTH * 31.5 / 100
+        tab_y = SCREEN_HEIGHT * 23 / 100
+        container_x = SCREEN_WIDTH * 38 / 100
+        container_y = SCREEN_HEIGHT * 25.5 / 100
         level = 3
 
         for cuisine in CUISINES_LIST:
@@ -1121,8 +1120,8 @@ class HireStaffScreen(StaffWindow):
 
 
     def LoadHireWaiterContents(self):
-        x = WIDTH * 26.5/100
-        y = HEIGHT * 30/100
+        x = SCREEN_WIDTH * 26.5 / 100
+        y = SCREEN_HEIGHT * 30 / 100
         level = 3
 
         while level >= 0:
@@ -1130,7 +1129,7 @@ class HireStaffScreen(StaffWindow):
             x += 340
             level -= 1
             if level == 1:
-                x = WIDTH * 26.5 / 100
+                x = SCREEN_WIDTH * 26.5 / 100
                 y += 145
 
 
@@ -1143,7 +1142,7 @@ class ChefTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((40, 40))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 22/100, HEIGHT * 25/100)
+        self.rect.center = (SCREEN_WIDTH * 22 / 100, SCREEN_HEIGHT * 25 / 100)
 
     def Clicked(self):
         staffType = "Chef"
@@ -1160,7 +1159,7 @@ class WaiterTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((40, 40))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 22/100, HEIGHT * 32 / 100)
+        self.rect.center = (SCREEN_WIDTH * 22 / 100, SCREEN_HEIGHT * 32 / 100)
 
     def Clicked(self):
         staffType = "Waiter"
@@ -1192,8 +1191,8 @@ class ChefDetail(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.group = group
 
-        self.x = WIDTH * 9 / 100
-        self.y = HEIGHT * 40 / 100
+        self.x = SCREEN_WIDTH * 9 / 100
+        self.y = SCREEN_HEIGHT * 40 / 100
         self.w = 230
         self.h = 300
         self.chef = chef
@@ -1240,8 +1239,8 @@ class WaiterDetail(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.group = group
 
-        self.x = WIDTH * 9 / 100
-        self.y = HEIGHT * 40 / 100
+        self.x = SCREEN_WIDTH * 9 / 100
+        self.y = SCREEN_HEIGHT * 40 / 100
         self.w = 230
         self.h = 300
         self.waiter = waiter
@@ -1488,7 +1487,7 @@ class RestaurantTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((100, 200))
         self.image.fill(PURPLE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 56.7 / 100, HEIGHT * 85 / 100)
+        self.rect.center = (SCREEN_WIDTH * 56.7 / 100, SCREEN_HEIGHT * 85 / 100)
 
         self.popUp = popUp
 
@@ -1538,7 +1537,7 @@ class RestaurantDetail(pygame.sprite.Sprite):
         self.image = pygame.Surface((230, 380))
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 9 / 100, HEIGHT * 36.5 / 100)
+        self.rect.center = (SCREEN_WIDTH * 9 / 100, SCREEN_HEIGHT * 36.5 / 100)
 
         Text("Level:", self.rect.left + 30, self.rect.top + 60, BLACK, 25, self.group)
         Text(str(self.parent.level), self.rect.left + 50, self.rect.top + 90, BLACK, 25,
@@ -1549,8 +1548,8 @@ class RestaurantDetail(pygame.sprite.Sprite):
                                        self.group, CENTER)
 
         Text("Operating Cost:", self.rect.centerx + 4, self.rect.top + 120, BLACK, 25, self.group, CENTER)
-        Text(str(self.parent.operatingCost), WIDTH * 8.5/100, self.rect.top + 140, BLACK, 25,
-                                            self.group, CENTER)
+        Text(str(self.parent.operatingCost), SCREEN_WIDTH * 8.5 / 100, self.rect.top + 140, BLACK, 25,
+             self.group, CENTER)
 
         Text("UPGRADE", self.rect.centerx, self.rect.top + 165, BLACK, 27, self.group, CENTER)
 
@@ -1573,7 +1572,7 @@ class UpgradeDetail(pygame.sprite.Sprite):
         self.image = pygame.Surface((200, 190))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 9 / 100, HEIGHT * 48 / 100)
+        self.rect.center = (SCREEN_WIDTH * 9 / 100, SCREEN_HEIGHT * 48 / 100)
         self.contents = []
 
         #UPGRADE LEVEL
@@ -1589,7 +1588,7 @@ class UpgradeDetail(pygame.sprite.Sprite):
                  self.group, CENTER)
             Text("$" + str(self.parent.upgradeLevelCost), self.rect.left + 130, self.rect.top + 45, BLACK, 25,
                  self.group, CENTER)
-            UpgradeButton(WIDTH * 9/100, self.rect.top + 70, self, "level", self.evManager, self.group)
+            UpgradeButton(SCREEN_WIDTH * 9 / 100, self.rect.top + 70, self, "level", self.evManager, self.group)
         else:
             Text("Max Level", self.rect.centerx, self.rect.top + 45, BLACK, 25, self.group, CENTER)
 
@@ -1605,7 +1604,7 @@ class UpgradeDetail(pygame.sprite.Sprite):
             self.group, CENTER)
 
         Text("$" + str(self.parent.upgradeCapacityCost), self.rect.left + 130, self.rect.top + 135, BLACK, 25, self.group, CENTER)
-        UpgradeButton(WIDTH * 9/100, self.rect.bottom - 25, self, "capacity", self.evManager, self.group)
+        UpgradeButton(SCREEN_WIDTH * 9 / 100, self.rect.bottom - 25, self, "capacity", self.evManager, self.group)
 
 
 class UpgradeButton(pygame.sprite.Sprite):
@@ -1649,7 +1648,7 @@ class MenuTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((500, 200))
         self.image.fill(BLUE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 20 / 100, HEIGHT * 85/100)
+        self.rect.center = (SCREEN_WIDTH * 20 / 100, SCREEN_HEIGHT * 85 / 100)
 
         self.contents = []
 
@@ -1718,7 +1717,7 @@ class InventoryTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((500, 200))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 80/100, HEIGHT * 85/100)
+        self.rect.center = (SCREEN_WIDTH * 80 / 100, SCREEN_HEIGHT * 85 / 100)
 
         self.contents = []
 
@@ -1813,8 +1812,8 @@ class InventoryItemDetail(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.group = group
         self.item = item
-        self.x = WIDTH * 9 / 100
-        self.y = HEIGHT * 37 / 100
+        self.x = SCREEN_WIDTH * 9 / 100
+        self.y = SCREEN_HEIGHT * 37 / 100
         self.w = 230
         self.h = 350
 
@@ -1863,7 +1862,7 @@ class MidTab(pygame.sprite.Sprite):
         self.image = pygame.Surface((70, 200))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 50/100, HEIGHT * 85/100)
+        self.rect.center = (SCREEN_WIDTH * 50 / 100, SCREEN_HEIGHT * 85 / 100)
 
 
 
@@ -1877,8 +1876,8 @@ class MarketingButton(pygame.sprite.Sprite):
         self.evManager.RegisterListener(self)
         self.name = "Marketing Window"
 
-        self.x = WIDTH * 50 / 100
-        self.y = HEIGHT * 93 / 100
+        self.x = SCREEN_WIDTH * 50 / 100
+        self.y = SCREEN_HEIGHT * 93 / 100
         self.image = pygame.Surface((40, 40))
         self.image.fill(PURPLE)
         self.rect = self.image.get_rect()
@@ -1921,15 +1920,15 @@ class MarketingWindow:
         self.group = group
         self.window = MainWindow(PURPLE, self.evManager, self.group)
 
-        x = WIDTH * 29.75/100
-        y = HEIGHT * 26.5/100
+        x = SCREEN_WIDTH * 29.75 / 100
+        y = SCREEN_HEIGHT * 26.5 / 100
         s = 0
         for strategy in MARKETING_LIST:
             MarketingContainer(x, y, strategy, self.parent, self.evManager, self.group)
             x += 260
             s += 1
             if s == 3:
-                x = WIDTH * 29.75 / 100
+                x = SCREEN_WIDTH * 29.75 / 100
                 y += 170
 
 
@@ -1990,8 +1989,8 @@ class AddDishButton(pygame.sprite.Sprite):
         self.group = group
         self.popUp = popUp
 
-        self.x = WIDTH * 50 / 100
-        self.y = HEIGHT * 78 / 100
+        self.x = SCREEN_WIDTH * 50 / 100
+        self.y = SCREEN_HEIGHT * 78 / 100
         self.image = pygame.Surface((40, 40))
         self.image.fill(BLUE)
         self.rect = self.image.get_rect()
@@ -2026,16 +2025,16 @@ class AddDishWindow:
         self.page = 1
         self.maxPage = math.ceil(len(WESTERN_DISHES) / 12)
 
-        PrevPage(WIDTH * 78 / 100, HEIGHT * 30 / 100, 50, 50, self, group)
-        self.pageDisplay = Numbers(self, "page", WIDTH * 77/100, HEIGHT * 38/100, WHITE, 24, self.group)
-        Text("/", WIDTH * 78/100, HEIGHT * 38/100, WHITE, 32, self.group, CENTER)
-        self.maxPageDisplay = Numbers(self, "maxPage", WIDTH * 79/100, HEIGHT * 38 / 100, WHITE, 24, self.group, LEFT)
-        NextPage(WIDTH * 78 / 100, HEIGHT * 46 / 100, 50, 50, self, group)
+        PrevPage(SCREEN_WIDTH * 78 / 100, SCREEN_HEIGHT * 30 / 100, 50, 50, self, group)
+        self.pageDisplay = Numbers(self, "page", SCREEN_WIDTH * 77 / 100, SCREEN_HEIGHT * 38 / 100, WHITE, 24, self.group)
+        Text("/", SCREEN_WIDTH * 78 / 100, SCREEN_HEIGHT * 38 / 100, WHITE, 32, self.group, CENTER)
+        self.maxPageDisplay = Numbers(self, "maxPage", SCREEN_WIDTH * 79 / 100, SCREEN_HEIGHT * 38 / 100, WHITE, 24, self.group, LEFT)
+        NextPage(SCREEN_WIDTH * 78 / 100, SCREEN_HEIGHT * 46 / 100, 50, 50, self, group)
 
         self.dishScreen = DishScreen(self.page, self.cuisine, self, self.evManager, self.popUp, group)
 
-        x = WIDTH * 25 / 100
-        y = HEIGHT * 17 / 100
+        x = SCREEN_WIDTH * 25 / 100
+        y = SCREEN_HEIGHT * 17 / 100
 
         for cuisine in CUISINES_LIST:
             CuisineTab(x, y, cuisine, self, self.evManager, group)
@@ -2084,7 +2083,7 @@ class DishScreen(pygame.sprite.Sprite):
         self.image = pygame.Surface((570, 350))
         self.image.fill(WHITE)
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 53 / 100, HEIGHT * 36 / 100)
+        self.rect.center = (SCREEN_WIDTH * 53 / 100, SCREEN_HEIGHT * 36 / 100)
 
         self.cuisine = cuisine
         if self.cuisine == "Western":
@@ -2101,8 +2100,8 @@ class DishScreen(pygame.sprite.Sprite):
         self.window.maxPage = math.ceil(len(self.dishList) / 12)
         self.window.maxPageDisplay.Update()
 
-        x = WIDTH * 42 / 100
-        y = HEIGHT * 17 / 100
+        x = SCREEN_WIDTH * 42 / 100
+        y = SCREEN_HEIGHT * 17 / 100
         baseIndex = (self.page - 1) * 12
         for i in range(12):
             try:
@@ -2113,7 +2112,7 @@ class DishScreen(pygame.sprite.Sprite):
                     y += 55
                     if i == 5:
                         x += 280
-                        y = HEIGHT * 17 / 100
+                        y = SCREEN_HEIGHT * 17 / 100
 
             except IndexError:
                 break
@@ -2168,8 +2167,8 @@ class DishDetail(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, group)
         self.group = group
         self.dish = dish
-        self.x = WIDTH * 9 / 100
-        self.y = HEIGHT * 36.5 / 100
+        self.x = SCREEN_WIDTH * 9 / 100
+        self.y = SCREEN_HEIGHT * 36.5 / 100
         self.w = 230
         self.h = 380
 
@@ -2317,8 +2316,8 @@ class MarketButton(pygame.sprite.Sprite):
         self.name = "Market Window"
         self.group = group
 
-        self.x = WIDTH * 50/100
-        self.y = HEIGHT * 85.5/100
+        self.x = SCREEN_WIDTH * 50 / 100
+        self.y = SCREEN_HEIGHT * 85.5 / 100
         self.image = pygame.Surface((40, 40))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
@@ -2362,8 +2361,8 @@ class MarketWindow:
         self.window = MainWindow(GREEN, self.evManager, self.group)
         self.tab = range(5)
 
-        x = WIDTH * 25 / 100
-        y = HEIGHT * 15 / 100
+        x = SCREEN_WIDTH * 25 / 100
+        y = SCREEN_HEIGHT * 15 / 100
         qualityNumber = 1
 
         self.page = 1
@@ -2372,11 +2371,11 @@ class MarketWindow:
 
         # Instantiate Sprite in the window.
         self.ingredientScreen = IngredientScreen(self.page, self, self.evManager, self.group)
-        PrevPage(WIDTH * 75 / 100, HEIGHT * 30 / 100, 50, 50, self, self.group)
-        self.pageDisplay = Numbers(self, "page", WIDTH * 74 / 100, HEIGHT * 38 / 100, WHITE, 24, self.group)
-        Text("/", WIDTH * 75 / 100, HEIGHT * 38 / 100, WHITE, 32, self.group, CENTER)
-        Numbers(self, "maxPage", WIDTH * 76 / 100, HEIGHT * 38 / 100, WHITE, 24, self.group, LEFT)
-        NextPage(WIDTH * 75 / 100, HEIGHT * 46 / 100, 50, 50, self, self.group)
+        PrevPage(SCREEN_WIDTH * 75 / 100, SCREEN_HEIGHT * 30 / 100, 50, 50, self, self.group)
+        self.pageDisplay = Numbers(self, "page", SCREEN_WIDTH * 74 / 100, SCREEN_HEIGHT * 38 / 100, WHITE, 24, self.group)
+        Text("/", SCREEN_WIDTH * 75 / 100, SCREEN_HEIGHT * 38 / 100, WHITE, 32, self.group, CENTER)
+        Numbers(self, "maxPage", SCREEN_WIDTH * 76 / 100, SCREEN_HEIGHT * 38 / 100, WHITE, 24, self.group, LEFT)
+        NextPage(SCREEN_WIDTH * 75 / 100, SCREEN_HEIGHT * 46 / 100, 50, 50, self, self.group)
 
         for tab in self.tab:
             imageName = str(qualityNumber) + "quality.png"
@@ -2430,14 +2429,14 @@ class IngredientScreen(pygame.sprite.Sprite):
         self.image = pygame.image.load(os.path.join(imgFolder, self.imageName)).convert()
         self.group = group
         self.rect = self.image.get_rect()
-        self.rect.center = (WIDTH * 46.5 / 100, HEIGHT * 38 / 100)
+        self.rect.center = (SCREEN_WIDTH * 46.5 / 100, SCREEN_HEIGHT * 38 / 100)
         self.ingredientContainers = []
 
         self.window = window
         self.page = page - 1
 
-        x = WIDTH * 34 / 100
-        y = HEIGHT * 22.5 / 100
+        x = SCREEN_WIDTH * 34 / 100
+        y = SCREEN_HEIGHT * 22.5 / 100
         baseIndex = self.page * 10
         for i in range(10):
             try:
@@ -2447,7 +2446,7 @@ class IngredientScreen(pygame.sprite.Sprite):
                 y += 55
                 if i == 4:
                     x += 315
-                    y = HEIGHT * 22.5 / 100
+                    y = SCREEN_HEIGHT * 22.5 / 100
             except IndexError:
                 break
 
@@ -2566,8 +2565,8 @@ class CartScreen(pygame.sprite.Sprite):
         self.evManager = evManager
 
         pygame.sprite.Sprite.__init__(self, group)
-        self.x = WIDTH * 85 / 100
-        self.y = HEIGHT * 38 / 100
+        self.x = SCREEN_WIDTH * 85 / 100
+        self.y = SCREEN_HEIGHT * 38 / 100
         self.group = group
         self.parent = parent
         self.image = pygame.Surface((190, 300))
@@ -2705,8 +2704,8 @@ class TrendNews(pygame.sprite.Sprite):
         self.trend = None
         self.group = group
 
-        x = WIDTH * 50/100
-        y = HEIGHT * 68/100
+        x = SCREEN_WIDTH * 50 / 100
+        y = SCREEN_HEIGHT * 68 / 100
         self.image = pygame.Surface((1270, 40))
         self.image.fill(PINK)
         self.rect = self.image.get_rect()
@@ -2715,8 +2714,8 @@ class TrendNews(pygame.sprite.Sprite):
         self.dynamic = None
 
     def Notify(self, event):
-        x = WIDTH * 50 / 100
-        y = HEIGHT * 68 / 100
+        x = SCREEN_WIDTH * 50 / 100
+        y = SCREEN_HEIGHT * 68 / 100
         if isinstance(event, SetTrendEvent):
             self.trend = event.trend
             if self.trend in DISHES_LIST:
