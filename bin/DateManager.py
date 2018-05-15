@@ -1,5 +1,6 @@
 from bin import *
 
+
 class DateManager:
     def __init__(self, evManager):
         self.evManager = evManager
@@ -7,12 +8,24 @@ class DateManager:
 
         self.deltaDay = 0 # To calculate weeks
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.evManager = Main.evManager
+        self.evManager.RegisterListener(self)
+        print(self.evManager)
+
     def NewMonth(self):
         Date.day = 1
         Date.month += 1
+        Date.monthNumber += 1
         if Date.month == 13:
             Date.month = 1
             Date.year += 1
+            Date.yearNumber += 1
 
             ev = NewYearEvent()
             self.evManager.Post(ev)

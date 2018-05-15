@@ -4,20 +4,24 @@ import configparser
 import copy
 
 
-
 class Game:
-    def __init__(self, evManager):
+    def __init__(self, folder, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
+        self.state = STATE_PAUSED
+
+        self.folder = folder
+
+        self.date = DateManager(self.evManager)
 
         # Human player exclusive modules
-        self.finance = Finance(self.evManager)
-        self.marketing = MarketingManager(self.evManager)
+        self.cart = Cart(self.evManager)
+        self.finance = Finance(self, self.evManager)
+        self.marketing = Marketing(self.evManager)
 
         self.trendManager = TrendManager(self.evManager)
         self.customerManager = CustomerManager(self.evManager)
         self.dishManager = DishManager(self.evManager)
-        self.cart = Cart(self.evManager)
 
         self.players = [Player(self, self.evManager),
                         AI("Deen's Cafe", CUISINE_WESTERN, self, self.evManager),
@@ -35,8 +39,21 @@ class Game:
                 player.marketing = self.marketing
                 player.inventory.evManager = self.evManager
 
+    def __enter__(self):
+        self.state = STATE_STARTED
         ev = GameStartedEvent(self.players)
         self.evManager.Post(ev)
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return True
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
 
 
     def Notify(self, event):
@@ -72,6 +89,15 @@ class Player:
         self.restaurantLvl = 1
         self.restaurantCapacity = 100
         self.menu.dishLimit = 4 * self.restaurantLvl
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.evManager = Main.evManager
+        self.evManager.RegisterListener(self)
 
     def SpendMoney(self, value, category):
         if value > self.cash:
@@ -125,14 +151,14 @@ class Player:
         else:
             grossImpression = self.menu.ImpressionPoints()
 
-        impression = grossImpression * (1 + restaurantModifier + marketingModifier + cuisineDiversityModifer)
+        impression = math.floor(grossImpression * (1 + restaurantModifier + marketingModifier + cuisineDiversityModifer))
 
         # Impression retention bonus
         if impression > self.impressionRetention:
             self.impressionRetention = impression
         else:
             difference = self.impressionRetention - impression
-            retention = math.floor(difference * 0.25)
+            retention = math.floor(difference * 0.75)
             impression += retention
             self.impressionRetention -= retention
 
@@ -186,7 +212,8 @@ class Player:
         totalSatisfaction -= unfedCustomers * 200
 
         # Customer service modifiers
-        insufficientStaff = customers - (len(self.waiters) * 30)
+        insufficientStaff = customers - (len(self.waiters) * CUSTOMERS_PER_WAITER)
+        insufficientStaff += customers - (len(self.chefs) * CUSTOMERS_PER_CHEF)
         if insufficientStaff > 0:
             totalSatisfaction -= insufficientStaff ** 2
 
@@ -427,8 +454,6 @@ class AI(Player):
             quality = 5
             self.menu.AddDish( dish, math.floor(dish.baseCost * quality * (1 + ((quality - 1) / 10))) )
 
-
-
     def EvaluateInventory(self, customers):
         dishList = self.dishManager.DishesByDemand(self, customers, estimate=True)
         ingredientsList = []
@@ -472,7 +497,6 @@ class AI(Player):
 
         self.SpendMoney(price)
 
-
     def ProcessDay(self, customers):
         self.customers = customers
         
@@ -481,6 +505,12 @@ class AI(Player):
 
         ingredientList = self.EvaluateInventory(customers)
         self.PurchaseIngredients(ingredientList)
+
+        if customers > len(self.chefs) * CUSTOMERS_PER_CHEF:
+            self.HireChef(3, self.cuisine)
+
+        if customers > len(self.waiters) * CUSTOMERS_PER_WAITER:
+            self.HireWaiter(3)
 
 
     def Notify(self, event):
@@ -496,6 +526,15 @@ class Staff:
 
         self.salary = 0
         self.deltaDay = 0
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.evManager = Main.evManager
+        self.evManager.RegisterListener(self)
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
@@ -529,6 +568,14 @@ class Menu:
         # Dishes stored as dictionary of 'dish' and 'price'
         self.dishes = []
         self.dishLimit = 0
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.evManager = Main.evManager
 
     def AddDish(self, dish, price):
         dishDict = dict(dish=dish, price=price, satisfaction=0)
@@ -600,10 +647,20 @@ class Ingredient:
 
 class Inventory:
     def __init__ (self):
-        self.evManager = None
+        self.evManager = None # No event manager for AI Inventory
 
         self.batches = []
         self.expiredList = []
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        if self.evManager:
+            self.evManager = Main.evManager
+            print(str(self.evManager) + "hello")
 
     def Stock(self):
         stock = []
@@ -704,6 +761,15 @@ class Batch:
         self.ingredients = []
         self.age = 0
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.evManager = Main.evManager
+        self.evManager.RegisterListener(self)
+
     def IngredientStock(self, ingredient):
         stock = [0, 0, 0, 0, 0] # Initialise based on quality 1 to 5
         for i in self.ingredients:
@@ -755,6 +821,17 @@ class Cart:
 
         self.cart = []
         self.totalPrice = 0
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.evManager = Main.evManager
+        print(self.evManager)
+        self.evManager.RegisterListener(self)
+
 
     def AddToCart(self, ingredient, quality, amount):
         new = True

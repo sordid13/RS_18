@@ -2,7 +2,7 @@ from bin import *
 import configparser
 
 
-class MarketingManager:
+class Marketing:
     def __init__(self, evManager):
         self.evManager = evManager
 
@@ -19,6 +19,15 @@ class MarketingManager:
             desc = config.get(section, "desc")
 
             MARKETING_LIST.append(MarketingBonus(name, modifier, cost, duration, desc))
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.evManager = Main.evManager
+        print(self.evManager)
 
     # return value total bonus
     # list of marketing player owns
@@ -59,6 +68,17 @@ class MarketingBonus:
         self.desc = desc
 
         self.dayPassed = 0
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        try:
+            self.evManager.RegisterListener(self) # Only for activated MarketingBonus
+        except AttributeError:
+            pass
 
     def Activate(self, parent, evManager):
         self.parent = parent

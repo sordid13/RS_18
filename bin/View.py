@@ -776,7 +776,6 @@ class RivalWindow:
 
         x = WIDTH/2
         y = HEIGHT/2
-        self.customersNumber = 100
 
         RivalScreen(x, y, self.parent.currentRival, self.evManager, self.group)
 

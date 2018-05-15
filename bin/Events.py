@@ -14,6 +14,16 @@ class QuitEvent:
         self.name = "Quit Event"
 
 
+class NewGameRequestEvent:
+    def __init__(self):
+        self.name = "New Game Request Event"
+
+
+class SaveGameRequestEvent:
+    def __init__(self):
+        self.name = "Save Game Request Event"
+
+
 class GameStartedEvent:
     def __init__(self, players):
         self.name = "Game Started Event"
@@ -23,6 +33,11 @@ class GameStartedEvent:
 class GameScreenLoadedEvent:
     def __init__(self):
         self.name = "Game Screen Loaded Event"
+
+
+class SaveGameEvent:
+    def __init__(self):
+        self.name = "Save Game Event"
 
 
 class NewDayEvent:
