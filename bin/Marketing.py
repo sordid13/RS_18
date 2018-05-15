@@ -21,11 +21,13 @@ class Marketing:
             MARKETING_LIST.append(MarketingBonus(name, modifier, cost, duration, desc))
 
     def __getstate__(self):
+        self.marketingList = MARKETING_LIST
         state = self.__dict__.copy()
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
+        MARKETING_LIST.extend(self.marketingList)
         self.evManager = Main.evManager
         print(self.evManager)
 

@@ -4,4 +4,3 @@ year = 2018
 dayNumber = 0
 monthNumber = 0
 yearNumber = 0
-date = day, month, year
