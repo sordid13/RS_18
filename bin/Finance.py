@@ -3,12 +3,12 @@ import json
 
 
 class Finance:
-    def __init__(self, game, evManager):
+    def __init__(self, folder, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
         self.player = None # To be assigned after init
 
-        self.folder = game.folder
+        self.folder = folder
 
         try:
             with open(self.folder + '/cashFlow.json', 'r') as json_file:

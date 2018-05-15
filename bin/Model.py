@@ -18,7 +18,7 @@ class Game:
 
         # Human player exclusive modules
         self.cart = Cart(self.evManager)
-        self.finance = Finance(self, self.evManager)
+        self.finance = Finance(self.folder, self.evManager)
         self.marketing = Marketing(self.evManager)
 
         self.trendManager = TrendManager(self.evManager)
