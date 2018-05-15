@@ -14,9 +14,30 @@ class QuitEvent:
         self.name = "Quit Event"
 
 
-class GameStartedEvent:
+class NewGameRequestEvent:
     def __init__(self):
+        self.name = "New Game Request Event"
+
+
+class SaveGameRequestEvent:
+    def __init__(self):
+        self.name = "Save Game Request Event"
+
+
+class GameStartedEvent:
+    def __init__(self, players):
         self.name = "Game Started Event"
+        self.players = players
+
+
+class GameScreenLoadedEvent:
+    def __init__(self):
+        self.name = "Game Screen Loaded Event"
+
+
+class SaveGameEvent:
+    def __init__(self):
+        self.name = "Save Game Event"
 
 
 class NewDayEvent:
@@ -40,13 +61,25 @@ class NewYearEvent:
 
 
 class SalesReportEvent:
-    def __init__(self, player, customers, unfedCustomers, revenue, satisfaction):
+    def __init__(self, player, dishesServed, customers, unfedCustomers, revenue, satisfaction):
         self.name = "Sales Report Event"
         self.player = player
+        self.dishesServed = dishesServed
         self.customers = customers
         self.unfedCustomers = unfedCustomers
         self.revenue = revenue
         self.satisfaction = satisfaction
+
+
+class RequestFinanceWindowEvent:
+    def __init__(self, fiscalTerm):
+        self.name = "Request Finance Window"
+        self.fiscalTerm = fiscalTerm
+
+class UpdateFinanceWindowEvent:
+    def __init__(self, cashBook):
+        self.name = "Open Finance Window"
+        self.cashBook = cashBook
 
 
 class MenuUpdateEvent:
@@ -132,17 +165,19 @@ class InventoryUpdateEvent:
         self.inventory = inventory
 
 
-class UpdateItemDetailEvent:
+class RequestIngredientAmountEvent:
     def __init__(self, ingredient):
         self.name = "Update Item Detail"
         self.ingredient = ingredient
 
 
-class ReturnAmountEvent:
-    def __init__(self, amount, expire):
+class ReturnIngredientAmountEvent:
+    def __init__(self, ingredient, amount, expire):
         self.name = "Return Amount Event"
+        self.ingredient = ingredient
         self.amount = amount
         self.expire = expire
+
 
 class GUIOpenHireStaffEvent:
     def __init__(self):
@@ -188,6 +223,13 @@ class HireWaiterEvent:
         self.name = "Hire Waiter Event"
         self.level = level
 
+
+class FireStaffEvent:
+    def __init__(self, staff):
+        self.name = "Fire Staff Event"
+        self.staff = staff
+
+
 class NoChefEvent:
     def __init__(self):
         self.name = "No Chef Event"
@@ -195,17 +237,35 @@ class NoChefEvent:
 
 #UPGRADE RELATED EVENT
 class UpgradeLevelEvent:
-    def __init__(self, level, cost):
+    def __init__(self):
         self.name = "Upgrade Level Event"
-        self.level = level
-        self.cost = cost
 
 
 class UpgradeCapacityEvent:
-    def __init__(self, capacity, cost):
+    def __init__(self):
         self.name = "Upgrade Capacity Event"
+
+
+class RestaurantUpdateEvent:
+    def __init__(self, level, capacity, operatingCost, upgrades):
+        self.name = "Restaurant Update Event"
+        self.level = level
         self.capacity = capacity
-        self.cost = cost
+        self.operatingCost = operatingCost
+        self.upgrades = upgrades
+
+
+#MARKETING RELATED EVENT
+class AddMarketingEvent:
+    def __init__(self, bonus):
+        self.name = "Add Marketing Event"
+        self.bonus = bonus
+
+
+class MarketingUpdateEvent:
+    def __init__(self, bonuses):
+        self.name = "Marketing Update Event"
+        self.bonuses = bonuses
 
 
 #Controller Related Event
@@ -215,11 +275,10 @@ class LeftClickEvent:
         self.pos = pos
 
         
-class CashFlowUpdateEvent:
-    def __init__(self, value, category):
+class CashUpdateEvent:
+    def __init__(self, cash):
         self.name = "Cash Flow Update Event"
-        self.value = value
-        self.category = category
+        self.cash = cash
 
 
 class ShiftLeftClickEvent:
@@ -234,11 +293,18 @@ class CtrlLeftClickEvent:
         self.pos = pos
 
 
+class MouseHoverEvent:
+    def __init__(self, pos):
+        self.name = "Mouse Hover Event"
+        self.pos = pos
+
+
 class GUIRequestWindowEvent:
     def __init__(self, window, draw):
         self.name = "GUI Request Window Event"
         self.window = window
         self.draw = draw
+
 
 class GUIRequestWindowRedrawEvent:
     def __init__(self, window, draw):
@@ -246,7 +312,34 @@ class GUIRequestWindowRedrawEvent:
         self.window = window
         self.draw = draw
 
+
+class GUIRequestPopUpEvent:
+    def __init__(self, popUp, draw):
+        self.name = "GUI Request Pop Up Event"
+        self.popUp = popUp
+        self.draw = draw
+
+
+class GUIRequestPopUpRedrawEvent:
+    def __init__(self, popUp, draw):
+        self.name = "GUI Request Pop Up Redraw Event"
+        self.popUp = popUp
+        self.draw = draw
+
+
 class GUICloseWindowEvent:
     def __init__(self, group):
         self.name = "GUI Close Window Event"
         self.group = group
+
+
+class SetTrendEvent:
+    def __init__(self, trend):
+        self.name = "Set Trend Event"
+        self.trend = trend
+
+
+class GUITooltipEvent:
+    def __init__(self, text):
+        self.name = "GUI Tooltip Event"
+        self.text = text

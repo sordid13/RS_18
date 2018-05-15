@@ -1,16 +1,31 @@
 from bin import *
 
+
 class DateManager:
     def __init__(self, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
 
+        self.deltaDay = 0 # To calculate weeks
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.evManager = Main.evManager
+        self.evManager.RegisterListener(self)
+        print(self.evManager)
+
     def NewMonth(self):
         Date.day = 1
         Date.month += 1
+        Date.monthNumber += 1
         if Date.month == 13:
             Date.month = 1
             Date.year += 1
+            Date.yearNumber += 1
 
             ev = NewYearEvent()
             self.evManager.Post(ev)
@@ -26,6 +41,7 @@ class DateManager:
         if isinstance(event, NewDayEvent):
             Date.day += 1
             Date.dayNumber += 1
+            self.deltaDay += 1
 
             if Date.day == 29:
                 if Date.month == 2 and not self.LeapYear():
@@ -38,5 +54,11 @@ class DateManager:
                     self.NewMonth()
             elif Date.day == 32:
                 self.NewMonth()
+
+            if self.deltaDay % 7 == 0:
+                self.deltaDay = 0
+
+                ev = NewWeekEvent()
+                self.evManager.Post(ev)
 
             print(Date.day, Date.month, Date.year)

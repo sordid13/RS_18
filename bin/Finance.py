@@ -1,20 +1,14 @@
 from bin import *
 import json
-import matplotlib
-import pygame
-import pylab
-import matplotlib.backends.backend_agg as agg
-from pygame.locals import *
-matplotlib.use("Agg")
 
 
 class Finance:
-    def __init__(self, player, evManager):
+    def __init__(self, game, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
-        self.player = player
+        self.player = None # To be assigned after init
 
-        self.folder = "data"
+        self.folder = game.folder
 
         try:
             with open(self.folder + '/cashFlow.json', 'r') as json_file:
@@ -25,17 +19,28 @@ class Finance:
                 json.dump(key, json_file)
                 json_file.close()
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.evManager = Main.evManager
+        self.evManager.RegisterListener(self)
+        print(self.evManager)
+
     def NewDay(self):
         cashFlow = dict()
-        cashFlow[CASH] = self.player.cash
+
         cashFlow[SALES] = 0
         cashFlow[INVENTORY] = 0
-        cashFlow[MARKETING] = 0
+        cashFlow[FIN_MARKETING] = 0
         cashFlow[RENOVATION] = 0
         cashFlow[SALARY] = 0
         cashFlow[MISC] = 0
-        cashFlow['Expense'] = 0
+        cashFlow[FIN_CASH] = self.player.cash
         cashFlow['Profit'] = 0
+        cashFlow['Expense'] = 0
         cashFlow['Day'] = Date.day
         cashFlow['Month'] = Date.month
         cashFlow['Year'] = Date.year
@@ -51,15 +56,15 @@ class Finance:
 
     def NewMonth(self):
         cashFlow = dict()
-        cashFlow[CASH] = self.player.cash
         cashFlow[SALES] = 0
         cashFlow[INVENTORY] = 0
-        cashFlow[MARKETING] = 0
+        cashFlow[FIN_MARKETING] = 0
         cashFlow[RENOVATION] = 0
         cashFlow[SALARY] = 0
         cashFlow[MISC] = 0
-        cashFlow['Expense'] = 0
+        cashFlow[FIN_CASH] = self.player.cash
         cashFlow['Profit'] = 0
+        cashFlow['Expense'] = 0
         cashFlow['Month'] = Date.month
         cashFlow['Year'] = Date.year
 
@@ -74,15 +79,15 @@ class Finance:
 
     def NewYear(self):
         cashFlow = dict()
-        cashFlow[CASH] = self.player.cash
         cashFlow[SALES] = 0
         cashFlow[INVENTORY] = 0
-        cashFlow[MARKETING] = 0
+        cashFlow[FIN_MARKETING] = 0
         cashFlow[RENOVATION] = 0
         cashFlow[SALARY] = 0
         cashFlow[MISC] = 0
-        cashFlow['Expense'] = 0
+        cashFlow[FIN_CASH] = self.player.cash
         cashFlow['Profit'] = 0
+        cashFlow['Expense'] = 0
         cashFlow['Year'] = Date.year
 
         with open(self.folder + '/cashFlow.json', 'r') as json_file:
@@ -94,6 +99,11 @@ class Finance:
             json.dump(cashDict, json_file, indent=2)
         json_file.close()
 
+    def CashFlow(self, value, category):
+        self.CashFlowDay(value, category)
+        self.CashFlowMonth(value, category)
+        self.CashFlowYear(value, category)
+
     #   This edit the current day's dictionary. Make sure the entry would be corresponding!! Ask Hakeem,
     def CashFlowDay(self, value, category):
 
@@ -101,112 +111,117 @@ class Finance:
             cashFlow = json.load(json_file)
         json_file.close()
 
-        for i in range(0, len(cashFlow['day'])):
-            if cashFlow['daily'][i]['Day'] == Date.day and cashFlow['daily'][i]['Month'] == Date.month and\
-                    cashFlow['daily'][i]['Year'] == Date.year:
+        i = Date.dayNumber
 
-                with open(self.folder + '/cashFlow.json', 'w') as json_file:
-                    cashFlow = json.load(json_file)
+        with open(self.folder + '/cashFlow.json', 'w') as json_file:
 
-                cashFlow['daily'][i][CASH] = self.player.cash
-                cashFlow['daily'][i][category] += value
+            cashFlow['daily'][i][FIN_CASH] = self.player.cash
+            cashFlow['daily'][i][category] += value
 
-                json_file.close()
+            if category in [INVENTORY, FIN_MARKETING, RENOVATION, SALARY, MISC]:
+                cashFlow['daily'][i]['Expense'] += value
 
-    def CashFlowMonth(self, category, value):
+            cashFlow['daily'][i]['Profit'] = cashFlow['daily'][i]['Sales'] - cashFlow['daily'][i]['Expense']
+
+            json.dump(cashFlow, json_file, indent=2)
+        json_file.close()
+
+    def CashFlowMonth(self, value, category):
         with open(self.folder + '/cashFlow.json', 'r') as json_file:
             cashFlow = json.load(json_file)
         json_file.close()
 
-        for i in range(0, len(cashFlow['month'])):
-            if cashFlow['monthly'][i]['Month'] == Date.month and cashFlow['monthly'][i]['Year'] == Date.year:
-                with open(self.folder + '/cashFlow.json', 'w') as json_file:
-                    cashFlow = json.load(json_file)
+        i = Date.monthNumber
 
-                cashFlow['monthly'][i][CASH] = self.player.cash
-                cashFlow['monthly'][i][category] += value
+        with open(self.folder + '/cashFlow.json', 'w') as json_file:
 
-                json_file.close()
+            cashFlow['monthly'][i][FIN_CASH] = self.player.cash
+            cashFlow['monthly'][i][category] += value
 
-    def CashFlowYear(self, category, value):
+            if category in [INVENTORY, FIN_MARKETING, RENOVATION, SALARY, MISC]:
+                cashFlow['monthly'][i]['Expense'] += value
+
+            cashFlow['monthly'][i]['Profit'] = cashFlow['monthly'][i]['Sales'] - cashFlow['monthly'][i]['Expense']
+
+            json.dump(cashFlow, json_file, indent=2)
+        json_file.close()
+
+    def CashFlowYear(self, value, category):
         with open(self.folder + '/cashFlow.json', 'r') as json_file:
             cashFlow = json.load(json_file)
         json_file.close()
 
-        for i in range(0, len(cashFlow['year'])):
-            if cashFlow['yearly'][i]['Year'] == Date.year:
-                with open(self.folder + '/cashFlow.json', 'w') as json_file:
-                    cashFlow = json.load(json_file)
+        i = Date.yearNumber
 
-                cashFlow['yearly'][i][CASH] = self.player.cash
-                cashFlow['yearly'][i][category] += value
+        with open(self.folder + '/cashFlow.json', 'w') as json_file:
 
-                json_file.close()
+            cashFlow['yearly'][i][FIN_CASH] = self.player.cash
+            cashFlow['yearly'][i][category] += value
 
-    """def Graph(self, category, type):
-        graph = []
-        with open(self.folder + '/cashFlow.json', 'r') as json_file:
-            cashFlow = json.load(json_file)
+            if category in [INVENTORY, FIN_MARKETING, RENOVATION, SALARY, MISC]:
+                cashFlow['yearly'][i]['Expense'] += value
 
-        for dictionary in cashFlow[type]:
-            graph.append(dictionary[category])
+            cashFlow['yearly'][i]['Profit'] = cashFlow['yearly'][i]['Sales'] - cashFlow['yearly'][i]['Expense']
+
+            json.dump(cashFlow, json_file, indent=2)
         json_file.close()
 
-        fig = pylab.figure(figsize=[6, 6],  # Inches width * height
-                           dpi=100,  # 100 dots per inch, so the resulting buffer is 400x400 pixels
-                           )
-        ax = fig.gca()
-        ax.plot([10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000])
-        ax.plot([12000, 10222, 13422, 11111, 13333, 12345, 12314, 11345])
-        ax.plot(graph)
-        canvas = agg.FigureCanvasAgg(fig)
-        canvas.draw()
-        renderer = canvas.get_renderer()
-        raw_data = renderer.tostring_rgb()
-
-        pygame.init()
-        # width *height
-        window = pygame.display.set_mode((600, 600), DOUBLEBUF)
-        screen = pygame.display.get_surface()
-
-        size = canvas.get_width_height()
-
-        surf = pygame.image.fromstring(raw_data, size, "RGB")
-        screen.blit(surf, (0, 0))
-        pygame.display.flip()"""
-
-    def CashBook(self, fiscalTerm, type):
+    def CashBook(self, fiscalTerm):
         with open(self.folder + '/cashFlow.json', 'r') as json_file:
             cashFlow = json.load(json_file)
         json_file.close()
+        statementList = []
 
         if fiscalTerm == DAILY:
-            for book in cashFlow[fiscalTerm]:
-                if book['Day'] == date.day and book['Month'] == date.month and book['Year'] == date.year:
-                    i = cashFlow[fiscalTerm].index(book)
+            i = Date.dayNumber
 
-                    statementList = [book, cashFlow[fiscalTerm][i - 1], cashFlow[fiscalTerm][i - 2]]
+            if len(cashFlow[fiscalTerm]) >= 3:
+                statementList.append(cashFlow[fiscalTerm][i])
+                statementList.append(cashFlow[fiscalTerm][i - 1])
+                statementList.append(cashFlow[fiscalTerm][i - 2])
 
-        if fiscalTerm == MONTHLY:
-            for book in cashFlow[fiscalTerm]:
-                if book['Month'] == date.month and book['Year'] == date.year:
-                    i = cashFlow[fiscalTerm].index(book)
+            else:
+                for x in range(len(cashFlow[fiscalTerm])):
+                    statementList.append(cashFlow[fiscalTerm][i - x])
 
-                    statementList = [book, cashFlow[fiscalTerm][i - 1], cashFlow[fiscalTerm][i - 2]]
 
-        if fiscalTerm == YEARLY:
-            for book in cashFlow[fiscalTerm]:
-                if book['Month'] == date.month and book['Year'] == date.year:
-                    i = cashFlow[fiscalTerm].index(book)
+        elif fiscalTerm == MONTHLY:
+            i = Date.monthNumber
 
-                    statementList = [book, cashFlow[fiscalTerm][i - 1], cashFlow[fiscalTerm][i - 2]]
+            if len(cashFlow[fiscalTerm]) >= 3:
+                statementList.append(cashFlow[fiscalTerm][i])
+                statementList.append(cashFlow[fiscalTerm][i - 1])
+                statementList.append(cashFlow[fiscalTerm][i - 2])
+
+            else:
+                for x in range(len(cashFlow[fiscalTerm])):
+                    statementList.append(cashFlow[fiscalTerm][i - x])
+
+        elif fiscalTerm == YEARLY:
+            i = Date.yearNumber
+
+            if len(cashFlow[fiscalTerm]) >= 3:
+                statementList.append(cashFlow[fiscalTerm][i])
+                statementList.append(cashFlow[fiscalTerm][i - 1])
+                statementList.append(cashFlow[fiscalTerm][i - 2])
+
+            else:
+                for x in range(len(cashFlow[fiscalTerm])):
+                    statementList.append(cashFlow[fiscalTerm][i - x])
+
+        return statementList
 
     # get daily or monthly or yearly
     # check date
     # pass the value in the dict
 
     def Notify(self, event):
-        if isinstance(event, NewDayEvent):
+        if isinstance(event, GameStartedEvent):
+            self.NewDay()
+            self.NewMonth()
+            self.NewYear()
+
+        elif isinstance(event, NewDayEvent):
             self.NewDay()
             """self.Graph(CASH, "daily")"""
 
@@ -216,7 +231,6 @@ class Finance:
         elif isinstance(event, NewYearEvent):
             self.NewYear()
 
-        elif isinstance(event, CashFlowUpdateEvent):
-            self.CashFlowDay(self, event.category)
-            self.CashFlowMonth(self, event.category)
-            self.CashFlowYear(self, event.category)
+        elif isinstance(event, RequestFinanceWindowEvent):
+            ev = UpdateFinanceWindowEvent(self.CashBook(event.fiscalTerm))
+            self.evManager.Post(ev)
