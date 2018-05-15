@@ -6,9 +6,22 @@ class DateManager:
         self.evManager = evManager
         self.evManager.RegisterListener(self)
 
+        Date.day = 1
+        Date.month = 1
+        Date.year = 2018
+        Date.dayNumber = 0
+        Date.monthNumber = 0
+        Date.yearNumber = 0
+
         self.deltaDay = 0 # To calculate weeks
 
     def __getstate__(self):
+        self.day = Date.day
+        self.month = Date.month
+        self.year = Date.year
+        self.dayNumber = Date.dayNumber
+        self.monthNumber = Date.monthNumber
+        self.yearNumber = Date.yearNumber
         state = self.__dict__.copy()
         return state
 
@@ -17,6 +30,12 @@ class DateManager:
         self.evManager = Main.evManager
         self.evManager.RegisterListener(self)
         print(self.evManager)
+        Date.day = self.day
+        Date.month = self.month
+        Date.year = self.year
+        Date.dayNumber = self.dayNumber
+        Date.monthNumber = self.monthNumber
+        Date.yearNumber = self.yearNumber
 
     def NewMonth(self):
         Date.day = 1

@@ -32,12 +32,12 @@ class Finance:
     def NewDay(self):
         cashFlow = dict()
 
-        cashFlow[SALES] = 0
-        cashFlow[INVENTORY] = 0
+        cashFlow[FIN_SALES] = 0
+        cashFlow[FIN_INVENTORY] = 0
         cashFlow[FIN_MARKETING] = 0
-        cashFlow[RENOVATION] = 0
-        cashFlow[SALARY] = 0
-        cashFlow[MISC] = 0
+        cashFlow[FIN_RENOVATION] = 0
+        cashFlow[FIN_SALARY] = 0
+        cashFlow[FIN_MISC] = 0
         cashFlow[FIN_CASH] = self.player.cash
         cashFlow['Profit'] = 0
         cashFlow['Expense'] = 0
@@ -56,12 +56,12 @@ class Finance:
 
     def NewMonth(self):
         cashFlow = dict()
-        cashFlow[SALES] = 0
-        cashFlow[INVENTORY] = 0
+        cashFlow[FIN_SALES] = 0
+        cashFlow[FIN_INVENTORY] = 0
         cashFlow[FIN_MARKETING] = 0
-        cashFlow[RENOVATION] = 0
-        cashFlow[SALARY] = 0
-        cashFlow[MISC] = 0
+        cashFlow[FIN_RENOVATION] = 0
+        cashFlow[FIN_SALARY] = 0
+        cashFlow[FIN_MISC] = 0
         cashFlow[FIN_CASH] = self.player.cash
         cashFlow['Profit'] = 0
         cashFlow['Expense'] = 0
@@ -79,12 +79,12 @@ class Finance:
 
     def NewYear(self):
         cashFlow = dict()
-        cashFlow[SALES] = 0
-        cashFlow[INVENTORY] = 0
+        cashFlow[FIN_SALES] = 0
+        cashFlow[FIN_INVENTORY] = 0
         cashFlow[FIN_MARKETING] = 0
-        cashFlow[RENOVATION] = 0
-        cashFlow[SALARY] = 0
-        cashFlow[MISC] = 0
+        cashFlow[FIN_RENOVATION] = 0
+        cashFlow[FIN_SALARY] = 0
+        cashFlow[FIN_MISC] = 0
         cashFlow[FIN_CASH] = self.player.cash
         cashFlow['Profit'] = 0
         cashFlow['Expense'] = 0
@@ -118,7 +118,7 @@ class Finance:
             cashFlow['daily'][i][FIN_CASH] = self.player.cash
             cashFlow['daily'][i][category] += value
 
-            if category in [INVENTORY, FIN_MARKETING, RENOVATION, SALARY, MISC]:
+            if category in [FIN_INVENTORY, FIN_MARKETING, FIN_RENOVATION, FIN_SALARY, FIN_MISC]:
                 cashFlow['daily'][i]['Expense'] += value
 
             cashFlow['daily'][i]['Profit'] = cashFlow['daily'][i]['Sales'] - cashFlow['daily'][i]['Expense']
@@ -138,7 +138,7 @@ class Finance:
             cashFlow['monthly'][i][FIN_CASH] = self.player.cash
             cashFlow['monthly'][i][category] += value
 
-            if category in [INVENTORY, FIN_MARKETING, RENOVATION, SALARY, MISC]:
+            if category in [FIN_INVENTORY, FIN_MARKETING, FIN_RENOVATION, FIN_SALARY, FIN_MISC]:
                 cashFlow['monthly'][i]['Expense'] += value
 
             cashFlow['monthly'][i]['Profit'] = cashFlow['monthly'][i]['Sales'] - cashFlow['monthly'][i]['Expense']
@@ -158,7 +158,7 @@ class Finance:
             cashFlow['yearly'][i][FIN_CASH] = self.player.cash
             cashFlow['yearly'][i][category] += value
 
-            if category in [INVENTORY, FIN_MARKETING, RENOVATION, SALARY, MISC]:
+            if category in [FIN_INVENTORY, FIN_MARKETING, FIN_RENOVATION, FIN_SALARY, FIN_MISC]:
                 cashFlow['yearly'][i]['Expense'] += value
 
             cashFlow['yearly'][i]['Profit'] = cashFlow['yearly'][i]['Sales'] - cashFlow['yearly'][i]['Expense']
@@ -172,7 +172,7 @@ class Finance:
         json_file.close()
         statementList = []
 
-        if fiscalTerm == DAILY:
+        if fiscalTerm == FIN_TERM_DAILY:
             i = Date.dayNumber
 
             if len(cashFlow[fiscalTerm]) >= 3:
@@ -185,7 +185,7 @@ class Finance:
                     statementList.append(cashFlow[fiscalTerm][i - x])
 
 
-        elif fiscalTerm == MONTHLY:
+        elif fiscalTerm == FIN_TERM_MONTHLY:
             i = Date.monthNumber
 
             if len(cashFlow[fiscalTerm]) >= 3:
@@ -197,7 +197,7 @@ class Finance:
                 for x in range(len(cashFlow[fiscalTerm])):
                     statementList.append(cashFlow[fiscalTerm][i - x])
 
-        elif fiscalTerm == YEARLY:
+        elif fiscalTerm == FIN_TERM_YEARLY:
             i = Date.yearNumber
 
             if len(cashFlow[fiscalTerm]) >= 3:

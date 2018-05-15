@@ -6,9 +6,11 @@ import copy
 
 class Game:
     def __init__(self, folder, evManager):
+        self.state = STATE_PAUSED
+        self.LoadAssets()
+
         self.evManager = evManager
         self.evManager.RegisterListener(self)
-        self.state = STATE_PAUSED
 
         self.folder = folder
 
@@ -49,16 +51,72 @@ class Game:
         return True
 
     def __getstate__(self):
+        self.state = STATE_PAUSED
+        self.dishesList = DISHES_LIST
+        self.westernDishes = WESTERN_DISHES
+        self.chineseDishes = CHINESE_DISHES
+        self.koreanDishes = KOREAN_DISHES
+        self.ingredientsList = INGREDIENTS_LIST
         state = self.__dict__.copy()
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
+        DISHES_LIST.extend(self.dishesList)
+        WESTERN_DISHES.extend(self.westernDishes)
+        CHINESE_DISHES.extend(self.chineseDishes)
+        KOREAN_DISHES.extend(self.koreanDishes)
+        INGREDIENTS_LIST.extend(self.ingredientsList)
+        self.evManager = Main.evManager
+        self.evManager.RegisterListener(self)
 
+    def LoadAssets(self):
+        # Load list of ingredients
+        config = configparser.ConfigParser()
+        config.read("data/ingredients.rs")
+        for section in config.sections():
+            name = str(config.get(section, "name"))
+            type = str(config.get(section, "type"))
+            baseCost = config.getfloat(section, "cost")
+            INGREDIENTS_LIST.append(Ingredient(name, type, baseCost))
+
+        # Load list of dishes
+        config = configparser.ConfigParser()  # Reinitiate for new file
+        config.read("data/dishes.rs")
+        for section in config.sections():
+            name = str(config.get(section, "name"))
+            type = str(config.get(section, "type"))
+            cuisine = str(config.get(section, "cuisine"))
+            rawIngre = str(config.get(section, "ingredients")).strip()
+
+            ingredients = []
+            split = rawIngre.split(', ')
+            for ingredient in split:
+                noIngredient = True
+                for i in INGREDIENTS_LIST:
+                    if ingredient == i.name:
+                        ingredients.append(i)
+                        noIngredient = False
+                        break
+                if noIngredient:
+                    print(ingredient)
+
+            dish = Dish(name, type, cuisine, ingredients)
+            DISHES_LIST.append(dish)
+            if cuisine == "Western":
+                WESTERN_DISHES.append(dish)
+            elif cuisine == "Chinese":
+                CHINESE_DISHES.append(dish)
+            elif cuisine == "Korean":
+                KOREAN_DISHES.append(dish)
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
             self.customerManager.CalculateCustomerSplit(self.players)
+
+        elif isinstance(event, SaveGameRequestEvent):
+            ev = SaveGameEvent(self)
+            self.evManager.Post(ev)
 
 
 class Player:
@@ -89,6 +147,8 @@ class Player:
         self.restaurantLvl = 1
         self.restaurantCapacity = 100
         self.menu.dishLimit = 4 * self.restaurantLvl
+
+        self.salesReport = (self, 0, 0, 0, 0) # For load game purposes
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -135,7 +195,13 @@ class Player:
         total = 0
         for waiter in self.waiters:
             total += waiter.level
-        return total / len(self.waiters)
+
+        try:
+            avgLevel = total / len(self.waiters)
+        except ZeroDivisionError:
+            avgLevel = 0
+
+        return avgLevel
 
     def CalculateImpression(self):
         cuisineDiversityModifer = -0.1 + (self.menu.NumberOfCuisines() / 10)
@@ -242,7 +308,8 @@ class Player:
 
         self.EarnMoney(salesRevenue, FIN_SALES)
 
-        ev = SalesReportEvent(self, dishesServed, customers, unfedCustomers, salesRevenue, avgSatisfaction)
+        self.salesReport = self, dishesServed, customers, unfedCustomers, avgSatisfaction
+        ev = SalesReportEvent(*self.salesReport)
         self.evManager.Post(ev)
 
         self.ProcessDay(customers) # For AI usage
@@ -289,6 +356,9 @@ class Player:
             self.evManager.Post(ev)
 
             ev = StaffUpdateEvent(self.chefs, self.waiters)
+            self.evManager.Post(ev)
+
+            ev = SalesReportEvent(*self.salesReport)
             self.evManager.Post(ev)
 
         elif isinstance(event, NewDayEvent):
@@ -388,7 +458,7 @@ class Player:
                 self.evManager.Post(ev)
 
         elif isinstance(event, AddMarketingEvent):
-            if self.SpendMoney(event.bonus.cost, MARKETING):
+            if self.SpendMoney(event.bonus.cost, FIN_MARKETING):
                 self.marketing.AddBonus(event.bonus)
 
 
@@ -578,9 +648,10 @@ class Menu:
         self.evManager = Main.evManager
 
     def AddDish(self, dish, price):
-        dishDict = dict(dish=dish, price=price, satisfaction=0)
-        if dish not in (d['dish'] for d in self.dishes):
-            self.dishes.append(dishDict)
+        if dish in DISHES_LIST:
+            dishDict = dict(dish=dish, price=price, satisfaction=0)
+            if dish not in (d['dish'] for d in self.dishes):
+                self.dishes.append(dishDict)
 
     def UpdateDishPrice(self, dish, price):
         for d in self.dishes:

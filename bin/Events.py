@@ -24,6 +24,18 @@ class SaveGameRequestEvent:
         self.name = "Save Game Request Event"
 
 
+class SaveGameEvent:
+    def __init__(self, game):
+        self.name = "Save Game Event"
+        self.game = game
+
+
+class LoadGameRequestEvent:
+    def __init__(self, save):
+        self.name = "Load Game Request Event"
+        self.save = save
+
+
 class GameStartedEvent:
     def __init__(self, players):
         self.name = "Game Started Event"
@@ -33,11 +45,6 @@ class GameStartedEvent:
 class GameScreenLoadedEvent:
     def __init__(self):
         self.name = "Game Screen Loaded Event"
-
-
-class SaveGameEvent:
-    def __init__(self):
-        self.name = "Save Game Event"
 
 
 class NewDayEvent:
@@ -61,13 +68,12 @@ class NewYearEvent:
 
 
 class SalesReportEvent:
-    def __init__(self, player, dishesServed, customers, unfedCustomers, revenue, satisfaction):
+    def __init__(self, player, dishesServed, customers, unfedCustomers, satisfaction):
         self.name = "Sales Report Event"
         self.player = player
         self.dishesServed = dishesServed
         self.customers = customers
         self.unfedCustomers = unfedCustomers
-        self.revenue = revenue
         self.satisfaction = satisfaction
 
 
