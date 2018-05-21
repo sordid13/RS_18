@@ -139,14 +139,18 @@ class DishManager:
 
     def ProcessDishes(self, player, customers):
         chefs = player.GetChefs()
-        if len(chefs) == 0:
-            ev = NoChefEvent()
-            self.evManager.Post(ev)
-            return []
+        if not hasattr(player, "ai"):
+            if len(chefs) == 0:
+                ev = NoChefEvent()
+                self.evManager.Post(ev)
+                return []
+            if len(player.waiters) == 0:
+                ev = NoWaiterEvent()
+                self.evManager.Post(ev)
+                return []
 
         dishList = self.DishesByDemand(player, customers)
         dishList = self.GetDishAvailable(dishList, player)
-
 
         for dish in dishList:
             dishAmount = dish['sales']

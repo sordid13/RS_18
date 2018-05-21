@@ -24,13 +24,14 @@ class CustomerManager:
     def TotalCustomers(self):
         # TODO: Implement BETTER system to generate number of customers incorporating random events
         customers = None
-        r = random.randint(0, 1) # 50% chance
+        r = random.randint(0, 4) # 20% chance
         if not r:
-            customers = self.prevCustomers * 1.01 # Simple growth equation
+            customers = self.prevCustomers * 1.001 # Simple growth equation
             self.prevCustomers = customers
         else:
             customers = self.prevCustomers
 
+        print(customers)
         self.totalCustomers = math.floor(customers)
 
     def CalculateCustomerSplit(self, players):

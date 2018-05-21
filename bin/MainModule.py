@@ -42,7 +42,8 @@ class MainModule:
 
     def Start(self):
         view = View(self.evManager)
-        control = Controller(self.evManager)
+        control = Controller(Main.evManager)
+
         control.Run()
 
     def Notify(self, event):
@@ -65,7 +66,6 @@ class MainModule:
 
 def main():
     Main.evManager = EventManager()
-    print(Main.evManager)
     auth = Authentication(Main.evManager)
     mainModule = MainModule(Main.evManager)
 

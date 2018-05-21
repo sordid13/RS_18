@@ -240,6 +240,9 @@ class NoChefEvent:
     def __init__(self):
         self.name = "No Chef Event"
 
+class NoWaiterEvent:
+    def __init__(self):_
+
 
 #UPGRADE RELATED EVENT
 class UpgradeLevelEvent:

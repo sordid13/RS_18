@@ -420,7 +420,7 @@ class CloseButton(pygame.sprite.Sprite):
 
 
 class ArrowLeft(pygame.sprite.Sprite):
-    def __init__(self, x, y, parent, attribute, group=None):
+    def __init__(self, x, y, parent, attribute, group=None, multiply=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.x = x
         self.y = y
@@ -430,31 +430,47 @@ class ArrowLeft(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y)
         self.parent = parent
         self.attribute = attribute
+        self.multiply = multiply
 
     def Clicked(self):
         value = getattr(self.parent, self.attribute)
-        if value > 0 and value != 0:
+        if self.multiply:
+            value -= 1 * self.multiply
+        else:
             value -= 1
-            setattr(self.parent, self.attribute, value)
-            self.parent.Update()
+
+        if value < 0:
+            value = 0
+        setattr(self.parent, self.attribute, value)
+        self.parent.Update()
 
     def ShiftClicked(self):
         value = getattr(self.parent, self.attribute)
-        if value > 0 and value != 0:
+        if self.multiply:
+            value -= 10 * self.multiply
+        else:
             value -= 10
-            setattr(self.parent, self.attribute, value)
-            self.parent.Update()
+
+        if value < 0:
+            value = 0
+        setattr(self.parent, self.attribute, value)
+        self.parent.Update()
 
     def CtrlClicked(self):
         value = getattr(self.parent, self.attribute)
-        if value > 0 and value != 0:
+        if self.multiply:
+            value -= 100 * self.multiply
+        else:
             value -= 100
-            setattr(self.parent, self.attribute, value)
-            self.parent.Update()
+
+        if value < 0:
+            value = 0
+        setattr(self.parent, self.attribute, value)
+        self.parent.Update()
 
 
 class ArrowRight(pygame.sprite.Sprite):
-    def __init__(self, x, y, parent, attribute, group=None):
+    def __init__(self, x, y, parent, attribute, group=None, multiply=None):
         pygame.sprite.Sprite.__init__(self, group)
         self.x = x
         self.y = y
@@ -464,22 +480,32 @@ class ArrowRight(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y)
         self.parent = parent
         self.attribute = attribute
+        self.multiply = multiply
 
     def Clicked(self):
         value = getattr(self.parent, self.attribute)
-        value += 1
+        if self.multiply:
+            value += 1 * self.multiply
+        else:
+            value += 1
         setattr(self.parent, self.attribute, value)
         self.parent.Update()
 
     def ShiftClicked(self):
         value = getattr(self.parent, self.attribute)
-        value += 10
+        if self.multiply:
+            value += 10 * self.multiply
+        else:
+            value += 10
         setattr(self.parent, self.attribute, value)
         self.parent.Update()
 
     def CtrlClicked(self):
         value = getattr(self.parent, self.attribute)
-        value += 100
+        if self.multiply:
+            value += 100 * self.multiply
+        else:
+            value += 100
         setattr(self.parent, self.attribute, value)
         self.parent.Update()
 
@@ -938,7 +964,7 @@ class DishBreakdown(pygame.sprite.Sprite):
 
         # Pie chart
         fig, ax = plt.subplots()
-        ax.pie(sizes, startangle=90, radius=0.1)
+        ax.pie(sizes, startangle=90, radius=0.5)
         ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
         ax.legend(labels, loc="best")
 
@@ -1444,6 +1470,8 @@ class ChefDetail(pygame.sprite.Sprite):
         self.evManager = evManager
         pygame.sprite.Sprite.__init__(self, group)
         self.group = group
+
+        self.name = ""
 
         self.x = SCREEN_WIDTH * 9 / 100
         self.y = SCREEN_HEIGHT * 40 / 100
@@ -2038,6 +2066,7 @@ class InventoryItemContainer(pygame.sprite.Sprite):
         InventoryItemDetail(self, self.item, self.evManager, self.popUp)
 
     def Clicked(self):
+        print(id(self))
         ev = GUIRequestPopUpEvent(self.name, self.Draw)
         self.evManager.Post(ev)
 
@@ -2050,6 +2079,7 @@ class InventoryItemContainer(pygame.sprite.Sprite):
                 self.amounts = [sum(x) for x in zip(event.amount, event.expire)]
                 self.expiredAmounts = event.expire
 
+                print(id(self))
                 ev = GUIRequestPopUpRedrawEvent(self.name, self.Draw)
                 self.evManager.Post(ev)
 
@@ -2736,8 +2766,8 @@ class IngredientContainer(pygame.sprite.Sprite):
         self.contents.append(self.ingredientQuantity)
         self.contents.append(self.ingredientPrice)
 
-        self.contents.append(ArrowLeft(self.x + 85, self.y - 10,  self, "quantity", self.group))
-        self.contents.append(ArrowRight(self.x + 135, self.y - 10,  self, "quantity", self.group))
+        self.contents.append(ArrowLeft(self.x + 85, self.y - 10,  self, "quantity", self.group, multiply=10))
+        self.contents.append(ArrowRight(self.x + 135, self.y - 10,  self, "quantity", self.group, multiply=10))
         self.contents.append(AddToCart(self.x + 110, self.y + 10, self, self.evManager, self.group))
 
         self.displayQuality = QualityStar(self.x - 55, self.y + 5, self.group, str(self.quality))

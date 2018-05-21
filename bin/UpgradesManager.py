@@ -41,5 +41,5 @@ class UpgradesManager: #values are called when even is requested
         return capacity
 
     def OperatingCost(self, level, capacity):
-        cost = 100 * (level**2) *(capacity/100)
+        cost = 70000 * (level**2) *(capacity/100)
         return int(cost)

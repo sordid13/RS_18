@@ -46,11 +46,10 @@ class Authentication(tk.Tk):
                 json.dump(key, json_file)
                 json_file.close()
 
-
-
     def Notify(self, event):
         if isinstance(event, AuthenticatedEvent):
             self.destroy()
+            self.evManager.UnregisterListener(self)
 
 
 class StartPage(tk.Frame):

@@ -112,17 +112,15 @@ class Finance:
         json_file.close()
 
         i = Date.dayNumber
+        cashFlow['daily'][i][FIN_CASH] = self.player.cash
+        cashFlow['daily'][i][category] += value
+
+        if category in [FIN_INVENTORY, FIN_MARKETING, FIN_RENOVATION, FIN_SALARY, FIN_MISC]:
+            cashFlow['daily'][i]['Expense'] += value
+
+        cashFlow['daily'][i]['Profit'] = cashFlow['daily'][i]['Sales'] - cashFlow['daily'][i]['Expense']
 
         with open(self.folder + '/cashFlow.json', 'w') as json_file:
-
-            cashFlow['daily'][i][FIN_CASH] = self.player.cash
-            cashFlow['daily'][i][category] += value
-
-            if category in [FIN_INVENTORY, FIN_MARKETING, FIN_RENOVATION, FIN_SALARY, FIN_MISC]:
-                cashFlow['daily'][i]['Expense'] += value
-
-            cashFlow['daily'][i]['Profit'] = cashFlow['daily'][i]['Sales'] - cashFlow['daily'][i]['Expense']
-
             json.dump(cashFlow, json_file, indent=2)
         json_file.close()
 
@@ -132,17 +130,15 @@ class Finance:
         json_file.close()
 
         i = Date.monthNumber
+        cashFlow['monthly'][i][FIN_CASH] = self.player.cash
+        cashFlow['monthly'][i][category] += value
+
+        if category in [FIN_INVENTORY, FIN_MARKETING, FIN_RENOVATION, FIN_SALARY, FIN_MISC]:
+            cashFlow['monthly'][i]['Expense'] += value
+
+        cashFlow['monthly'][i]['Profit'] = cashFlow['monthly'][i]['Sales'] - cashFlow['monthly'][i]['Expense']
 
         with open(self.folder + '/cashFlow.json', 'w') as json_file:
-
-            cashFlow['monthly'][i][FIN_CASH] = self.player.cash
-            cashFlow['monthly'][i][category] += value
-
-            if category in [FIN_INVENTORY, FIN_MARKETING, FIN_RENOVATION, FIN_SALARY, FIN_MISC]:
-                cashFlow['monthly'][i]['Expense'] += value
-
-            cashFlow['monthly'][i]['Profit'] = cashFlow['monthly'][i]['Sales'] - cashFlow['monthly'][i]['Expense']
-
             json.dump(cashFlow, json_file, indent=2)
         json_file.close()
 
@@ -152,17 +148,15 @@ class Finance:
         json_file.close()
 
         i = Date.yearNumber
+        cashFlow['yearly'][i][FIN_CASH] = self.player.cash
+        cashFlow['yearly'][i][category] += value
+
+        if category in [FIN_INVENTORY, FIN_MARKETING, FIN_RENOVATION, FIN_SALARY, FIN_MISC]:
+            cashFlow['yearly'][i]['Expense'] += value
+
+        cashFlow['yearly'][i]['Profit'] = cashFlow['yearly'][i]['Sales'] - cashFlow['yearly'][i]['Expense']
 
         with open(self.folder + '/cashFlow.json', 'w') as json_file:
-
-            cashFlow['yearly'][i][FIN_CASH] = self.player.cash
-            cashFlow['yearly'][i][category] += value
-
-            if category in [FIN_INVENTORY, FIN_MARKETING, FIN_RENOVATION, FIN_SALARY, FIN_MISC]:
-                cashFlow['yearly'][i]['Expense'] += value
-
-            cashFlow['yearly'][i]['Profit'] = cashFlow['yearly'][i]['Sales'] - cashFlow['yearly'][i]['Expense']
-
             json.dump(cashFlow, json_file, indent=2)
         json_file.close()
 
@@ -216,21 +210,11 @@ class Finance:
     # pass the value in the dict
 
     def Notify(self, event):
-        if isinstance(event, GameStartedEvent):
-            self.NewDay()
-            self.NewMonth()
-            self.NewYear()
-
-        elif isinstance(event, NewDayEvent):
-            self.NewDay()
-            """self.Graph(CASH, "daily")"""
-
-        elif isinstance(event, NewMonthEvent):
-            self.NewMonth()
-
-        elif isinstance(event, NewYearEvent):
-            self.NewYear()
-
-        elif isinstance(event, RequestFinanceWindowEvent):
+        if isinstance(event, RequestFinanceWindowEvent):
             ev = UpdateFinanceWindowEvent(self.CashBook(event.fiscalTerm))
             self.evManager.Post(ev)
+
+        elif isinstance(event, GameStartedEvent):
+            self.NewDay()
+            self.NewMonth()
+            self.NewYear()
