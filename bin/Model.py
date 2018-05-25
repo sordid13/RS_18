@@ -1,152 +1,114 @@
 from bin import *
 from .Events import *
+import json
 import configparser
 import copy
+import weakref
 
 
 class Game:
     def __init__(self, folder, evManager):
         self.state = STATE_PAUSED
-        self.LoadAssets()
 
         self.evManager = evManager
-        self.evManager.RegisterListener(self)
-
         self.folder = folder
 
-        self.date = DateManager(self, self.evManager)
+        self.date = DateManager(self.evManager)
 
         # Human player exclusive modules
         self.cart = Cart(self.evManager)
-        self.finance = Finance(self.folder, self.evManager)
-        self.marketing = Marketing(self.evManager)
 
         self.trendManager = TrendManager(self.evManager)
         self.customerManager = CustomerManager(self.evManager)
         self.dishManager = DishManager(self.evManager)
 
         self.players = [Player(self, self.evManager),
-                        AI("Deen's Cafe", CUISINE_WESTERN, self, self.evManager),
-                        AI("Emperor's Spice", CUISINE_CHINESE, self, self.evManager),
-                        AI("Bap Bap", CUISINE_KOREAN, self, self.evManager)]
+                        AI("Deen's Cafe", 2, CUISINE_WESTERN, self, self.evManager),
+                        AI("Emperor's Spice", 3, CUISINE_CHINESE, self, self.evManager),
+                        AI("Bap Bap", 4, CUISINE_KOREAN, self, self.evManager)]
 
         for player in self.players:
-            playerList = self.players[:]
-            playerList.remove(player)
-            player.rivals = playerList
-
             if not hasattr(player, "ai"):
-                self.finance.player = player
-                player.finance = self.finance
-                player.marketing = self.marketing
-                player.inventory.evManager = self.evManager
+                player.finance = Finance(self.evManager)
+                player.finance.FirstDay(player.cash)
+                player.marketing = Marketing(self.evManager)
 
-        ev = GameStartedEvent(self.players)
+        self.evManager.RegisterListener(self)
+
+        ev = GameStartedEvent()
         self.evManager.Post(ev)
-
-    def __enter__(self):
-        self.state = STATE_STARTED
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        return True
 
     def __getstate__(self):
         self.state = STATE_PAUSED
-        self.dishesList = DISHES_LIST
-        self.westernDishes = WESTERN_DISHES
-        self.chineseDishes = CHINESE_DISHES
-        self.koreanDishes = KOREAN_DISHES
-        self.ingredientsList = INGREDIENTS_LIST
         state = self.__dict__.copy()
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        DISHES_LIST.extend(self.dishesList)
-        WESTERN_DISHES.extend(self.westernDishes)
-        CHINESE_DISHES.extend(self.chineseDishes)
-        KOREAN_DISHES.extend(self.koreanDishes)
-        INGREDIENTS_LIST.extend(self.ingredientsList)
         self.evManager = Main.evManager
         self.evManager.RegisterListener(self)
 
-    def LoadAssets(self):
-        # Load list of ingredients
-        config = configparser.ConfigParser()
-        config.read("data/ingredients.rs")
-        for section in config.sections():
-            name = str(config.get(section, "name"))
-            type = str(config.get(section, "type"))
-            baseCost = config.getfloat(section, "cost")
-            INGREDIENTS_LIST.append(Ingredient(name, type, baseCost))
+    def UpdateAI(self):
+        rivals = []
+        for player in self.players:
+            if hasattr(player, "ai"):
+                rivals.append(player.GetInfo())
 
-        # Load list of dishes
-        config = configparser.ConfigParser()  # Reinitiate for new file
-        config.read("data/dishes.rs")
-        for section in config.sections():
-            name = str(config.get(section, "name"))
-            type = str(config.get(section, "type"))
-            cuisine = str(config.get(section, "cuisine"))
-            rawIngre = str(config.get(section, "ingredients")).strip()
-
-            ingredients = []
-            split = rawIngre.split(', ')
-            for ingredient in split:
-                for i in INGREDIENTS_LIST:
-                    if ingredient == i.name:
-                        ingredients.append(i)
-                        break
-
-            dish = Dish(name, type, cuisine, ingredients)
-            DISHES_LIST.append(dish)
-            if cuisine == "Western":
-                WESTERN_DISHES.append(dish)
-            elif cuisine == "Chinese":
-                CHINESE_DISHES.append(dish)
-            elif cuisine == "Korean":
-                KOREAN_DISHES.append(dish)
+        ev = RivalsUpdateEvent(rivals)
+        self.evManager.Post(ev)
 
     def Notify(self, event):
         if isinstance(event, NewDayEvent):
             self.customerManager.CalculateCustomerSplit(self.players)
+            self.UpdateAI()
 
-        elif isinstance(event, SaveGameRequestEvent):
-            ev = SaveGameEvent(self)
-            self.evManager.Post(ev)
+        elif isinstance(event, GameScreenLoadedEvent):
+            self.UpdateAI()
+            print("bitch")
+
+        elif isinstance(event, GameStartedEvent):
+            print("fakku game")
 
 
 class Player:
     def __init__(self, game, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
-        self.game = game
-        self.rivals = None
+        self.folder = game.folder
 
         self.finance = None
         self.marketing = None
-        self.upgrades = UpgradesManager(self, self.evManager)
-        self.customerManager = self.game.customerManager
-        self.dishManager = self.game.dishManager
+        self.upgrades = UpgradesManager(self.evManager)
+        self.customerManager = game.customerManager
+        self.dishManager = game.dishManager
 
-
+        self.inventory = Inventory(True, self.evManager)
         self.menu = Menu(self.evManager)
-        self.inventory = Inventory()
-        self.chefs = [Chef(0, CUISINE_WESTERN, self, self.evManager)]
-        self.waiters = [Waiter(0, self, self.evManager), Waiter(0, self, self.evManager)]
+        self.chefs = [Chef(0, CUISINE_WESTERN, self.evManager)]
+        self.waiters = [Waiter(0, self.evManager), Waiter(0, self.evManager)]
 
         self.impression = 0 # Value assigned at start of day
         self.baseImpression = 60 # Affected by satisfaction
         self.impressionRetention = 60
 
-        self.cash = 100000
+        self.cash = 200000
         self.restaurantLvl = 1
         self.restaurantCapacity = 100
         self.menu.dishLimit = 4 * self.restaurantLvl
 
-        self.salesReport = (self, [], 0, 0, 0) # For load game purposes
+        self.salesReport = ([], 0, 0, 0) # For load game purpose
+
+        self.gameOver = False
 
     def __getstate__(self):
+        if not hasattr(self, "ai"): # Only for player
+            date = str(Date.day) + "/" + str(Date.month) + "/" + str(Date.year)
+            info = dict(cash=self.cash, level=self.restaurantLvl, date=date, days=Date.dayNumber,
+                        months=Date.monthNumber, years=Date.yearNumber)
+            with open(self.folder + "/info.json", "w+") as file:
+                json.dump(info, file, indent=2)
+                file.close()
+
         state = self.__dict__.copy()
         return state
 
@@ -155,12 +117,12 @@ class Player:
         self.evManager = Main.evManager
         self.evManager.RegisterListener(self)
 
-    def SpendMoney(self, value, category, force=True):
+    def SpendMoney(self, value, category, force=None):
         if value > self.cash and not force:
             return False
         else:
             self.cash -= value
-            self.finance.CashFlow(value, category)
+            self.finance.CashFlow(value, category, self.cash)
 
             ev = CashUpdateEvent(self.cash)
             self.evManager.Post(ev)
@@ -169,7 +131,7 @@ class Player:
 
     def EarnMoney(self, value, category):
         self.cash += value
-        self.finance.CashFlow(value, category)
+        self.finance.CashFlow(value, category, self.cash)
 
         ev = CashUpdateEvent(self.cash)
         self.evManager.Post(ev)
@@ -226,7 +188,7 @@ class Player:
         print("Impression :" + str(impression))
         return impression
 
-    def CalculateSatisfaction(self, dishesServed, customers, unfedCustomers):
+    def CalculateSatisfaction(self, dishesServed, customers, unfedCustomers, rivals):
         # Calculate satisfaction based on base cost to sale price value
         costModifier = math.floor(self.restaurantLvl ** 1.7)
         totalSatisfaction = 0
@@ -249,7 +211,7 @@ class Player:
             # Dish competition comparison modifier
             rivalsDishSatisfaction = None
             rivalDishes = []
-            for rival in self.rivals:
+            for rival in rivals:
                 for d in rival.menu.dishes:
                     if d['dish'].name == dish['dish'].name:
                         rivalDishes.append(d)
@@ -280,17 +242,17 @@ class Player:
             totalSatisfaction -= insufficientStaff ** 2
 
         waitersLvl = self.WaitersLevel()
-        totalSatisfaction *= 1 - 0.025 * ((3 - waitersLvl) ** 2)
+        totalSatisfaction *= 1 - 0.05 * (3 - waitersLvl)
 
         return math.floor(totalSatisfaction)
 
-    def ProcessSales(self, customers):
+    def ProcessSales(self, customers, rivals):
         dishesServed = self.dishManager.ProcessDishes(self, customers)
 
         unfedCustomers = self.dishManager.UnfedCustomers(customers, dishesServed)
         salesRevenue = self.dishManager.SalesRevenue(dishesServed)
 
-        satisfaction = self.CalculateSatisfaction(dishesServed, customers, unfedCustomers)
+        satisfaction = self.CalculateSatisfaction(dishesServed, customers, unfedCustomers, rivals)
         if satisfaction < 0:
             satisfaction = 0
 
@@ -300,13 +262,14 @@ class Player:
             satisfaction = 0
             avgSatisfaction = 0
 
-        self.baseImpression = satisfaction
+        self.baseImpression = (avgSatisfaction * 10) * (1 + customers/100)
 
         self.EarnMoney(salesRevenue, FIN_SALES)
 
-        self.salesReport = (self, dishesServed, customers, unfedCustomers, avgSatisfaction)
-        ev = SalesReportEvent(*self.salesReport)
-        self.evManager.Post(ev)
+        if not hasattr(self, "ai"):
+            self.salesReport = (dishesServed, customers, unfedCustomers, avgSatisfaction)
+            ev = SalesReportEvent(*self.salesReport)
+            self.evManager.Post(ev)
 
         self.ProcessDay(customers) # For AI usage
         print(dishesServed)
@@ -316,11 +279,11 @@ class Player:
 
     def HireChef(self, level, cuisine):
         if self.SpendMoney(CHEF_SALARY[level] * 2, FIN_SALARY):
-            self.chefs.append(Chef(level, cuisine, self, self.evManager))
+            self.chefs.append(Chef(level, cuisine, self.evManager))
 
     def HireWaiter(self, level):
         if self.SpendMoney(WAITER_SALARY[level] * 2, FIN_SALARY):
-            self.waiters.append(Waiter(level, self, self.evManager))
+            self.waiters.append(Waiter(level, self.evManager))
 
     def FireStaff(self, staff):
         if self.SpendMoney(staff.salary * 3, FIN_SALARY):
@@ -335,7 +298,7 @@ class Player:
 
     def Notify(self, event):
         if isinstance(event, GameScreenLoadedEvent):
-            ev = RestaurantUpdateEvent(self.restaurantLvl, self.restaurantCapacity,
+            ev = RestaurantUpdateEvent(self, self.restaurantLvl, self.restaurantCapacity,
                                        self.upgrades.OperatingCost(self.restaurantLvl, self.restaurantCapacity),
                                        self.upgrades)
             self.evManager.Post(ev)
@@ -358,13 +321,29 @@ class Player:
             ev = SalesReportEvent(*self.salesReport)
             self.evManager.Post(ev)
 
+
         elif isinstance(event, NewDayEvent):
+            self.finance.NewDay(self.cash)
+            for staff in self.chefs + self.waiters:
+                staff.CountDay(self.SpendMoney)
+
             ev = InventoryUpdateEvent(self.inventory.Stock())
             self.evManager.Post(ev)
 
+            if self.gameOver:
+                ev = GameOverEvent()
+                self.evManager.Post(ev)
+            elif self.cash < -10000:
+                self.gameOver = True
+
         elif isinstance(event, NewMonthEvent):
-            print("hi")
+            self.finance.NewDay(self.cash)
+            self.finance.NewMonth(self.cash)
+
             self.SpendMoney(self.upgrades.OperatingCost(self.restaurantLvl, self.restaurantCapacity), FIN_MISC, True)
+
+        elif isinstance(event, NewYearEvent):
+            self.finance.NewYear(self.cash)
 
         elif isinstance(event, AddDishEvent):
             if self.SpendMoney(ADD_DISH_COST, FIN_MISC):
@@ -395,11 +374,14 @@ class Player:
                         new = False
 
                 if new:
-                    newBatch = Batch(self.inventory, self.evManager)
+                    newBatch = Batch(self.evManager)
                     newBatch.AddIngredients(event.cart)
                     self.inventory.batches.append(newBatch)
 
                 ev = InventoryUpdateEvent(self.inventory.Stock())
+                self.evManager.Post(ev)
+
+                ev = ClearCartEvent()
                 self.evManager.Post(ev)
 
         elif isinstance(event, RequestIngredientAmountEvent):
@@ -441,20 +423,20 @@ class Player:
             self.evManager.Post(ev)
 
         elif isinstance(event, UpgradeLevelEvent):
-            if self.SpendMoney(self.upgrades.UpgradeLevelCost(), FIN_RENOVATION):
-                self.upgrades.UpgradeLevel()
+            if self.SpendMoney(self.upgrades.UpgradeLevelCost(self), FIN_RENOVATION):
+                self.upgrades.UpgradeLevel(self)
                 self.menu.dishLimit = 4 * self.restaurantLvl
 
-                ev = RestaurantUpdateEvent(self.restaurantLvl, self.restaurantCapacity,
+                ev = RestaurantUpdateEvent(self, self.restaurantLvl, self.restaurantCapacity,
                                            self.upgrades.OperatingCost(self.restaurantLvl, self.restaurantCapacity),
                                            self.upgrades)
                 self.evManager.Post(ev)
 
         elif isinstance(event, UpgradeCapacityEvent):
-            if self.SpendMoney(self.upgrades.UpgradeCapacityCost(), FIN_RENOVATION):
-                self.upgrades.UpgradeCapacity()
+            if self.SpendMoney(self.upgrades.UpgradeCapacityCost(self), FIN_RENOVATION):
+                self.upgrades.UpgradeCapacity(self)
 
-                ev = RestaurantUpdateEvent(self.restaurantLvl, self.restaurantCapacity,
+                ev = RestaurantUpdateEvent(self, self.restaurantLvl, self.restaurantCapacity,
                                            self.upgrades.OperatingCost(self.restaurantLvl, self.restaurantCapacity),
                                            self.upgrades)
                 self.evManager.Post(ev)
@@ -465,16 +447,19 @@ class Player:
 
 
 class AI(Player):
-    def __init__(self, name, cuisine, game, evManager):
+    def __init__(self, name, level, cuisine, game, evManager):
         super().__init__(game, evManager)
         self.ai = ""
         self.name = name
+        self.level = level
         self.cuisine = cuisine
 
-        self.chefs = [Chef(3, self.cuisine, self, self.evManager), Chef(3, self.cuisine, self, self.evManager)]
+        self.inventory = Inventory(False, self.evManager)
+
+        self.chefs = [Chef(self.level - 1, self.cuisine, self.evManager), Chef(self.level - 1, self.cuisine, self.evManager)]
         self.waiters = []
         for i in range(4):
-            self.waiters.append(Waiter(3, self, self.evManager))
+            self.waiters.append(Waiter(self.level - 1, self.evManager))
 
         self.baseImpression = 80
         self.impressionRetention = 80
@@ -493,6 +478,9 @@ class AI(Player):
 
     def EarnMoney(self, value, category=None, force=None):
         self.cash += value
+
+    def GetInfo(self):
+        return self.name, self.customers, self.menu.dishes
 
     def GetLeastPopularDish(self):
         dish = None
@@ -546,7 +534,7 @@ class AI(Player):
 
                 if new:
                     ing = copy.deepcopy(ingredient)
-                    ing.quality = 5
+                    ing.quality = self.level
                     ing.amount = amount
                     ingredientsList.append(ing)
 
@@ -562,7 +550,7 @@ class AI(Player):
         return ingredientsList
 
     def PurchaseIngredients(self, ingredientsList):
-        newBatch = Batch(self.inventory, self.evManager)
+        newBatch = Batch(self.evManager)
         newBatch.AddIngredients(ingredientsList)
         self.inventory.batches.append(newBatch)
 
@@ -582,21 +570,19 @@ class AI(Player):
         self.PurchaseIngredients(ingredientsList)
 
         if customers > len(self.chefs) * CUSTOMERS_PER_CHEF:
-            self.HireChef(3, self.cuisine)
+            self.HireChef(self.level - 1, self.cuisine)
 
         if customers > len(self.waiters) * CUSTOMERS_PER_WAITER:
-            self.HireWaiter(3)
-
+            self.HireWaiter(self.level - 1)
 
     def Notify(self, event):
-        pass
+        if isinstance(event, GameStartedEvent):
+            print("fakku ai " + self.name)
 
 
 class Staff:
-    def __init__(self, player, evManager):
+    def __init__(self, evManager):
         self.evManager = evManager
-        self.evManager.RegisterListener(self)
-        self.player = player
 
         self.salary = 0
         self.deltaDay = 0
@@ -608,18 +594,16 @@ class Staff:
     def __setstate__(self, state):
         self.__dict__.update(state)
         self.evManager = Main.evManager
-        self.evManager.RegisterListener(self)
 
-    def Notify(self, event):
-        if isinstance(event, NewDayEvent):
+    def CountDay(self, spendMoney):
             self.deltaDay += 1
-            if self.deltaDay == 30:
+            if self.deltaDay == 7:
                 self.deltaDay = 0
-                self.player.SpendMoney(self.salary, FIN_SALARY, True)
+                spendMoney(self.salary, FIN_SALARY, True)
 
 class Chef(Staff):
-    def __init__(self, level, cuisine, player, evManager):
-        super().__init__(player, evManager)
+    def __init__(self, level, cuisine, evManager):
+        super().__init__(evManager)
         self.level = level
         self.cuisine = cuisine
 
@@ -627,8 +611,8 @@ class Chef(Staff):
 
 
 class Waiter(Staff):
-    def __init__(self, level, player, evManager):
-        super().__init__(player, evManager)
+    def __init__(self, level, evManager):
+        super().__init__(evManager)
         self.level = level
 
         self.salary = WAITER_SALARY[self.level]
@@ -709,7 +693,7 @@ class Ingredient:
         self.baseCost = baseCost * 10
 
         self.quality = None
-        self.amount = None
+        self.amount = 0
 
     def Price(self, quality):
         price = self.baseCost * quality * (1 + ((quality - 1) / 10))
@@ -719,8 +703,11 @@ class Ingredient:
 
 
 class Inventory:
-    def __init__ (self):
-        self.evManager = None # No event manager for AI Inventory
+    def __init__ (self, doPost, evManager):
+        self.evManager = evManager
+        self.evManager.RegisterListener(self)
+
+        self.doPost = doPost
 
         self.batches = []
         self.expiredList = []
@@ -731,9 +718,8 @@ class Inventory:
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        if self.evManager:
-            self.evManager = Main.evManager
-            print(str(self.evManager) + "hello")
+        self.evManager = Main.evManager
+        self.evManager.RegisterListener(self)
 
     def Stock(self):
         stock = []
@@ -785,17 +771,21 @@ class Inventory:
         for batch in self.batches:
             ingredientsToRemove = []
             for ingredient in batch.ingredients:
-                if ingredient.amount <= 0:
+                if ingredient.amount == 0:
                     ingredientsToRemove.append(ingredient)
+                elif ingredient.amount < 0:
+                    print("shieeeeet")
 
             for ingredient in ingredientsToRemove:
                 batch.ingredients.remove(ingredient)
 
-                try:
+                if self.doPost:
                     ev = ReturnIngredientAmountEvent(ingredient, self.IngredientStock(ingredient), self.IngredientExpiredAmount(ingredient))
                     self.evManager.Post(ev)
-                except AttributeError:
-                    pass
+
+        if self.doPost:
+            ev = InventoryUpdateEvent(self.Stock())
+            self.evManager.Post(ev)
 
     def IngredientExpiredAmount(self, ingredient):
         stock = [0, 0, 0, 0, 0] # Initialise based on quality 5 to 1
@@ -823,13 +813,25 @@ class Inventory:
             if b is batch:
                 self.batches.remove(b)
 
+    def Notify(self, event):
+        if isinstance(event, NewDayEvent):
+            batchesToRemove = []
+            for batch in self.batches:
+                batch.age += 1
+                if batch.age > 6:
+                    batchesToRemove.append(batch)
+
+            for batch in batchesToRemove:
+                self.batches.remove(batch)
+
+            if self.doPost:
+                ev = InventoryUpdateEvent(self.Stock())
+                self.evManager.Post(ev)
+
 
 class Batch:
-    def __init__(self, inventory, evManager):
+    def __init__(self, evManager):
         self.evManager = evManager
-        self.evManager.RegisterListener(self)
-
-        self.inventory = inventory
 
         self.ingredients = []
         self.age = 0
@@ -841,7 +843,6 @@ class Batch:
     def __setstate__(self, state):
         self.__dict__.update(state)
         self.evManager = Main.evManager
-        self.evManager.RegisterListener(self)
 
     def IngredientStock(self, ingredient):
         stock = [0, 0, 0, 0, 0] # Initialise based on quality 1 to 5
@@ -855,8 +856,8 @@ class Batch:
         return stock
 
     def AddIngredients(self, list):
-        new = True
         for ingredient in list:
+            new = True
             for i in self.ingredients:
                 if i.name == ingredient.name and i.quality == ingredient.quality:
                     i.amount += ingredient.amount
@@ -875,13 +876,6 @@ class Batch:
                     for i in self.ingredients:
                         if i is ing:
                             self.ingredients.remove(ing)
-
-    def Notify(self, event):
-        if isinstance(event, NewDayEvent):
-            self.age += 1
-            if self.age > 6:
-                self.inventory.AddToExpiredList(self)
-                self.inventory.RemoveBatch(self)
 
 
 class Cart:
@@ -938,13 +932,6 @@ class Cart:
 
         elif isinstance(event, RemoveFromCartEvent):
             self.RemoveFromCart(event.ingredient)
-
-        elif isinstance(event, BuyIngredientsEvent):
-            self.cart = []
-            self.totalPrice = 0
-
-            ev = CartUpdateEvent(self.cart, self.totalPrice)
-            self.evManager.Post(ev)
 
         elif isinstance(event, ClearCartEvent):
             self.cart = []

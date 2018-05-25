@@ -8,18 +8,6 @@ class Marketing:
 
         self.activeBonuses = []
 
-        # Load list of marketing strats
-        config = configparser.ConfigParser()
-        config.read("data/marketing.rs")
-        for section in config.sections():
-            name = str(config.get(section, "name"))
-            modifier = config.getfloat(section, "modifier")
-            cost = config.getint(section, "cost")
-            duration = config.getint(section, "duration")
-            desc = config.get(section, "desc")
-
-            MARKETING_LIST.append(MarketingBonus(name, modifier, cost, duration, desc))
-
     def __getstate__(self):
         self.marketingList = MARKETING_LIST
         state = self.__dict__.copy()
@@ -27,7 +15,6 @@ class Marketing:
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        MARKETING_LIST.extend(self.marketingList)
         self.evManager = Main.evManager
         print(self.evManager)
 

@@ -2,11 +2,11 @@ from bin import *
 
 
 class DateManager:
-    def __init__(self, game, evManager):
+    def __init__(self, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
-        self.game = game
 
+        # Reset date variables every new game
         Date.day = 1
         Date.month = 1
         Date.year = 2018
@@ -43,14 +43,10 @@ class DateManager:
         Date.month += 1
         Date.monthNumber += 1
 
-        self.game.finance.NewMonth()
-
         if Date.month == 13:
             Date.month = 1
             Date.year += 1
             Date.yearNumber += 1
-
-            self.game.finance.NewYear()
 
             ev = NewYearEvent()
             self.evManager.Post(ev)
@@ -67,8 +63,6 @@ class DateManager:
             Date.day += 1
             Date.dayNumber += 1
             self.deltaDay += 1
-
-            self.game.finance.NewDay()
 
             if Date.day == 29:
                 if Date.month == 2 and not self.LeapYear():
@@ -89,3 +83,6 @@ class DateManager:
                 self.evManager.Post(ev)
 
             print(Date.day, Date.month, Date.year)
+
+        elif isinstance(event, GameStartedEvent):
+            print("fakku date")

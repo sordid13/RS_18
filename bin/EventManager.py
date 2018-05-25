@@ -9,10 +9,7 @@ class EventManager:
         self.listeners = WeakKeyDictionary()
 
     def RegisterListener(self, listener):
-        try:
-            self.listeners[listener] = 1
-        except AttributeError:
-            pass
+        self.listeners[listener] = 1
 
     def UnregisterListener(self, listener):
         if listener in self.listeners.keys():

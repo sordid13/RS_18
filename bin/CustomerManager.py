@@ -6,7 +6,6 @@ import random
 class CustomerManager:
     def __init__(self, evManager):
         self.evManager = evManager
-        self.evManager.RegisterListener(self)
 
         self.totalCustomers = None
         self.prevCustomers = STARTING_CUSTOMERS
@@ -18,7 +17,6 @@ class CustomerManager:
     def __setstate__(self, state):
         self.__dict__.update(state)
         self.evManager = Main.evManager
-        self.evManager.RegisterListener(self)
         print(self.evManager)
 
     def TotalCustomers(self):
@@ -47,9 +45,7 @@ class CustomerManager:
 
         for player in players:
             customers = math.floor(self.totalCustomers * (player.impression / totalImpression))
+            rivals = players[:]
+            rivals.remove(player)
 
-            player.ProcessSales(customers)
-
-    def Notify(self, event):
-        if isinstance(event, NewDayEvent):
-            self.TotalCustomers()
+            player.ProcessSales(customers, rivals)

@@ -24,27 +24,24 @@ class SaveGameRequestEvent:
         self.name = "Save Game Request Event"
 
 
-class SaveGameEvent:
-    def __init__(self, game):
-        self.name = "Save Game Event"
-        self.game = game
-
-
-class LoadGameRequestEvent:
-    def __init__(self, save):
+class ContinueGameRequestEvent:
+    def __init__(self):
         self.name = "Load Game Request Event"
-        self.save = save
 
 
 class GameStartedEvent:
-    def __init__(self, players):
+    def __init__(self):
         self.name = "Game Started Event"
-        self.players = players
 
 
 class GameScreenLoadedEvent:
     def __init__(self):
         self.name = "Game Screen Loaded Event"
+
+
+class GameOverEvent:
+    def __init__(self):
+        self.name = "Game Over Event"
 
 
 class NewDayEvent:
@@ -68,19 +65,25 @@ class NewYearEvent:
 
 
 class SalesReportEvent:
-    def __init__(self, player, dishesServed, customers, unfedCustomers, satisfaction):
+    def __init__(self, dishesServed, customers, unfedCustomers, satisfaction):
         self.name = "Sales Report Event"
-        self.player = player
         self.dishesServed = dishesServed
         self.customers = customers
         self.unfedCustomers = unfedCustomers
         self.satisfaction = satisfaction
 
 
+class RivalsUpdateEvent:
+    def __init__(self, rivals):
+        self.name = "Rivals Update Event"
+        self.rivals = rivals
+
+
 class RequestFinanceWindowEvent:
     def __init__(self, fiscalTerm):
         self.name = "Request Finance Window"
         self.fiscalTerm = fiscalTerm
+
 
 class UpdateFinanceWindowEvent:
     def __init__(self, cashBook):
@@ -256,8 +259,9 @@ class UpgradeCapacityEvent:
 
 
 class RestaurantUpdateEvent:
-    def __init__(self, level, capacity, operatingCost, upgrades):
+    def __init__(self, player, level, capacity, operatingCost, upgrades):
         self.name = "Restaurant Update Event"
+        self.player = player
         self.level = level
         self.capacity = capacity
         self.operatingCost = operatingCost
@@ -277,17 +281,18 @@ class MarketingUpdateEvent:
         self.bonuses = bonuses
 
 
+# Finance Related Event
+class CashUpdateEvent:
+    def __init__(self, cash):
+        self.name = "Cash Flow Update Event"
+        self.cash = cash
+
+
 #Controller Related Event
 class LeftClickEvent:
     def __init__(self, pos):
         self.name = "Left Click Event"
         self.pos = pos
-
-        
-class CashUpdateEvent:
-    def __init__(self, cash):
-        self.name = "Cash Flow Update Event"
-        self.cash = cash
 
 
 class ShiftLeftClickEvent:
@@ -352,3 +357,15 @@ class GUITooltipEvent:
     def __init__(self, text):
         self.name = "GUI Tooltip Event"
         self.text = text
+
+
+class GUIOpenStartMenuEvent:
+    def __init__(self, new=None):
+        self.name = "GUI Open Start Menu Event"
+        self.new = new
+
+
+class GUIDishSpecificMarketEvent:
+    def __init__(self, dish):
+        self.name = "GUI Dish Specific Market Event"
+        self.dish = dish

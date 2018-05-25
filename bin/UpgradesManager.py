@@ -1,9 +1,8 @@
 from bin import *
 
-class UpgradesManager: #values are called when even is requested
-    def __init__(self, player, evManager):
+class UpgradesManager:
+    def __init__(self, evManager):
         self.evManager = evManager
-        self.player = player
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -14,30 +13,30 @@ class UpgradesManager: #values are called when even is requested
         self.evManager = Main.evManager
         print(self.evManager)
 
-    def UpgradeLevel(self):  # initial LEVEL is 1
-        self.player.restaurantLvl = self.NextLevel()
+    def UpgradeLevel(self, player):  # initial LEVEL is 1
+        player.restaurantLvl = self.NextLevel(player)
 
-    def UpgradeLevelCost(self):
-        cost = 40000 * self.player.restaurantLvl**2 *(self.player.restaurantCapacity/100)
+    def UpgradeLevelCost(self, player):
+        cost = 1000000 * player.restaurantLvl**2 *(player.restaurantCapacity/100)
         return int(cost)
 
-    def UpgradeCapacity(self):
-        self.player.restaurantCapacity = self.NextCapacity()
+    def UpgradeCapacity(self, player):
+        player.restaurantCapacity = self.NextCapacity(player)
 
-    def UpgradeCapacityCost(self):
-        cost = 20000 * self.player.restaurantLvl**2 *(self.player.restaurantCapacity/100)
+    def UpgradeCapacityCost(self, player):
+        cost = 1000000 * player.restaurantLvl**2 *(player.restaurantCapacity/100)
         return int(cost)
 
-    def NextLevel(self):
-        if self.player.restaurantLvl < 5:
-            level = self.player.restaurantLvl + 1
+    def NextLevel(self, player):
+        if player.restaurantLvl < 5:
+            level = player.restaurantLvl + 1
         else:
             level = 5
 
         return level
 
-    def NextCapacity(self):
-        capacity = self.player.restaurantCapacity * 2
+    def NextCapacity(self, player):
+        capacity = player.restaurantCapacity * 2
         return capacity
 
     def OperatingCost(self, level, capacity):

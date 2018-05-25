@@ -13,38 +13,88 @@ class MainModule:
             os.makedirs("../users")
 
         self.folder = ""
+        self.game = None
 
-    def NewGame(self):
-        saves = [x[0] for x in os.walk(self.folder)] # Return child directories ... first entry is self.folder
-        newSave = self.folder + "/save" + str(len(saves))
-        os.makedirs(newSave)
+    def LoadAssets(self):
+        # Load list of ingredients
+        config = configparser.ConfigParser()
+        config.read("data/ingredients.rs")
+        for section in config.sections():
+            name = str(config.get(section, "name"))
+            type = str(config.get(section, "type"))
+            baseCost = config.getfloat(section, "cost")
+            INGREDIENTS_LIST.append(Ingredient(name, type, baseCost))
 
-        return newSave
+        # Load list of dishes
+        config = configparser.ConfigParser()  # Reinitiate for new file
+        config.read("data/dishes.rs")
+        for section in config.sections():
+            name = str(config.get(section, "name"))
+            type = str(config.get(section, "type"))
+            cuisine = str(config.get(section, "cuisine"))
+            rawIngre = str(config.get(section, "ingredients")).strip()
 
-    def StartGame(self, new=None, save=None):
+            ingredients = []
+            split = rawIngre.split(', ')
+            for ingredient in split:
+                for i in INGREDIENTS_LIST:
+                    if ingredient == i.name:
+                        ingredients.append(i)
+                        break
+
+            dish = Dish(name, type, cuisine, ingredients)
+            DISHES_LIST.append(dish)
+            if cuisine == "Western":
+                WESTERN_DISHES.append(dish)
+            elif cuisine == "Chinese":
+                CHINESE_DISHES.append(dish)
+            elif cuisine == "Korean":
+                KOREAN_DISHES.append(dish)
+
+        # Load list of marketing strats
+        config = configparser.ConfigParser()
+        config.read("data/marketing.rs")
+        for section in config.sections():
+            name = str(config.get(section, "name"))
+            modifier = config.getfloat(section, "modifier")
+            cost = config.getint(section, "cost")
+            duration = config.getint(section, "duration")
+            desc = config.get(section, "desc")
+
+            MARKETING_LIST.append(MarketingBonus(name, modifier, cost, duration, desc))
+
+    def StartGame(self, new=None):
         if new:
-            folder = self.NewGame()
-            with Game(folder, self.evManager) as game:
-                pass
+            self.game = Game(self.folder, self.evManager)
+            print(self.game)
 
-        elif save:
-            with open(self.folder+"/"+save+"/game.save", "rb") as file:
-                import pickle
-                game = pickle.load(file)
-                ev = GameStartedEvent(game.players)
+        else:
+            with open(self.folder+"/game.save", "rb") as file:
+                self.game = pickle.load(file)
+                ev = GameStartedEvent()
                 self.evManager.Post(ev)
                 print("yes")
 
-    def SaveGame(self, game):
-        import pickle
-        with open(game.folder + "/game.save", "wb") as file:
-            pickle.dump(game, file)
+    def SaveGame(self):
+        if self.game:
+            with open(self.folder + "/game.save", "wb") as file:
+                pickle.dump(self.game, file)
 
     def Start(self):
+        # Start pygame GUI and Controller
         view = View(self.evManager)
         control = Controller(Main.evManager)
 
+        new = False
+        if not os.path.isfile(self.folder + "/game.save"):
+            new = True
+
+        ev = GUIOpenStartMenuEvent(new)
+        self.evManager.Post(ev)
+
         control.Run()
+
+
 
     def Notify(self, event):
         if isinstance(event, AuthenticatedEvent):
@@ -52,16 +102,32 @@ class MainModule:
             if not os.path.exists(self.folder):
                 os.makedirs(self.folder)
 
+            self.LoadAssets()
             self.Start()
+
+        elif isinstance(event, GUIOpenStartMenuEvent):
+            self.game = None
 
         elif isinstance(event, NewGameRequestEvent):
             self.StartGame(new=True)
 
-        elif isinstance(event, LoadGameRequestEvent):
-            self.StartGame(save=event.save)
+        elif isinstance(event, ContinueGameRequestEvent):
+            self.StartGame()
 
-        elif isinstance(event, SaveGameEvent):
-            self.SaveGame(event.game)
+        elif isinstance(event, SaveGameRequestEvent):
+            self.SaveGame()
+
+        elif isinstance(event, GameOverEvent):
+            self.game = None
+            try:
+                os.remove(self.folder+"/game.save")
+            except FileNotFoundError:
+                pass
+            try:
+                os.remove(self.folder+"/info.json")
+            except FileNotFoundError:
+                pass
+
 
 
 def main():

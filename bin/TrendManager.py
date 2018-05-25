@@ -6,7 +6,6 @@ class TrendManager:
     def __init__(self, evManager):
         self.evManager = evManager
         self.evManager.RegisterListener(self)
-        self.trends = [self.DishTrend, self.FoodTypeTrend, self.CuisineTypeTrend]
         self.currentTrend = None
 
     def __getstate__(self):
@@ -19,8 +18,10 @@ class TrendManager:
         self.evManager.RegisterListener(self)
 
     def SetTrend(self):
+        trends = [self.DishTrend, self.FoodTypeTrend, self.CuisineTypeTrend]
+
         self.currentTrend = None
-        self.currentTrend = random.choices(self.trends, weights=[10, 3, 2], k=1)[0]()
+        self.currentTrend = random.choices(trends, weights=[10, 3, 2], k=1)[0]()
 
         for dish in DISHES_LIST:
             if dish == self.currentTrend:
@@ -60,3 +61,6 @@ class TrendManager:
     def Notify(self, event):
         if isinstance(event, NewWeekEvent):
             self.SetTrend()
+
+        elif isinstance(event, GameStartedEvent):
+            print("fakku trend")
